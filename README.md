@@ -10,9 +10,13 @@ If you don't want to install Anaconda for whatever reason (not to worry, these s
 Required Files:
 
 SOLSTISE_Sim.py
+
 CircleAreaCalc.py
+
 Sim_File.py
+
 massreader.py
+
 masses.txt
 
 Code Summary:
