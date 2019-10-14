@@ -48,6 +48,7 @@ def BuildEvts():
 
         file.write(str(theta) + '\t' + str(Eejec2) + '\n')
 
+        return beamenergy
 
 
     file.close()
