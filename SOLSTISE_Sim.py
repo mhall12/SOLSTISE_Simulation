@@ -149,7 +149,25 @@ def main():
         plt.plot(x1, y1, x2, y2, color='black')
 
     plt.ioff()
-    input("\nPress ENTER to continue.")
+    
+    fname = "PipeOut_" + str(int(r2)) + "_" + str(int(angin)) + ".txt"
+    
+    print(fname)
+    
+    params = [r1, r2, c2height, anginrad, angin2rad]
+    
+    # input("\nPress ENTER to continue.")
+    
+    file = open(fname,"w+")
+    
+    # Build the pipe setup file here
+    for i in range(5):
+        file.write(str(params[i]) + "\n")
+    
+    print("An output file named " + fname + " was created!")
+
+    file.close()
+    
     # final pipe geometry is defined by anglist[], r1 ,r2, and the output of new_height_calc, which is the
     # height of the 2nd circle above the x-axis (c2height)
 
@@ -158,7 +176,7 @@ def main():
 
     # read in the energy and angle from the text file into a numpy array:
 
-    sim(r1, r2, c2height, anginrad, angin2rad, vikar_in)
+    # sim(r1, r2, c2height, anginrad, angin2rad, vikar_in)
 
     input("\nPress ENTER to end.")
 
