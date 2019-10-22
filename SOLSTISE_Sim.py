@@ -9,34 +9,6 @@ import numpy as np
 def main():
     # main will ask the user questions and call the relevant functions to track the particles from VIKAR
 
-    print("")
-    print("########   ########  ##       ########  ########  ########  ########  ######## ")
-    print("##         ##    ##  ##       ##           ##        ##     ##        ##          ")
-    print("##         ##    ##  ##       ##           ##        ##     ##        ##          ")
-    print("########   ##    ##  ##       ########     ##        ##     ########  ########    ")
-    print("      ##   ##    ##  ##             ##     ##        ##           ##  ##          ")
-    print("      ##   ##    ##  ##             ##     ##        ##           ##  ##          ")
-    print("########   ########  #######  ########     ##     ########  ########  ########   ")
-    print("            Solenoid & Supersonic Target In Structure Experiments")
-    print("")
-    print("                          VIKAR add-on for HELIOS")
-    print("                              (Now in python)")
-    input("\n\n\nTo continue, press ENTER")
-    print("\nThe default VIKAR input file is: out_eject_unsmeared_all.dat")
-    yn = input("\nWould you like to use this file? (Y/N) ")
-
-    vikar_in = "out_eject_unsmeared_all.dat"
-
-    # if the user wants to enter a new file, get the file name here.
-    # it must end in .dat or .txt to be recognized.
-    if yn == "N" or yn == "n":
-        vikar_in = "buff"
-        while vikar_in[-4:] != ".dat" and vikar_in[-4:] != ".txt":
-            vikar_in = input("\nEnter the name of the new input file (.dat or .txt): ")
-            if vikar_in[-4:] != ".dat" and vikar_in[-4:] != ".txt":
-                print("\nERROR: Incorrect file extension...")
-
-    print("\nThe file to be used is: " + vikar_in)
 
     print("\nNow the SOLSTISE pipe will be defined. It is bounded by two circles of radius r1 and r2,")
     print("as well as two angles \u03B8\u2081 and \u03B8\u2082.")

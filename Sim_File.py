@@ -5,20 +5,50 @@ from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 from massreader import readmass
 from mpl_toolkits import mplot3d
+from Event_Builder import BuildEvts
 
 
-def sim(rbore, rblock, cheight, phi1block, phi2block, vikar_in):
-
-    #changes changes
+def sim(rbore, rblock, cheight, phi1block, phi2block):
 
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
 
-    #print(rblock, cheight, phi1block, phi2block)
+    print("")
+    print("########   ########  ##       ########  ########  ########  ########  ######## ")
+    print("##         ##    ##  ##       ##           ##        ##     ##        ##          ")
+    print("##         ##    ##  ##       ##           ##        ##     ##        ##          ")
+    print("########   ##    ##  ##       ########     ##        ##     ########  ########    ")
+    print("      ##   ##    ##  ##             ##     ##        ##           ##  ##          ")
+    print("      ##   ##    ##  ##             ##     ##        ##           ##  ##          ")
+    print("########   ########  #######  ########     ##     ########  ########  ########   ")
+    print("            Solenoid & Supersonic Target In Structure Experiments")
+    print("")
+    print("                          Particle Simulation Code")
+    input("\n\n\nTo continue, press ENTER")
+    print("\nThe default input file is: eventsout.txt")
+    yn = input("\nWould you like to use this file? (Y/N) ")
+    
+    filein = "eventsout.txt"
+    
+    # if the user wants to enter a new file, get the file name here.
+    # it must end in .dat or .txt to be recognized.
+    
+    ebeam = 168
+    
+    if yn == "N" or yn == "n":
+        filein = "buff"
+        
+        print("\nThe default reaction is d(28Si,p)")
+        yn2 = input("\nWould you like to input a new reaction? (Y/N)")
+        
+        if yn2 == "N" or yn2 == "n":
+            while filein[-4:] != ".dat" and filein[-4:] != ".txt":
+                filein = input("\nEnter the name of the new input file (.dat or .txt): ")
+                if filein[-4:] != ".dat" and filein[-4:] != ".txt":
+                    print("\nERROR: Incorrect file extension...")
+        else:
+            ebeam = BuildEvts()
 
-    rblock = np.array(rblock, dtype=np.float64)
-    cheight = np.array(cheight, dtype=np.float64)
-    phi1block = np.array(phi1block, dtype=np.float64)
-    phi2block = np.array(phi2block, dtype=np.float64)
+    print("\nThe file to be used is: " + filein)
 
     masses = readmass()
 
@@ -34,7 +64,13 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, vikar_in):
     #mb = 27.97692653246
     #me = 1.0072765
     #mr = 28.9764947
+
     ebeam = 168 # MeV, for d(28Si,p) it is 6 MeV/u
+
+    rblock = np.array(rblock, dtype=np.float64)
+    cheight = np.array(cheight, dtype=np.float64)
+    phi1block = np.array(phi1block, dtype=np.float64)
+    phi2block = np.array(phi2block, dtype=np.float64)
 
     mevtoj = 1.6021766e-13
     c = 2.998e8
@@ -48,10 +84,9 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, vikar_in):
     B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
 
-    # vikar_in = "out_eject_unsmeared_all.dat"
 
     # Generates a numpy array of shape (xxx,2) whose columns are theta angle and energy.
-    data = np.genfromtxt(vikar_in)
+    data = np.genfromtxt(filein)
 
     # read in the energy and angle from the file (all rows, 1st column), (all rows, 0th column)
     energy = data[:, 1]
