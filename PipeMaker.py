@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 
-def main():
+def makepipe():
     # main will ask the user questions and call the relevant functions to track the particles from VIKAR
 
     print("\nNow the SOLSTISE pipe will be defined. It is bounded by two circles of radius r1 and r2,")
@@ -147,10 +147,10 @@ def main():
 
     # sim(r1, r2, c2height, anginrad, angin2rad, vikar_in)
 
-    input("\nPress ENTER to end.")
+    return file
 
 
-main()
+
 
 
 

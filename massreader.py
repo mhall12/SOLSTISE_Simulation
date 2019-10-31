@@ -1,9 +1,9 @@
 import re
 import numpy as np
 
-def readmass():
+def readmass(reac):
 
-    reac = input("Enter a reaction of the form d(17F,p): ")
+    #reac = input("Enter a reaction of the form d(17F,p): ")
     # reac = 'd(28Si,p)'
 
     # firstpos grabs the position of the ( so we can get the target

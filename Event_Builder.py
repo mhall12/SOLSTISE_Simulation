@@ -4,7 +4,9 @@ from massreader import readmass
 
 def BuildEvts():
 
-    masses = readmass()
+    reac = input("Enter a reaction of the form d(17F,p): ")
+
+    masses = readmass(reac)
 
     utoMeV = 931.4941
 
@@ -15,6 +17,10 @@ def BuildEvts():
 
     levnum = int(input("Enter the number of energy levels to be populated in the recoil: "))
 
+    while levnum < 1:
+        print("ERROR: The number of levels cannot be less than 1.")
+        levnum = int(input("Enter the number of energy levels to be populated in the recoil: "))
+
     levels = []
 
     for i in range(levnum):
@@ -22,7 +28,13 @@ def BuildEvts():
 
     numevents = int(input("Input the number of events you would like to generate: "))
 
-    file = open("eventsout.txt", "w+")
+    reac = reac.replace("(", "_")
+    reac = reac.replace(",", "_")
+    reac = reac.replace(")", "_")
+
+    outfilename = reac + str(int(beamenergy)) + "_evts.txt"
+
+    file = open(outfilename, "w+")
 
     for i in range(numevents):
 
@@ -48,7 +60,7 @@ def BuildEvts():
 
         file.write(str(theta) + '\t' + str(Eejec2) + '\n')
 
-        return beamenergy
+    return outfilename
 
 
     file.close()

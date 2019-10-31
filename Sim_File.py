@@ -5,13 +5,13 @@ from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 from massreader import readmass
 from mpl_toolkits import mplot3d
-from Event_Builder import BuildEvts
 
-def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein):
+
+def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
 
-    masses = readmass()
+    masses = readmass(reac)
 
     # reaction of form t(b,e)R
     utoMeV = 931.4941
@@ -165,6 +165,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein):
     rpipe = lambda ph: cheight*np.sin(ph) + np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
     for i in range(300):
+        print(i)
         t = treduced/300 * (i+1)
         xpos = (-(vper/omega)*np.cos((omega*t)+phi))+((vper/omega)*np.cos(phi))
         ypos = ((vper/omega)*np.sin(omega*t+phi))-vper/omega*np.sin(phi)
