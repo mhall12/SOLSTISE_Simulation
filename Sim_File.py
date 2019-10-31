@@ -7,48 +7,9 @@ from massreader import readmass
 from mpl_toolkits import mplot3d
 from Event_Builder import BuildEvts
 
-
-def sim(rbore, rblock, cheight, phi1block, phi2block):
+def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein):
 
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
-
-    print("")
-    print("########   ########  ##       ########  ########  ########  ########  ######## ")
-    print("##         ##    ##  ##       ##           ##        ##     ##        ##          ")
-    print("##         ##    ##  ##       ##           ##        ##     ##        ##          ")
-    print("########   ##    ##  ##       ########     ##        ##     ########  ########    ")
-    print("      ##   ##    ##  ##             ##     ##        ##           ##  ##          ")
-    print("      ##   ##    ##  ##             ##     ##        ##           ##  ##          ")
-    print("########   ########  #######  ########     ##     ########  ########  ########   ")
-    print("            Solenoid & Supersonic Target In Structure Experiments")
-    print("")
-    print("                          Particle Simulation Code")
-    input("\n\n\nTo continue, press ENTER")
-    print("\nThe default input file is: eventsout.txt")
-    yn = input("\nWould you like to use this file? (Y/N) ")
-    
-    filein = "eventsout.txt"
-    
-    # if the user wants to enter a new file, get the file name here.
-    # it must end in .dat or .txt to be recognized.
-    
-    ebeam = 168
-    
-    if yn == "N" or yn == "n":
-        filein = "buff"
-        
-        print("\nThe default reaction is d(28Si,p)")
-        yn2 = input("\nWould you like to input a new reaction? (Y/N)")
-        
-        if yn2 == "N" or yn2 == "n":
-            while filein[-4:] != ".dat" and filein[-4:] != ".txt":
-                filein = input("\nEnter the name of the new input file (.dat or .txt): ")
-                if filein[-4:] != ".dat" and filein[-4:] != ".txt":
-                    print("\nERROR: Incorrect file extension...")
-        else:
-            ebeam = BuildEvts()
-
-    print("\nThe file to be used is: " + filein)
 
     masses = readmass()
 
@@ -65,7 +26,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block):
     #me = 1.0072765
     #mr = 28.9764947
 
-    ebeam = 168 # MeV, for d(28Si,p) it is 6 MeV/u
+    #ebeam = 168 # MeV, for d(28Si,p) it is 6 MeV/u
 
     rblock = np.array(rblock, dtype=np.float64)
     cheight = np.array(cheight, dtype=np.float64)
@@ -159,7 +120,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block):
     conedia = 2.18  # cone outer diameter in inches
     coneheight = 3.82  # cone height in inches as measured from the top of the ISO base.
 
-    # Height above the cone that the reaction occurs
+    # Height above the cone that the reaction occursfrom massreader import readmass
     reacheight = ((nozzleconedistin - reacdistbelownozzle) * 2.54) / 100
     rcone = ((conedia / 2) * 2.54) / 100
 
@@ -360,4 +321,6 @@ def sim(rbore, rblock, cheight, phi1block, phi2block):
     input("\nPress ENTER to end.")
 
 
-#sim(r1,phi1, phi2)
+
+
+

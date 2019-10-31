@@ -113,4 +113,4 @@ def readmass():
     return masses
 
 
-readmass()
+#readmass()
