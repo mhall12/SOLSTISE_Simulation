@@ -2,7 +2,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap, LogNorm
 from massreader import readmass
 from mpl_toolkits import mplot3d
 
@@ -37,7 +37,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     c = 2.998e8
 
     # finite radius of the detector array
-    r0 = 0.03
+    r0 = 0.011
 
     tcm = mt/(mb+mt)*ebeam
 
@@ -164,8 +164,17 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # function determines the r coordinates of the 2nd circle that makes up the gas pipe.
     rpipe = lambda ph: cheight*np.sin(ph) + np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
+    # Simulating events status bar for the for loop
+    print("Simulating Events...")
+    statbar = "[                              ]"
+
+    # Splits the flight time into 300 segments for tracking purposes to see whether or not the particle is blocked.
     for i in range(300):
-        print(i)
+
+        if i%10 == 0:
+            statbar = statbar.replace(" ", "=", 1)
+            print(statbar, end='\r', flush=True)
+
         t = treduced/300 * (i+1)
         xpos = (-(vper/omega)*np.cos((omega*t)+phi))+((vper/omega)*np.cos(phi))
         ypos = ((vper/omega)*np.sin(omega*t+phi))-vper/omega*np.sin(phi)
@@ -215,7 +224,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     maskdet2 = (phic > np.pi/2) & (phic < np.pi)
     maskdet3 = (phic > np.pi) & (phic < 3*np.pi/2)
     maskdet4 = (phic > 3*np.pi/2) & (phic < 2*np.pi)
-    # inverting maskmaster will pick out the blocked particles by the pipe
+    # inverting maskmaster will pick out the blocked particles
     maskmasterdet1 = maskmaster & maskdet1 & maskz & maskrbore
     maskmasterdet2 = maskmaster & maskdet2 & maskz & maskrbore
     maskmasterdet3 = maskmaster & maskdet3 & maskz & maskrbore
@@ -284,25 +293,25 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     plt.rc('ytick', labelsize=15)
 
     plt.subplot(2, 2, 1)
-    plt.hist2d(zposarr[1], energyarr[1], bins=(250, 250), cmap=plt.cm.binary)
+    plt.hist2d(zposarr[1], energyarr[1], bins=(500, 500), norm=LogNorm())
     plt.xlim(-.8, 0)
     plt.ylim(0, 11)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 2)
-    plt.hist2d(zposarr[0], energyarr[0], bins=(250, 250), cmap=plt.cm.binary)
+    plt.hist2d(zposarr[0], energyarr[0], bins=(500, 500), norm=LogNorm())
     plt.xlim(-.8, 0)
     plt.ylim(0, 11)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 3)
-    plt.hist2d(zposarr[2], energyarr[2], bins=(250, 250), cmap=plt.cm.binary)
+    plt.hist2d(zposarr[2], energyarr[2], bins=(500, 500), norm=LogNorm())
     plt.xlim(-.8, 0)
     plt.ylim(0, 11)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 4)
-    plt.hist2d(zposarr[3], energyarr[3], bins=(250, 250), cmap=plt.cm.binary)
+    plt.hist2d(zposarr[3], energyarr[3], bins=(500, 500), norm=LogNorm())
     plt.xlim(-.8, 0)
     plt.ylim(0, 11)
     plt.xlabel('z(m)')
