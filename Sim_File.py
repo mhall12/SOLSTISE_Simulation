@@ -171,7 +171,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # Splits the flight time into 300 segments for tracking purposes to see whether or not the particle is blocked.
     for i in range(300):
 
-        if i%10 == 0:
+        if i % 10 == 0:
             statbar = statbar.replace(" ", "=", 1)
             print(statbar, end='\r', flush=True)
 

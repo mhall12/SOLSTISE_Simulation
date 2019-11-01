@@ -6,6 +6,13 @@ def BuildEvts():
 
     reac = input("Enter a reaction of the form d(17F,p): ")
 
+    kinemat = 3
+    while kinemat > 2 or kinemat ==0:
+        kinemat = int(input("Will the reaction be measured in normal (1) or inverse kinematics (2)? "))
+        if kinemat > 2 or kinemat == 0:
+            print("ERROR: Please choose 1 for normal kinematics or 2 for inverse kinematics...")
+
+
     masses = readmass(reac)
 
     utoMeV = 931.4941
@@ -44,7 +51,10 @@ def BuildEvts():
 
         # print(qval)
 
-        theta = random.random() * 90 + 90
+        if kinemat == 1:
+            theta  = random.random() * 90
+        elif kinemat == 2:
+            theta = random.random() * 90 + 90
 
         trad = theta * math.pi / 180
 
