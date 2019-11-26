@@ -215,7 +215,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         #print(maskr.shape, phir.shape, zpos[np.invert(maskz)].shape)
 
         #maskmaster = maskmaster*np.invert(maskrpipe & maskphipipe)#np.invert(maskcone)*np.invert(masky)#*np.invert(maskz)
-        maskmaster = maskmaster*np.invert(maskcone)*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
+        maskmaster = maskmaster*np.invert(maskcone)#*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
@@ -225,10 +225,10 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     maskdet3 = (phic > np.pi) & (phic < 3*np.pi/2)
     maskdet4 = (phic > 3*np.pi/2) & (phic < 2*np.pi)
     # inverting maskmaster will pick out the blocked particles
-    maskmasterdet1 = maskmaster & maskdet1 & maskz & maskrbore
-    maskmasterdet2 = maskmaster & maskdet2 & maskz & maskrbore
-    maskmasterdet3 = maskmaster & maskdet3 & maskz & maskrbore
-    maskmasterdet4 = maskmaster & maskdet4 & maskz & maskrbore
+    maskmasterdet1 = np.invert(maskmaster) & maskdet1 & maskz & maskrbore
+    maskmasterdet2 = np.invert(maskmaster) & maskdet2 & maskz & maskrbore
+    maskmasterdet3 = np.invert(maskmaster) & maskdet3 & maskz & maskrbore
+    maskmasterdet4 = np.invert(maskmaster) & maskdet4 & maskz & maskrbore
 
 
     #print("I get here")

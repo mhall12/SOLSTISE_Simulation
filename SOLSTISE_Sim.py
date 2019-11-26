@@ -75,7 +75,7 @@ print("The reaction is: " + reac)
 
 ebeam = int(filein[(uslocs[2]+1):uslocs[3]])
 
-print("The beam energy is: " + str(ebeam))
+print("The beam energy is: " + str(ebeam) + " MeV")
 
 pipeyn = input("\nWould you like to use a custom shaped pipe for the gas return? [Y/N] ")
 

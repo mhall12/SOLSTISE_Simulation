@@ -147,7 +147,7 @@ def makepipe():
 
     # sim(r1, r2, c2height, anginrad, angin2rad, vikar_in)
 
-    return file
+    return fname
 
 
 
