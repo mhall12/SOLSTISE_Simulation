@@ -115,10 +115,10 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # this just initializes phic, but it might be unnecessary.
     phic = energy
 
-    nozzleconedistin = 3.43  # dist between nozzle and cone in inches
+    nozzleconedistin = 3.83  # dist between nozzle and cone in inches
     reacdistbelownozzle = 0.09843  # dist below nozzle the reaction happens in inches
-    conedia = 2.18  # cone outer diameter in inches
-    coneheight = 3.82  # cone height in inches as measured from the top of the ISO base.
+    conedia = 2.6  # cone outer diameter in inches
+    coneheight = 3.02  # cone height in inches as measured from the top of the ISO base.
 
     # Height above the cone that the reaction occursfrom massreader import readmass
     reacheight = ((nozzleconedistin - reacdistbelownozzle) * 2.54) / 100
@@ -128,14 +128,20 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     baseheight = reacheight + coneheight * 2.54 / 100
     rISObase = (5.12 / 2) * 2.54 / 100
 
-    # distance from the reaction that the cone side equation starts (this equation starts at ~5.5).
-    sideheight = (5.5 - reacdistbelownozzle) * 2.54 / 100
+    # distance from the reaction that the cone side equation starts (this equation starts at ~5.5, now 3.83).
+    # sideheight = (5.5 - reacdistbelownozzle) * 2.54 / 100
+    sideheight = (3.83 - reacdistbelownozzle) * 2.54 / 100
 
     #print(sideheight)
     #print(baseheight)
 
     # polynomial coefficients
-    poly3 = [0.0349, -0.4655, 1.9711, -1.4778]
+
+    #poly3 = [0.0349, -0.4655, 1.9711, -1.4778] These were for the tall cone
+
+    # Polynomial coefficients for the current best cone: Top of cone is 3.83 in away from nozzle
+
+    poly3 = [0.0611, -0.8077, 3.5255, -3.7867]
 
     rconeside = lambda y: (poly3[0] * (y + reacdistbelownozzle)**3 + poly3[1] * (y + reacdistbelownozzle)**2 +
                            poly3[2] * (y + reacdistbelownozzle) + poly3[3]) * 2.54 / 100
@@ -198,11 +204,13 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # maskcone determines if the particle is within the opening of the cone
         # Since if statements on the arrays are so slow, we'll break up the cone mask into three: tube (top), sides,
         # and ISO base. In the future, the base could be gotten rid of.
-        masktop = (rxzplane < rcone) & (ypos > reacheight) & (ypos < sideheight)
-        masksides = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > sideheight) & (ypos < baseheight)
+        # masktop = (rxzplane < rcone) & (ypos > reacheight) & (ypos < sideheight)
+        # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
+        # the cone has been removed.
+        masksides = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight)) & (ypos < baseheight)
         maskbase = (rxzplane < rISObase) & (ypos > baseheight)
 
-        maskcone = masktop | masksides | maskbase
+        maskcone = masksides | maskbase
 
         # we want only particles that come out at backward angles
         maskz = zpos < 0
@@ -215,7 +223,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         #print(maskr.shape, phir.shape, zpos[np.invert(maskz)].shape)
 
         #maskmaster = maskmaster*np.invert(maskrpipe & maskphipipe)#np.invert(maskcone)*np.invert(masky)#*np.invert(maskz)
-        maskmaster = maskmaster*np.invert(maskcone)#*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
+        maskmaster = maskmaster*np.invert(maskcone)*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
@@ -225,10 +233,15 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     maskdet3 = (phic > np.pi) & (phic < 3*np.pi/2)
     maskdet4 = (phic > 3*np.pi/2) & (phic < 2*np.pi)
     # inverting maskmaster will pick out the blocked particles
-    maskmasterdet1 = np.invert(maskmaster) & maskdet1 & maskz & maskrbore
-    maskmasterdet2 = np.invert(maskmaster) & maskdet2 & maskz & maskrbore
-    maskmasterdet3 = np.invert(maskmaster) & maskdet3 & maskz & maskrbore
-    maskmasterdet4 = np.invert(maskmaster) & maskdet4 & maskz & maskrbore
+    maskmasterdet1 = maskmaster & maskdet1 & maskz & maskrbore
+    maskmasterdet2 = maskmaster & maskdet2 & maskz & maskrbore
+    maskmasterdet3 = maskmaster & maskdet3 & maskz & maskrbore
+    maskmasterdet4 = maskmaster & maskdet4 & maskz & maskrbore
+
+    invmaskmasterdet1 = np.invert(maskmaster) & maskdet1 & maskz & maskrbore
+    invmaskmasterdet2 = np.invert(maskmaster) & maskdet2 & maskz & maskrbore
+    invmaskmasterdet3 = np.invert(maskmaster) & maskdet3 & maskz & maskrbore
+    invmaskmasterdet4 = np.invert(maskmaster) & maskdet4 & maskz & maskrbore
 
 
     #print("I get here")
@@ -247,10 +260,13 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     input("ENTER")
 
-    #print(tcyc)
+    #
     energyarr = [energy[maskmasterdet1], energy[maskmasterdet2], energy[maskmasterdet3], energy[maskmasterdet4]]
     thetaarr = [theta[maskmasterdet1], theta[maskmasterdet2], theta[maskmasterdet3], theta[maskmasterdet4]]
     zposarr = [zpos[maskmasterdet1], zpos[maskmasterdet2], zpos[maskmasterdet3], zpos[maskmasterdet4]]
+
+    invenergyarr = [energy[invmaskmasterdet1], energy[invmaskmasterdet2], energy[invmaskmasterdet3], energy[invmaskmasterdet4]]
+    invzposarr = [zpos[invmaskmasterdet1], zpos[invmaskmasterdet2], zpos[invmaskmasterdet3], zpos[invmaskmasterdet4]]
 
     #print(energy.shape)
     #print(theta.shape)
@@ -259,6 +275,13 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     #fig = plt.figure()
     #ax = plt.axes(projection='3d')
     #ax.scatter3D(xpos[:][0], ypos[:][0], zpos[:][0])
+
+    print(invenergyarr[0])
+    print(invenergyarr[0].shape)
+
+    print(invzposarr[0])
+    print(invzposarr[0].shape)
+
 
     Reds = cm.get_cmap('Reds', 256)
     newcolors = Reds(np.linspace(0, 1, 256))
@@ -293,27 +316,25 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     plt.rc('ytick', labelsize=15)
 
     plt.subplot(2, 2, 1)
-    plt.hist2d(zposarr[1], energyarr[1], bins=(500, 500), norm=LogNorm())
-    plt.xlim(-.8, 0)
-    plt.ylim(0, 11)
+    plt.hist2d(zposarr[1], energyarr[1], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
+    plt.hist2d(invzposarr[1], invenergyarr[1], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 2)
-    plt.hist2d(zposarr[0], energyarr[0], bins=(500, 500), norm=LogNorm())
-    plt.xlim(-.8, 0)
-    plt.ylim(0, 11)
+    plt.hist2d(zposarr[0], energyarr[0], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
+    plt.hist2d(invzposarr[0], invenergyarr[0], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 3)
-    plt.hist2d(zposarr[2], energyarr[2], bins=(500, 500), norm=LogNorm())
-    plt.xlim(-.8, 0)
-    plt.ylim(0, 11)
+    plt.hist2d(zposarr[2], energyarr[2], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
+    plt.hist2d(invzposarr[2], invenergyarr[2], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
+    #plt.xlim(-.8, 0)
+    #plt.ylim(0, 11)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 4)
-    plt.hist2d(zposarr[3], energyarr[3], bins=(500, 500), norm=LogNorm())
-    plt.xlim(-.8, 0)
-    plt.ylim(0, 11)
+    plt.hist2d(zposarr[3], energyarr[3], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
+    plt.hist2d(invzposarr[3], invenergyarr[3], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
 

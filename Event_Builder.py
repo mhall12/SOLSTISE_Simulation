@@ -19,6 +19,7 @@ def BuildEvts():
 
     for i in range(4):
         masses[i] = masses[i] * utoMeV
+        print(masses[i])
 
     beamenergy = float(input("Enter a beam energy in MeV: "))
 
@@ -43,19 +44,30 @@ def BuildEvts():
 
     file = open(outfilename, "w+")
 
+    thmindeg = 0
+
     for i in range(numevents):
 
         randlevnum = random.randrange(0, levnum, 1)
 
         qval = (masses[0] + masses[1] - masses[2] - masses[3]) - levels[randlevnum]
 
-        # print(qval)
+        #print(qval)
+        if (masses[2] > masses[0]):
+            thmin = math.acos(-1*math.sqrt(-((masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
+                                                      beamenergy))/(masses[1] * masses[2] * beamenergy)))
+            thmindeg = thmin * 180 / math.pi
+        else:
+            thmindeg = 90
+
+        #print(thmindeg)
 
         if kinemat == 1:
-            theta  = random.random() * 90
+            theta = random.random() * 90
         elif kinemat == 2:
-            theta = random.random() * 90 + 90
+            theta = random.random() * (180-thmindeg) + thmindeg
 
+        #print(theta)
         trad = theta * math.pi / 180
 
         pm = random.randrange(-1, 2, 2)
