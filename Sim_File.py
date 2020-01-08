@@ -267,18 +267,21 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     thetablocked = thetablocked*180/np.pi
 
     #print(thetablocked.shape)
-    f2 = plt.figure(2)
-    plt.rc('axes', labelsize=15)
-    plt.rc('xtick', labelsize=15)
-    plt.rc('ytick', labelsize=15)
-    plt.hist(thetablocked)
-    plt.xlabel('Lab Angle (deg)')
-    plt.ylabel('Counts')
-    f2.show()
+    #f2 = plt.figure(2)
+    #plt.rc('axes', labelsize=15)
+    #plt.rc('xtick', labelsize=15)
+    #plt.rc('ytick', labelsize=15)
+    #plt.hist(thetablocked)
+    #plt.xlabel('Lab Angle (deg)')
+    #plt.ylabel('Counts')
+    #f2.show()
 
-    input("ENTER")
+    #input("ENTER")
 
     #
+
+    thetalab = theta*180/np.pi
+
     energyarr = [energy[maskmasterdet[0]], energy[maskmasterdet[1]], energy[maskmasterdet[2]], energy[maskmasterdet[3]]]
     thetaarr = [theta[maskmasterdet[0]], theta[maskmasterdet[1]], theta[maskmasterdet[2]], theta[maskmasterdet[3]]]
     zposarr = [zpos[maskmasterdet[0]], zpos[maskmasterdet[1]], zpos[maskmasterdet[2]], zpos[maskmasterdet[3]]]
@@ -287,16 +290,22 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                              energy[maskmasterdet_cone[2]], energy[maskmasterdet_cone[3]]]
     zposarr_blockedcone = [zpos[maskmasterdet_cone[0]], zpos[maskmasterdet_cone[1]],
                            zpos[maskmasterdet_cone[2]], zpos[maskmasterdet_cone[3]]]
+    thetaarr_blockedcone = [thetalab[maskmasterdet_cone[0]], thetalab[maskmasterdet_cone[1]],
+                            thetalab[maskmasterdet_cone[2]], thetalab[maskmasterdet_cone[3]]]
 
     energyarr_blockedpipe = [energy[maskmasterdet_pipe[0]], energy[maskmasterdet_pipe[1]],
                              energy[maskmasterdet_pipe[2]], energy[maskmasterdet_pipe[3]]]
     zposarr_blockedpipe = [zpos[maskmasterdet_pipe[0]], zpos[maskmasterdet_pipe[1]],
                            zpos[maskmasterdet_pipe[2]], zpos[maskmasterdet_pipe[3]]]
+    thetaarr_blockedpipe = [thetalab[maskmasterdet_pipe[0]], thetalab[maskmasterdet_pipe[1]],
+                            thetalab[maskmasterdet_pipe[2]], thetalab[maskmasterdet_pipe[3]]]
 
     energyarr_blockednozzle = [energy[maskmasterdet_nozzle[0]], energy[maskmasterdet_nozzle[1]],
                              energy[maskmasterdet_nozzle[2]], energy[maskmasterdet_nozzle[3]]]
     zposarr_blockednozzle = [zpos[maskmasterdet_nozzle[0]], zpos[maskmasterdet_nozzle[1]],
                            zpos[maskmasterdet_nozzle[2]], zpos[maskmasterdet_nozzle[3]]]
+    thetaarr_blockednozzle = [theta[maskmasterdet_nozzle[0]], theta[maskmasterdet_nozzle[1]],
+                            thetalab[maskmasterdet_nozzle[2]], thetalab[maskmasterdet_nozzle[3]]]
 
     invenergyarr = [energy[invmaskmasterdet1], energy[invmaskmasterdet2], energy[invmaskmasterdet3], energy[invmaskmasterdet4]]
     invzposarr = [zpos[invmaskmasterdet1], zpos[invmaskmasterdet2], zpos[invmaskmasterdet3], zpos[invmaskmasterdet4]]
@@ -309,11 +318,11 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     #ax = plt.axes(projection='3d')
     #ax.scatter3D(xpos[:][0], ypos[:][0], zpos[:][0])
 
-    print(invenergyarr[0])
-    print(invenergyarr[0].shape)
+    #print(invenergyarr[0])
+    #print(invenergyarr[0].shape)
 
-    print(invzposarr[0])
-    print(invzposarr[0].shape)
+    #print(invzposarr[0])
+    #print(invzposarr[0].shape)
 
 
     Reds = cm.get_cmap('Reds', 256)
@@ -353,66 +362,109 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     blu = newcmpBlue(1)
     red = newcmpRed(1)
 
+    switch = 0
 
-    fig = plt.figure()
+    historder = [1, 0, 2, 3]
 
-    #for i in range(4):
-    plt.rc('axes', labelsize=15)
-    plt.rc('xtick', labelsize=15)
-    plt.rc('ytick', labelsize=15)
+    print(thetaarr_blockedcone[1])
 
 
-    plt.subplot(2, 2, 1)
-    p1 = plt.hist2d(zposarr[1], energyarr[1], bins=(750, 750), range=[[-0.8, 0], [0, 11]], cmap=newcmpBlue)
-    p2 = plt.hist2d(zposarr_blockedcone[1], energyarr_blockedcone[1], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    p3 = plt.hist2d(zposarr_blockedpipe[1], energyarr_blockedpipe[1], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
-    p4 = plt.hist2d(zposarr_blockednozzle[1], energyarr_blockednozzle[1], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
-    plt.xlabel('z(m)')
-    plt.ylabel('Energy (MeV)')
+    print("\n\nChoose from the list below to plot histograms from the generated data.\n"
+          "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
+          "looking down the beam axis.")
 
-    handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blu, grn, red, blk]]
-    labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
-    plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
+    while switch == 0:
+        plt.ion()
+       # plt.pause(0.0001)
+        while True:
+            try:
+                plotnum = int(input("\n1: Unblocked particles in all 4 detectors (2D).\n"
+                                    "2: Blocked Particles in all 4 detectors (2D).\n"
+                                    "3: Unblocked and blocked particles in all 4 detectors (2D).\n"
+                                    "4: Total blocked counts vs angle (1D).\n"
+                                    "5: Blocked counts vs z  in all 4 detectors (1D)\n"
+                                    "6: Blocked counts vs z  in all 4 detectors stacked (1D)\n"
+                                    "End: 0\n"
+                                    "Entry: "))
+                break
+            except:
+                print("Enter an integer number from the list!")
 
-    plt.subplot(2, 2, 2)
-    plt.hist2d(zposarr[0], energyarr[0], bins=(750, 750), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[0], energyarr_blockedcone[0], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[0], energyarr_blockedpipe[0], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
-    plt.hist2d(zposarr_blockednozzle[0], energyarr_blockednozzle[0], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
-    plt.xlabel('z(m)')
-    plt.ylabel('Energy (MeV)')
+        if plotnum == 1 or plotnum == 2 or plotnum == 3:
+            fig = plt.figure()
 
-    plt.subplot(2, 2, 3)
-    plt.hist2d(zposarr[2], energyarr[2], bins=(750, 750), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[2], energyarr_blockedcone[2], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[2], energyarr_blockedpipe[2], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
-    plt.hist2d(zposarr_blockednozzle[2], energyarr_blockednozzle[2], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
-    #plt.xlim(-.8, 0)
-    #plt.ylim(0, 11)
-    plt.xlabel('z(m)')
-    plt.ylabel('Energy (MeV)')
+            #for i in range(4):
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
 
-    plt.subplot(2, 2, 4)
-    plt.hist2d(zposarr[3], energyarr[3], bins=(750, 750), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[3], energyarr_blockedcone[3], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[3], energyarr_blockedpipe[3], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
-    plt.hist2d(zposarr_blockednozzle[3], energyarr_blockednozzle[3], bins=(750, 750),
-               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
-    plt.xlabel('z(m)')
-    plt.ylabel('Energy (MeV)')
+            for k in range(4):
+                plt.subplot(2, 2, k+1)
+                if plotnum == 1 or plotnum == 3:
+                    plt.hist2d(zposarr[historder[k]], energyarr[historder[k]], bins=(750, 750),
+                               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
+                if plotnum == 2 or plotnum == 3:
+                    plt.hist2d(zposarr_blockedcone[historder[k]], energyarr_blockedcone[historder[k]], bins=(750, 750),
+                               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
+                    plt.hist2d(zposarr_blockedpipe[historder[k]], energyarr_blockedpipe[historder[k]], bins=(750, 750),
+                               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
+                    plt.hist2d(zposarr_blockednozzle[historder[k]], energyarr_blockednozzle[historder[k]],
+                               bins=(750, 750), range=[[-0.8, 0], [0, 11]], cmap=newcmpBlue)
+                    if k == 0:
+                        handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
+                        labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
+                        plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
 
-    plt.show()
+                    plt.xlabel('z(m)')
+                    plt.ylabel('Energy (MeV)')
+
+                if k == 3:
+                    plt.show()
+
+        elif plotnum == 4:
+            f2 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            plt.hist(thetablocked)
+            plt.xlabel('Lab Angle (deg)')
+            plt.ylabel('Counts')
+            plt.show()
+        elif plotnum == 5:
+            fig2 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            for i in range(4):
+                plt.subplot(2, 2, i+1)
+                plt.hist(zposarr_blockedcone[historder[i]], bins=375, range=[-0.5, 0], color=grn, alpha=1)
+                plt.hist(zposarr_blockedpipe[historder[i]], bins=375, range=[-0.5, 0], color=red, alpha=0.7)
+                plt.hist(zposarr_blockednozzle[historder[i]], bins=375, range=[-0.5, 0], color=blu, alpha=0.6)
+            plt.show
+        elif plotnum == 6:
+            fig3 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            for i in range(4):
+                plt.subplot(2, 2, i+1)
+                plt.hist((zposarr_blockedcone[historder[i]], zposarr_blockedpipe[historder[i]],
+                          zposarr_blockednozzle[historder[i]]), bins=375, range=[-0.5, 0], color=(grn, red, blu),
+                         stacked=True)
+            plt.show()
+        elif plotnum == 7:
+            fig4 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            for i in range (4):
+                plt.subplot(2, 2, i+1)
+                plt.hist((thetaarr_blockedcone[historder[i]], thetaarr_blockedpipe[historder[i]],
+                          thetaarr_blockednozzle[historder[i]]), bins=60, range=[90, 120], color=(grn, red, blu),
+                         stacked=True)
+
+        elif plotnum == 0:
+            switch = 1
 
 
     #plt.hist2d(zpos, energy, bins=(500, 500), cmap=plt.cm.gist_earth_r)
