@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, LogNorm
+from matplotlib.patches import Rectangle
 from massreader import readmass
 from mpl_toolkits import mplot3d
 
@@ -111,6 +112,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # maskmasters for the pipe and cone defined here.
     maskmaster_pipe = energy > 0
     maskmaster_cone = energy > 0
+    maskmaster_nozzle = energy > 0
     # maskrbore takes care of the mask for the bore radius because some particles will hit that
     maskrbore = energy > 0
     # maskcone initialized like maskrbore
@@ -229,6 +231,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         maskmaster = maskmaster*np.invert(maskcone)*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
         maskmaster_cone = maskmaster_cone*np.invert(maskcone)
         maskmaster_pipe = maskmaster_pipe*np.invert(maskrpipe & maskphipipe)
+        maskmaster_nozzle = maskmaster_nozzle * np.invert(masknozzle)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
@@ -248,6 +251,10 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                           np.invert(maskmaster_pipe) & maskdet2 & maskz & maskrbore,
                           np.invert(maskmaster_pipe) & maskdet3 & maskz & maskrbore,
                           np.invert(maskmaster_pipe) & maskdet4 & maskz & maskrbore]
+    maskmasterdet_nozzle = [np.invert(maskmaster_nozzle) & maskdet1 & maskz & maskrbore,
+                          np.invert(maskmaster_nozzle) & maskdet2 & maskz & maskrbore,
+                          np.invert(maskmaster_nozzle) & maskdet3 & maskz & maskrbore,
+                          np.invert(maskmaster_nozzle) & maskdet4 & maskz & maskrbore]
 
     invmaskmasterdet1 = np.invert(maskmaster) & maskdet1 & maskz & maskrbore
     invmaskmasterdet2 = np.invert(maskmaster) & maskdet2 & maskz & maskrbore
@@ -286,6 +293,11 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     zposarr_blockedpipe = [zpos[maskmasterdet_pipe[0]], zpos[maskmasterdet_pipe[1]],
                            zpos[maskmasterdet_pipe[2]], zpos[maskmasterdet_pipe[3]]]
 
+    energyarr_blockednozzle = [energy[maskmasterdet_nozzle[0]], energy[maskmasterdet_nozzle[1]],
+                             energy[maskmasterdet_nozzle[2]], energy[maskmasterdet_nozzle[3]]]
+    zposarr_blockednozzle = [zpos[maskmasterdet_nozzle[0]], zpos[maskmasterdet_nozzle[1]],
+                           zpos[maskmasterdet_nozzle[2]], zpos[maskmasterdet_nozzle[3]]]
+
     invenergyarr = [energy[invmaskmasterdet1], energy[invmaskmasterdet2], energy[invmaskmasterdet3], energy[invmaskmasterdet4]]
     invzposarr = [zpos[invmaskmasterdet1], zpos[invmaskmasterdet2], zpos[invmaskmasterdet3], zpos[invmaskmasterdet4]]
 
@@ -315,7 +327,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     Blues = cm.get_cmap('Blues', 256)
     newcolors = Blues(np.linspace(0, 1, 256))
     white = np.array([1, 1, 1, 0])
-    blue = np.array([0, 0, 1, 1])
+    blue = np.array([0, .5, 1, 1])
     newcolors[:1, :] = white
     newcolors[1:, :] = blue
     newcmpBlue = ListedColormap(newcolors)
@@ -328,11 +340,18 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     newcolors[1:, :] = green
     newcmpGreen = ListedColormap(newcolors)
 
-    Oranges = cm.get_cmap('Oranges', 256)
-    newcolors = Oranges(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 1])
+    Greys = cm.get_cmap('Greys', 256)
+    newcolors = Greys(np.linspace(0, 1, 256))
+    white = np.array([1, 1, 1, 0])
+    black = np.array([0, 0, 0, 1])
     newcolors[:1, :] = white
-    newcmpOrange = ListedColormap(newcolors)
+    newcolors[1:, :] = black
+    newcmpBlack = ListedColormap(newcolors)
+
+    blk = newcmpBlack(1)
+    grn = newcmpGreen(1)
+    blu = newcmpBlue(1)
+    red = newcmpRed(1)
 
 
     fig = plt.figure()
@@ -342,38 +361,54 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     plt.rc('xtick', labelsize=15)
     plt.rc('ytick', labelsize=15)
 
+
     plt.subplot(2, 2, 1)
-    plt.hist2d(zposarr[1], energyarr[1], bins=(1000, 1000), range=[[-0.8, 0], [0, 11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[1], energyarr_blockedcone[1], bins=(1000, 1000),
+    p1 = plt.hist2d(zposarr[1], energyarr[1], bins=(750, 750), range=[[-0.8, 0], [0, 11]], cmap=newcmpBlue)
+    p2 = plt.hist2d(zposarr_blockedcone[1], energyarr_blockedcone[1], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[1], energyarr_blockedpipe[1], bins=(1000, 1000),
+    p3 = plt.hist2d(zposarr_blockedpipe[1], energyarr_blockedpipe[1], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
+    p4 = plt.hist2d(zposarr_blockednozzle[1], energyarr_blockednozzle[1], bins=(750, 750),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
+
+    handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blu, grn, red, blk]]
+    labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
+    plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
+
     plt.subplot(2, 2, 2)
-    plt.hist2d(zposarr[0], energyarr[0], bins=(1000, 1000), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[0], energyarr_blockedcone[0], bins=(1000, 1000),
+    plt.hist2d(zposarr[0], energyarr[0], bins=(750, 750), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[0], energyarr_blockedcone[0], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[0], energyarr_blockedpipe[0], bins=(1000, 1000),
+    plt.hist2d(zposarr_blockedpipe[0], energyarr_blockedpipe[0], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
+    plt.hist2d(zposarr_blockednozzle[0], energyarr_blockednozzle[0], bins=(750, 750),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
+
     plt.subplot(2, 2, 3)
-    plt.hist2d(zposarr[2], energyarr[2], bins=(1000, 1000), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[2], energyarr_blockedcone[2], bins=(1000, 1000),
+    plt.hist2d(zposarr[2], energyarr[2], bins=(750, 750), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[2], energyarr_blockedcone[2], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[2], energyarr_blockedpipe[2], bins=(1000, 1000),
+    plt.hist2d(zposarr_blockedpipe[2], energyarr_blockedpipe[2], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
+    plt.hist2d(zposarr_blockednozzle[2], energyarr_blockednozzle[2], bins=(750, 750),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
     #plt.xlim(-.8, 0)
     #plt.ylim(0, 11)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
+
     plt.subplot(2, 2, 4)
-    plt.hist2d(zposarr[3], energyarr[3], bins=(1000, 1000), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
-    plt.hist2d(zposarr_blockedcone[3], energyarr_blockedcone[3], bins=(1000, 1000),
+    plt.hist2d(zposarr[3], energyarr[3], bins=(750, 750), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[3], energyarr_blockedcone[3], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
-    plt.hist2d(zposarr_blockedpipe[3], energyarr_blockedpipe[3], bins=(1000, 1000),
+    plt.hist2d(zposarr_blockedpipe[3], energyarr_blockedpipe[3], bins=(750, 750),
                range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
+    plt.hist2d(zposarr_blockednozzle[3], energyarr_blockednozzle[3], bins=(750, 750),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
 
