@@ -106,8 +106,11 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # print(phi.shape)
 
     # creates a mask the same shape as the energy array
-    # maskmaster is the mask that keeps track of the mask in the loop
+    # maskmaster is the mask that keeps track of the overall mask in the loop
     maskmaster = energy > 0
+    # maskmasters for the pipe and cone defined here.
+    maskmaster_pipe = energy > 0
+    maskmaster_cone = energy > 0
     # maskrbore takes care of the mask for the bore radius because some particles will hit that
     maskrbore = energy > 0
     # maskcone initialized like maskrbore
@@ -224,6 +227,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
         #maskmaster = maskmaster*np.invert(maskrpipe & maskphipipe)#np.invert(maskcone)*np.invert(masky)#*np.invert(maskz)
         maskmaster = maskmaster*np.invert(maskcone)*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
+        maskmaster_cone = maskmaster_cone*np.invert(maskcone)
+        maskmaster_pipe = maskmaster_pipe*np.invert(maskrpipe & maskphipipe)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
@@ -233,10 +238,16 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     maskdet3 = (phic > np.pi) & (phic < 3*np.pi/2)
     maskdet4 = (phic > 3*np.pi/2) & (phic < 2*np.pi)
     # inverting maskmaster will pick out the blocked particles
-    maskmasterdet1 = maskmaster & maskdet1 & maskz & maskrbore
-    maskmasterdet2 = maskmaster & maskdet2 & maskz & maskrbore
-    maskmasterdet3 = maskmaster & maskdet3 & maskz & maskrbore
-    maskmasterdet4 = maskmaster & maskdet4 & maskz & maskrbore
+    maskmasterdet = [maskmaster & maskdet1 & maskz & maskrbore, maskmaster & maskdet2 & maskz & maskrbore,
+                     maskmaster & maskdet3 & maskz & maskrbore, maskmaster & maskdet4 & maskz & maskrbore]
+    maskmasterdet_cone = [np.invert(maskmaster_cone) & maskdet1 & maskz & maskrbore,
+                          np.invert(maskmaster_cone) & maskdet2 & maskz & maskrbore,
+                          np.invert(maskmaster_cone) & maskdet3 & maskz & maskrbore,
+                          np.invert(maskmaster_cone) & maskdet4 & maskz & maskrbore]
+    maskmasterdet_pipe = [np.invert(maskmaster_pipe) & maskdet1 & maskz & maskrbore,
+                          np.invert(maskmaster_pipe) & maskdet2 & maskz & maskrbore,
+                          np.invert(maskmaster_pipe) & maskdet3 & maskz & maskrbore,
+                          np.invert(maskmaster_pipe) & maskdet4 & maskz & maskrbore]
 
     invmaskmasterdet1 = np.invert(maskmaster) & maskdet1 & maskz & maskrbore
     invmaskmasterdet2 = np.invert(maskmaster) & maskdet2 & maskz & maskrbore
@@ -261,9 +272,19 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     input("ENTER")
 
     #
-    energyarr = [energy[maskmasterdet1], energy[maskmasterdet2], energy[maskmasterdet3], energy[maskmasterdet4]]
-    thetaarr = [theta[maskmasterdet1], theta[maskmasterdet2], theta[maskmasterdet3], theta[maskmasterdet4]]
-    zposarr = [zpos[maskmasterdet1], zpos[maskmasterdet2], zpos[maskmasterdet3], zpos[maskmasterdet4]]
+    energyarr = [energy[maskmasterdet[0]], energy[maskmasterdet[1]], energy[maskmasterdet[2]], energy[maskmasterdet[3]]]
+    thetaarr = [theta[maskmasterdet[0]], theta[maskmasterdet[1]], theta[maskmasterdet[2]], theta[maskmasterdet[3]]]
+    zposarr = [zpos[maskmasterdet[0]], zpos[maskmasterdet[1]], zpos[maskmasterdet[2]], zpos[maskmasterdet[3]]]
+
+    energyarr_blockedcone = [energy[maskmasterdet_cone[0]], energy[maskmasterdet_cone[1]],
+                             energy[maskmasterdet_cone[2]], energy[maskmasterdet_cone[3]]]
+    zposarr_blockedcone = [zpos[maskmasterdet_cone[0]], zpos[maskmasterdet_cone[1]],
+                           zpos[maskmasterdet_cone[2]], zpos[maskmasterdet_cone[3]]]
+
+    energyarr_blockedpipe = [energy[maskmasterdet_pipe[0]], energy[maskmasterdet_pipe[1]],
+                             energy[maskmasterdet_pipe[2]], energy[maskmasterdet_pipe[3]]]
+    zposarr_blockedpipe = [zpos[maskmasterdet_pipe[0]], zpos[maskmasterdet_pipe[1]],
+                           zpos[maskmasterdet_pipe[2]], zpos[maskmasterdet_pipe[3]]]
 
     invenergyarr = [energy[invmaskmasterdet1], energy[invmaskmasterdet2], energy[invmaskmasterdet3], energy[invmaskmasterdet4]]
     invzposarr = [zpos[invmaskmasterdet1], zpos[invmaskmasterdet2], zpos[invmaskmasterdet3], zpos[invmaskmasterdet4]]
@@ -285,20 +306,26 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     Reds = cm.get_cmap('Reds', 256)
     newcolors = Reds(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 1])
+    white = np.array([1, 1, 1, 0])
+    red = np.array([1, 0, 0, 1])
     newcolors[:1, :] = white
+    newcolors[1:, :] = red
     newcmpRed = ListedColormap(newcolors)
 
     Blues = cm.get_cmap('Blues', 256)
     newcolors = Blues(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 1])
+    white = np.array([1, 1, 1, 0])
+    blue = np.array([0, 0, 1, 1])
     newcolors[:1, :] = white
+    newcolors[1:, :] = blue
     newcmpBlue = ListedColormap(newcolors)
 
     Greens = cm.get_cmap('Greens', 256)
     newcolors = Greens(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 1])
+    white = np.array([1, 1, 1, 0])
+    green = np.array([0, 1, 0, 1])
     newcolors[:1, :] = white
+    newcolors[1:, :] = green
     newcmpGreen = ListedColormap(newcolors)
 
     Oranges = cm.get_cmap('Oranges', 256)
@@ -316,25 +343,37 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     plt.rc('ytick', labelsize=15)
 
     plt.subplot(2, 2, 1)
-    plt.hist2d(zposarr[1], energyarr[1], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
-    plt.hist2d(invzposarr[1], invenergyarr[1], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
+    plt.hist2d(zposarr[1], energyarr[1], bins=(1000, 1000), range=[[-0.8, 0], [0, 11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[1], energyarr_blockedcone[1], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
+    plt.hist2d(zposarr_blockedpipe[1], energyarr_blockedpipe[1], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 2)
-    plt.hist2d(zposarr[0], energyarr[0], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
-    plt.hist2d(invzposarr[0], invenergyarr[0], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
+    plt.hist2d(zposarr[0], energyarr[0], bins=(1000, 1000), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[0], energyarr_blockedcone[0], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
+    plt.hist2d(zposarr_blockedpipe[0], energyarr_blockedpipe[0], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 3)
-    plt.hist2d(zposarr[2], energyarr[2], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
-    plt.hist2d(invzposarr[2], invenergyarr[2], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
+    plt.hist2d(zposarr[2], energyarr[2], bins=(1000, 1000), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[2], energyarr_blockedcone[2], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
+    plt.hist2d(zposarr_blockedpipe[2], energyarr_blockedpipe[2], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
     #plt.xlim(-.8, 0)
     #plt.ylim(0, 11)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
     plt.subplot(2, 2, 4)
-    plt.hist2d(zposarr[3], energyarr[3], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.winter)
-    plt.hist2d(invzposarr[3], invenergyarr[3], bins=(1000, 1000), range=[[-0.8,0],[0,11]], norm=LogNorm(), cmap=cm.autumn)
+    plt.hist2d(zposarr[3], energyarr[3], bins=(1000, 1000), range=[[-0.8,0],[0,11]], cmap=newcmpBlue)
+    plt.hist2d(zposarr_blockedcone[3], energyarr_blockedcone[3], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
+    plt.hist2d(zposarr_blockedpipe[3], energyarr_blockedpipe[3], bins=(1000, 1000),
+               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
     plt.xlabel('z(m)')
     plt.ylabel('Energy (MeV)')
 
