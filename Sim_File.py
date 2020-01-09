@@ -389,6 +389,21 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     #print(thetaarr_blockedcone[1])
 
+    # Set the max and min values for the various histogram axis parameters
+    if np.mean(thetalab) > 90:
+        zmax = 0
+        zmin = np.amin(zpos)
+    else:
+        zmin = 0
+        zmax = np.amax(zpos)
+
+    emax = np.amax(energy)
+    #emin should always just be 0
+
+    thmax = np.amax(thetalab)
+    thmin = np.amin(thetalab)
+
+
 
     print("\n\nChoose from the list below to plot histograms from the generated data.\n"
           "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
@@ -429,14 +444,14 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                 plt.subplot(2, 2, k+1)
                 if plotnum == 1 or plotnum == 3:
                     plt.hist2d(zposarr[historder[k]], energyarr[historder[k]], bins=(750, 750),
-                               range=[[-0.8, 0], [0, 11]], cmap=newcmpBlack)
+                               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
                 if plotnum == 2 or plotnum == 3:
                     plt.hist2d(zposarr_blockedcone[historder[k]], energyarr_blockedcone[historder[k]], bins=(750, 750),
-                               range=[[-0.8, 0], [0, 11]], cmap=newcmpGreen)
+                               range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
                     plt.hist2d(zposarr_blockedpipe[historder[k]], energyarr_blockedpipe[historder[k]], bins=(750, 750),
-                               range=[[-0.8, 0], [0, 11]], cmap=newcmpRed)
+                               range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                     plt.hist2d(zposarr_blockednozzle[historder[k]], energyarr_blockednozzle[historder[k]],
-                               bins=(750, 750), range=[[-0.8, 0], [0, 11]], cmap=newcmpBlue)
+                               bins=(750, 750), range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
                     if k == 0:
                         handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
                         labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
