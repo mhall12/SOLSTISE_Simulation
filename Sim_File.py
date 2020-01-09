@@ -27,6 +27,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     #me = 1.0072765
     #mr = 28.9764947
 
+    qvalnoex = (mt + mb - me - mr)*utoMeV
+
     #ebeam = 168 # MeV, for d(28Si,p) it is 6 MeV/u
 
     rblock = np.array(rblock, dtype=np.float64)
@@ -283,7 +285,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     thetalab = theta*180/np.pi
 
     energyarr = [energy[maskmasterdet[0]], energy[maskmasterdet[1]], energy[maskmasterdet[2]], energy[maskmasterdet[3]]]
-    thetaarr = [theta[maskmasterdet[0]], theta[maskmasterdet[1]], theta[maskmasterdet[2]], theta[maskmasterdet[3]]]
+    thetaarr = [thetalab[maskmasterdet[0]], thetalab[maskmasterdet[1]], thetalab[maskmasterdet[2]],
+                thetalab[maskmasterdet[3]]]
     zposarr = [zpos[maskmasterdet[0]], zpos[maskmasterdet[1]], zpos[maskmasterdet[2]], zpos[maskmasterdet[3]]]
 
     energyarr_blockedcone = [energy[maskmasterdet_cone[0]], energy[maskmasterdet_cone[1]],
@@ -324,6 +327,24 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     #print(invzposarr[0])
     #print(invzposarr[0].shape)
 
+    # We'll also reconstruct the Q-value spectrum from the "detected" particles.
+    # First we have to calculate the CM Energy:
+    energycm = energy+.5*me*utoMeV*(vcm/c)**2-me*utoMeV*(vcm/c**2)/tcyc*zpos
+    #print(.5*me*utoMeV*(vcm/c)**2)
+    print(me*utoMeV*(vcm/c**2)/tcyc*zpos)
+    #print(energycm)
+    #print(energy)
+    excitationenergy = tcm + qvalnoex - energycm*(me+mr)/mr
+    print(excitationenergy)
+
+    exarr = [excitationenergy[maskmasterdet[0]], excitationenergy[maskmasterdet[1]],
+                           excitationenergy[maskmasterdet[2]], excitationenergy[maskmasterdet[3]]]
+    exarr_blockedcone = [excitationenergy[maskmasterdet_cone[0]], excitationenergy[maskmasterdet_cone[1]],
+                         excitationenergy[maskmasterdet_cone[2]], excitationenergy[maskmasterdet_cone[3]]]
+    exarr_blockedpipe = [excitationenergy[maskmasterdet_pipe[0]], excitationenergy[maskmasterdet_pipe[1]],
+                         excitationenergy[maskmasterdet_pipe[2]], excitationenergy[maskmasterdet_pipe[3]]]
+    exarr_blockednozzle = [excitationenergy[maskmasterdet_nozzle[0]], excitationenergy[maskmasterdet_nozzle[1]],
+                           excitationenergy[maskmasterdet_nozzle[2]], excitationenergy[maskmasterdet_nozzle[3]]]
 
     Reds = cm.get_cmap('Reds', 256)
     newcolors = Reds(np.linspace(0, 1, 256))
@@ -366,7 +387,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     historder = [1, 0, 2, 3]
 
-    print(thetaarr_blockedcone[1])
+    #print(thetaarr_blockedcone[1])
 
 
     print("\n\nChoose from the list below to plot histograms from the generated data.\n"
@@ -379,16 +400,22 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         while True:
             try:
                 plotnum = int(input("\n1: Unblocked particles in all 4 detectors (2D).\n"
-                                    "2: Blocked Particles in all 4 detectors (2D).\n"
+                                    "2: Blocked particles in all 4 detectors (2D).\n"
                                     "3: Unblocked and blocked particles in all 4 detectors (2D).\n"
                                     "4: Total blocked counts vs angle (1D).\n"
                                     "5: Blocked counts vs z  in all 4 detectors (1D)\n"
                                     "6: Blocked counts vs z  in all 4 detectors stacked (1D)\n"
-                                    "End: 0\n"
-                                    "Entry: "))
+                                    "7: Blocked counts vs lab angle in all 4 detectors stacked (1D)\n"
+                                    "8: Unblocked particles Energy vs ejected lab angle in all 4 detectors (2D)\n"
+                                    "9: Unblocked and blocked particles Energy vs ejected lab angle in all 4 detectors "
+                                    "(2D)\n"
+                                    "10: Unblocked particles Ex from detected energy and position (1D)\n"
+                                    "11: Unblocked and blocked particles Ex from detected energy and position (1D)\n"
+                                    "0: End\n"
+                                    "Enter a Histogram Number: "))
                 break
             except:
-                print("Enter an integer number from the list!")
+                print("\n*****Enter an integer number from the list!*****\n")
 
         if plotnum == 1 or plotnum == 2 or plotnum == 3:
             fig = plt.figure()
@@ -415,8 +442,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                         labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
                         plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
 
-                    plt.xlabel('z(m)')
-                    plt.ylabel('Energy (MeV)')
+                plt.xlabel('z(m)')
+                plt.ylabel('Energy (MeV)')
 
                 if k == 3:
                     plt.show()
@@ -440,6 +467,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                 plt.hist(zposarr_blockedcone[historder[i]], bins=375, range=[-0.5, 0], color=grn, alpha=1)
                 plt.hist(zposarr_blockedpipe[historder[i]], bins=375, range=[-0.5, 0], color=red, alpha=0.7)
                 plt.hist(zposarr_blockednozzle[historder[i]], bins=375, range=[-0.5, 0], color=blu, alpha=0.6)
+                plt.xlabel('z(m)')
+                plt.ylabel('Counts')
             plt.show
         elif plotnum == 6:
             fig3 = plt.figure()
@@ -451,18 +480,68 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                 plt.hist((zposarr_blockedcone[historder[i]], zposarr_blockedpipe[historder[i]],
                           zposarr_blockednozzle[historder[i]]), bins=375, range=[-0.5, 0], color=(grn, red, blu),
                          stacked=True)
+                plt.xlabel('z(m)')
+                plt.ylabel('Counts')
             plt.show()
         elif plotnum == 7:
             fig4 = plt.figure()
             plt.rc('axes', labelsize=15)
             plt.rc('xtick', labelsize=15)
             plt.rc('ytick', labelsize=15)
-            for i in range (4):
+            for i in range(4):
                 plt.subplot(2, 2, i+1)
                 plt.hist((thetaarr_blockedcone[historder[i]], thetaarr_blockedpipe[historder[i]],
                           thetaarr_blockednozzle[historder[i]]), bins=60, range=[90, 120], color=(grn, red, blu),
                          stacked=True)
+                plt.xlabel('Lab Angle (Deg)')
+                plt.ylabel('Counts')
+        elif plotnum == 8 or plotnum == 9:
+            fig5 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            for i in range(4):
+                plt.subplot(2, 2, i+1)
+                plt.hist2d(thetaarr[historder[i]], energyarr[historder[i]], bins=(750,750), range=[[90, 180], [0, 11]],
+                           cmap=newcmpBlack)
+                if plotnum == 9:
+                    plt.hist2d(thetaarr_blockedcone[historder[i]], energyarr_blockedcone[historder[i]], bins=(750, 750),
+                               range=[[90, 180], [0, 11]], cmap=newcmpGreen)
+                    plt.hist2d(thetaarr_blockedpipe[historder[i]], energyarr_blockedpipe[historder[i]], bins=(750, 750),
+                               range=[[90, 180], [0, 11]], cmap=newcmpRed)
+                    plt.hist2d(thetaarr_blockednozzle[historder[i]], energyarr_blockednozzle[historder[i]],
+                               bins=(750, 750), range=[[90, 180], [0, 11]], cmap=newcmpBlue)
+                    if i == 0:
+                        handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
+                        labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
+                        plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
 
+                plt.xlabel('Lab Angle (Deg)')
+                plt.ylabel('Energy (MeV)')
+        elif plotnum == 10:
+            fig6 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            plt.hist(excitationenergy, bins=750, range=[0, 10])
+            plt.xlabel('Excitation Energy (MeV)')
+            plt.ylabel('Counts')
+        elif plotnum == 11:
+            fig7 = plt.figure()
+            plt.rc('axes', labelsize=15)
+            plt.rc('xtick', labelsize=15)
+            plt.rc('ytick', labelsize=15)
+            for i in range(4):
+                plt.subplot(2, 2, i+1)
+                plt.hist((exarr[historder[i]], exarr_blockedcone[historder[i]], exarr_blockedpipe[historder[i]],
+                          exarr_blockednozzle[historder[i]]), bins=1000, range=[0, 8], color=(blk, grn, red, blu),
+                         stacked=True)
+                if i == 0:
+                    handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
+                    labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
+                    plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
+                plt.xlabel('Excitation Energy (MeV)')
+                plt.ylabel('Counts')
         elif plotnum == 0:
             switch = 1
 
