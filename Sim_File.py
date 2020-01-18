@@ -232,7 +232,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         #maskmaster = maskmaster*np.invert(maskrpipe & maskphipipe)#np.invert(maskcone)*np.invert(masky)#*np.invert(maskz)
         maskmaster = maskmaster*np.invert(maskcone)*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
         maskmaster_cone = maskmaster_cone*np.invert(maskcone)
-        maskmaster_pipe = maskmaster_pipe*np.invert(maskrpipe & maskphipipe)
+        maskmaster_pipe = maskmaster_pipe*np.invert((maskrpipe & maskphipipe)*np.invert(maskcone)*np.invert(masknozzle))
         maskmaster_nozzle = maskmaster_nozzle * np.invert(masknozzle)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
@@ -557,6 +557,29 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                     plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
                 plt.xlabel('Excitation Energy (MeV)')
                 plt.ylabel('Counts')
+        elif plotnum == 12:
+            xx = thetalab
+            yy = energy
+            fig8 = plt.figure()
+            ax = fig8.add_subplot(111, projection='3d')
+            hist, xedges, yedges = np.histogram2d(xx,yy,bins=(90,90))
+            xposs, yposs = np.meshgrid(xedges[:-1] + xedges[1:], yedges[:-1] + yedges[1:])
+
+            xposs = xposs.flatten()/2
+            yposs = yposs.flatten()/2
+            zposs = np.zeros_like(xposs)
+            dx = xedges[1] - xedges[0]
+            dy = yedges[1] - yedges[0]
+            dz = hist.flatten()
+
+            cmap = cm.get_cmap('jet')
+            max_height = np.max(dz)
+            min_height = np.min(dz)
+
+            rgba = [cmap((k-min_height)/max_height) for k in dz]
+
+            ax.bar3d(xposs, yposs, zposs, dx, dy, dz, color=rgba, zsort='average')
+            plt.show()
         elif plotnum == 0:
             switch = 1
 

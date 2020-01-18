@@ -19,20 +19,28 @@ def BuildEvts():
 
     for i in range(4):
         masses[i] = masses[i] * utoMeV
-        print(masses[i])
+    #    print(masses[i])
 
     beamenergy = float(input("Enter a beam energy in MeV: "))
 
-    levnum = int(input("Enter the number of energy levels to be populated in the recoil: "))
+    levnum = int(input("Enter the number of energy levels to be populated in the recoil (or 0 for "
+                       "all energies): "))
 
-    while levnum < 1:
-        print("ERROR: The number of levels cannot be less than 1.")
+    energyend = 0
+
+    if levnum == 0:
+        print("All energies will be simulated.")
+        energyend = int(input("Enter the highest excitation energy (integer MeV) you would like to simulate: "))
+
+    while levnum < 0:
+        print("ERROR: The number of levels cannot be less than 0.")
         levnum = int(input("Enter the number of energy levels to be populated in the recoil: "))
 
     levels = []
 
-    for i in range(levnum):
-        levels.append(float(input("Enter the energy of a level: ")))
+    if levnum > 0:
+        for i in range(levnum):
+            levels.append(float(input("Enter the energy of a level in MeV: ")))
 
     numevents = int(input("Input the number of events you would like to generate: "))
 
@@ -40,19 +48,29 @@ def BuildEvts():
     reac = reac.replace(",", "_")
     reac = reac.replace(")", "_")
 
-    outfilename = reac + str(int(beamenergy)) + "_evts.txt"
+    if levnum > 0:
+        outfilename = reac + str(int(beamenergy)) + "_evts.txt"
+    else:
+        outfilename = reac + str(int(beamenergy)) + "_evts_allE.txt"
 
     file = open(outfilename, "w+")
 
     thmindeg = 0
+    dead = 0
 
     for i in range(numevents):
 
-        randlevnum = random.randrange(0, levnum, 1)
+        if levnum > 0:
+            randlevnum = random.randrange(0, levnum, 1)
+            excitation_energy = levels[randlevnum]
+        else:
+            excitation_energy = random.randrange(0, energyend*100, 1)
+            excitation_energy = excitation_energy/100
 
-        qval = (masses[0] + masses[1] - masses[2] - masses[3]) - levels[randlevnum]
+        qval = (masses[0] + masses[1] - masses[2] - masses[3]) - excitation_energy
 
         #print(qval)
+        #print(excitation_energy)
         if (masses[2] > masses[0]):
             thmin = math.acos(-1*math.sqrt(-((masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
                                                       beamenergy))/(masses[1] * masses[2] * beamenergy)))
@@ -72,20 +90,29 @@ def BuildEvts():
 
         pm = random.randrange(-1, 2, 2)
 
-        Eejec2 = ((math.sqrt(masses[1] * masses[2] * beamenergy) * math.cos(trad) +
-                    math.sqrt(masses[1] * masses[2] * beamenergy * math.cos(trad)**2 +
-                            (masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
-                                                      beamenergy))) / (masses[3] + masses[2]))**2
+        while True:
+            try:
+                Eejec2 = ((math.sqrt(masses[1] * masses[2] * beamenergy) * math.cos(trad) +
+                            math.sqrt(masses[1] * masses[2] * beamenergy * math.cos(trad)**2 +
+                                    (masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
+                                                              beamenergy))) / (masses[3] + masses[2]))**2
+                break
+            except ValueError:
+                dead = dead+1
+                Eejec2 = 0
+                Theta = 90
+                break
 
         Eejec2 = random.gauss(Eejec2, .01)
         theta = random.gauss(theta, .1)
 
+
         file.write(str(theta) + '\t' + str(Eejec2) + '\n')
 
+    print(dead)
+    file.close()
     return outfilename
 
-
-    file.close()
 
 
 #BuildEvts()

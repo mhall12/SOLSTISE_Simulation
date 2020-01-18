@@ -21,7 +21,7 @@ print("")
 print("                     Particle Shadowing Simulation Code")
 input("\n\n\nTo continue, press ENTER")
 
-list_files = glob.glob('*evts.txt')
+list_files = glob.glob('*evts*.txt')
 
 if len(list_files) == 0:
     print("It appears that no event files exist, so we'll create one now!")
