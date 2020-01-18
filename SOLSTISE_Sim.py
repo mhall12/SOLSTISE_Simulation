@@ -1,5 +1,5 @@
 # SOLSTISE Simulation Code Front End
-from Sim_File import sim
+from Sim_File_pd import sim_pd
 from Event_Builder import BuildEvts
 from PipeMaker import makepipe
 import glob
@@ -53,7 +53,7 @@ else:
                     while len(list_file2) == 0 or numuscore != 4:
                         filein = input("\nEnter the name of an existing input file (.dat or .txt): ")
                         list_file2 = glob.glob(filein)
-                        numuscore = filein.count("_")
+                        numuscopre = filein.count("_")
                         if len(list_file2) == 0 or numuscore != 4:
                             print("\nERROR: Incorrect file name syntax or the file does not exist...")
         else:
@@ -64,7 +64,7 @@ else:
 print("\nThe file to be used is: " + filein)
 
 # Get the reaction out of the file name
-# the locations of the underscores in the filez name are found here and put into an array
+# the locations of the underscores in the file name are found here and put into an array
 uslocs = [m.start() for m in re.finditer('_', filein)]
 
 reac = filein[:uslocs[0]] + "(" + filein[(uslocs[0]+1):uslocs[1]] + "," + filein[(uslocs[1]+1):uslocs[2]] + ")"
@@ -144,4 +144,4 @@ else:
 
     lines = file.readlines()
 
-    sim(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac)
+    sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac)
