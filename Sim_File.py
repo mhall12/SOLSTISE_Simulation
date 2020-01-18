@@ -44,7 +44,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     tcm = mt/(mb+mt)*ebeam
 
-    mass = 1.6726219e-27  # proton mass in MeV/c^2
+    amutokg = 1.66053907e-27  # amu to kg conversion
     B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
 
@@ -60,11 +60,11 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     theta = theta * np.pi/180
 
     # Cyclotron frequency and period.
-    omega = (q*B)/mass
+    omega = (q*B)/(me * amutokg)
     tcyc = (2*np.pi)/omega
 
     # Velocity of the ejectile in the lab frame (m/s)
-    vel = np.sqrt((2 * energy * mevtoj) / mass)
+    vel = np.sqrt((2 * energy * mevtoj) / (me * amutokg))
     # Velocities parallel to the z-axis and perpendicular to the z-axis.
     vper = vel * np.sin(theta)
     vpar = vel * np.cos(theta)
