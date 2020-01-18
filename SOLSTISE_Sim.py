@@ -64,7 +64,7 @@ else:
 print("\nThe file to be used is: " + filein)
 
 # Get the reaction out of the file name
-# the locations of the underscores in the file name are found here and put into an array
+# the locations of the underscores in the filez name are found here and put into an array
 uslocs = [m.start() for m in re.finditer('_', filein)]
 
 reac = filein[:uslocs[0]] + "(" + filein[(uslocs[0]+1):uslocs[1]] + "," + filein[(uslocs[1]+1):uslocs[2]] + ")"
