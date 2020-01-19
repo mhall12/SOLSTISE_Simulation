@@ -210,7 +210,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
         # maskcone determines if the particle is within the opening of the cone
         # Since if statements on the arrays are so slow, we'll break up the cone mask into three: tube (top), sides,
-        # and ISO base. In the future, the base could be gotten rid of.
+        # and ISO base. In the future, the base could be gotten rid of depending on final geometry.
         # masktop = (rxzplane < rcone) & (ypos > reacheight) & (ypos < sideheight)
         # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
         # the cone has been removed.
