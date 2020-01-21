@@ -23,11 +23,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     me = masses[2]
     mr = masses[3]
 
-    print(mt,'\n')
-    print(mb,'\n')
-    print(me,"\n")
-    print(mr,"\n")
-
     qvalnoex = (mt + mb - me - mr)*utoMeV
 
     #ebeam = 168 # MeV, for d(28Si,p) it is 6 MeV/u
@@ -55,15 +50,21 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     df = pd.read_csv(filein, sep="\t", header=None)
     df.columns = ["Theta_Deg", "Energy"]
 
+    # Determine whether or not the particles are coming out at backward or forward angles:
+    if df["Theta_Deg"].mean() > 90:
+        invkin = True
+    else:
+        invkin = False
+
     # Convert the angle to radians and add it to the dataframe
     df['Theta_Rad'] = df['Theta_Deg'] * np.pi/180
 
     # Cyclotron frequency and period.
-    omega = (q * B) / (me*amutokg)
+    omega = (q * B) / (me * amutokg)
     tcyc = (2 * np.pi) / omega
 
     # Velocity of the ejectile in the lab frame (m/s) added to dataframe
-    df['vel_ejec'] = np.sqrt((2 * df['Energy'] * mevtoj) / (me*amutokg))
+    df['vel_ejec'] = np.sqrt((2 * df['Energy'] * mevtoj) / (me * amutokg))
     # Velocities parallel to the z-axis and perpendicular to the z-axis.
     df['vel_perp'] = df['vel_ejec'] * np.sin(df['Theta_Rad'])
     df['vel_par'] = df['vel_ejec'] * np.cos(df['Theta_Rad'])
@@ -85,9 +86,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # break if it gets a value outside of that range.
     # However, we'll get rid of all the NaN entries before the arccos line with a mask.
     df['cosarg'] = (df['vel_ejec']**2 - df['v0']**2 - vcm**2)/(2 * df['v0'] * vcm)
-    maskarg = (df['cosarg'] >= -1)&(df['cosarg'] <= 1)
+    maskarg = (df['cosarg'] >= -1) & (df['cosarg'] <= 1)
 
     df = df[maskarg]
+
+    df = df.reset_index(drop=True)
+    #print(df)
 
     df['Theta_CM'] = np.arccos((df['vel_ejec']**2 - df['v0']**2 - vcm**2)/(2 * df['v0'] * vcm))
 
@@ -95,9 +99,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     df['t_reduced'] = tcyc - r0/(df['v0']*np.sin(df['Theta_CM']))
 
     # makes a phi array the same size as the theta array, random number 0 to 1
+    #np.random.seed = 18
     phi = np.random.rand(len(df))
     # then multiply the phi array by 2pi to get a real phi value and put it into the dataframe
     df['Phi'] = phi * 2 * np.pi
+
+    #print(df['Phi'])
 
     # creates a mask the same shape as the energy array
     # maskmaster is the mask that keeps track of the overall mask in the loop
@@ -153,6 +160,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     # *********************************************************************************************
 
+    dummy = df['Energy']
+
     # Simulating events status bar for the for loop
     print("Simulating Events...")
     statbar = "[                              ]"
@@ -167,10 +176,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         t = df['t_reduced']/300 * (i+1)
         xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
         ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
-        zpos = df['vel_perp']*t
+        zpos = df['vel_par']*t
+
+        #print(ypos)
 
         # r is the radial position of the particle
         r = np.sqrt(xpos**2 + ypos**2)
+
         # phic is the phi current position of the particle.
         phic = np.arctan2(ypos, xpos) + np.pi
 
@@ -180,6 +192,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # rpipe determines the r position of the 2nd circle boundary
         # so if the particle radius is greater than that, it gets blocked
         maskrpipe = (r > rpipe(phic))
+
         # maskphipipe is the mask that determines whether or not the particle is within the phi boundaries of the pipe
         # if maskphipipe and maskrpipe are true, then the particle is blocked by the pipe
         maskphipipe = (phic > phi1block) & (phic < phi2block)
@@ -191,12 +204,22 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
         # the cone has been removed.
         masksides = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight)) & (ypos < baseheight)
+        masktest = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight))
         maskbase = (rxzplane < rISObase) & (ypos > baseheight)
+
+        #print(rconeside(ypos * 100 / 2.54),"\n")
+        #print(dummy[masksides])
+
+        #print(rconeside(ypos * 100 / 2.54), rxzplane)
+        #print(ypos[masktest])
 
         maskcone = masksides | maskbase
 
         # we want only particles that come out at backward angles
-        maskz = zpos < 0
+        if invkin:
+            maskz = zpos < 0
+        else:
+            maskz = zpos > 0
 
         # masknozzle determines if the the particle hits the nozzle.
         masknozzle = masknozzle*((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
@@ -216,8 +239,32 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # Adds the final phi position to the dataframe
     df['Phi_final'] = phic
 
-    print(df.iloc[:,-3:])
-    print(len(df))
+    # splits the particles up onto four quadrants of a fictional detector
+    df["Det1"] = (phic > 0) & (phic < np.pi/2)
+    df["Det2"] = (phic > np.pi/2) & (phic < np.pi)
+    df["Det3"] = (phic > np.pi) & (phic < 3*np.pi/2)
+    df["Det4"] = (phic > 3*np.pi/2) & (phic < 2*np.pi)
+
+    # Each element of df_det contains the info for the particles that hit that detector quadrant.
+    # i.e. element 0 = quad 1, 1 = quad 2 etc..
+
+    # Add boolean masks to the dataframe to pick out the specific particles we want.
+    # All possible rejects all the particles that go in the wrong half of the magnet or hit the bore.
+    df["AllPossible"] = maskz & maskrbore
+    # All unshadowed particles
+    df["Unblocked"] = maskmaster & maskz & maskrbore
+    # All particles blocked by the cone
+    df["Blocked_Cone"] = np.invert(maskmaster_cone) & maskz & maskrbore
+    # All particles blocked by the nozzle
+    df["Blocked_Nozzle"] = np.invert(maskmaster_nozzle) & maskz & maskrbore
+    # All particles blocked by the pipe
+    df["Blocked_Pipe"] = np.invert(maskmaster_pipe) & maskz & maskrbore
+
+
+
+    #print(df.iloc[:,-3:])
+    #print(df[df["Det1"]])
+    #print(df_det)
 
     input("\nPress ENTER to end.")
 

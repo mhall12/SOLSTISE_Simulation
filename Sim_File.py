@@ -102,8 +102,9 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # makes a phi array the same size as the theta array, random number 0 to 1
     phi = np.random.rand(theta.size)
     # then multiply the phi array by 2pi to get a real phi value
-    phi = phi * 2 * np.pi
+    phi = 6.0#phi * 2 * np.pi
 
+    #print(phi)
     # debugging
     # print(energy.shape)
     # print(phi.shape)
@@ -177,6 +178,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # function determines the r coordinates of the 2nd circle that makes up the gas pipe.
     rpipe = lambda ph: cheight*np.sin(ph) + np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
+
+    dummy = energy
     # Simulating events status bar for the for loop
     print("Simulating Events...")
     statbar = "[                              ]"
@@ -204,6 +207,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # rpipe determines the r position of the 2nd circle boundary
         # so if the particle radius is greater than that, it gets blocked
         maskrpipe = (r > rpipe(phic))
+
         # maskphipipe is the mask that determines whether or not the particle is within the phi boundaries of the pipe
         # if maskphipipe and maskrpipe are true, then the particle is blocked by the pipe
         maskphipipe = (phic > phi1block) & (phic < phi2block)
@@ -216,6 +220,10 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # the cone has been removed.
         masksides = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight)) & (ypos < baseheight)
         maskbase = (rxzplane < rISObase) & (ypos > baseheight)
+
+        #print(rconeside(ypos * 100 / 2.54),"\n")
+
+        #print(ypos[masksides])
 
         maskcone = masksides | maskbase
 
