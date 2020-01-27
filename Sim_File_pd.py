@@ -6,13 +6,14 @@ from matplotlib.colors import ListedColormap, LinearSegmentedColormap, LogNorm
 from matplotlib.patches import Rectangle
 from massreader import readmass
 import pandas as pd
+import scipy.ndimage as ndimage
 from mpl_toolkits import mplot3d
+from Plotter import plot
 
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
-
     masses = readmass(reac)
 
     # reaction of form t(b,e)R
@@ -247,8 +248,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     df["Det3"] = (phic > np.pi) & (phic < 3*np.pi/2)
     df["Det4"] = (phic > 3*np.pi/2) & (phic < 2*np.pi)
 
-    detarr = [df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
-
     # Each element of df_det contains the info for the particles that hit that detector quadrant.
     # i.e. element 0 = quad 1, 1 = quad 2 etc..
 
@@ -270,244 +269,15 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                      df['zpos_final']
     df['Ex_Reconstructed'] = tcm + qvalnoex - df['EnergyCM'] * (me + mr) / mr
 
-    Reds = cm.get_cmap('Reds', 256)
-    newcolors = Reds(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 0])
-    red = np.array([1, 0, 0, 1])
-    newcolors[:1, :] = white
-    newcolors[1:, :] = red
-    newcmpRed = ListedColormap(newcolors)
+    df.to_pickle(filein[:-4] + ".pkl")
 
-    Blues = cm.get_cmap('Blues', 256)
-    newcolors = Blues(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 0])
-    blue = np.array([0, .5, 1, 1])
-    newcolors[:1, :] = white
-    newcolors[1:, :] = blue
-    newcmpBlue = ListedColormap(newcolors)
+    print("\nOutput file named" + filein[:-4] + ".pkl was generated.")
 
-    Greens = cm.get_cmap('Greens', 256)
-    newcolors = Greens(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 0])
-    green = np.array([0, 1, 0, 1])
-    newcolors[:1, :] = white
-    newcolors[1:, :] = green
-    newcmpGreen = ListedColormap(newcolors)
-
-    Greys = cm.get_cmap('Greys', 256)
-    newcolors = Greys(np.linspace(0, 1, 256))
-    white = np.array([1, 1, 1, 0])
-    black = np.array([0, 0, 0, 1])
-    newcolors[:1, :] = white
-    newcolors[1:, :] = black
-    newcmpBlack = ListedColormap(newcolors)
-
-    blk = newcmpBlack(1)
-    grn = newcmpGreen(1)
-    blu = newcmpBlue(1)
-    red = newcmpRed(1)
-
-    switch = 0
-
-    # Histogram order to get the quadrants right.
-    ho = [1, 0, 2, 3]
-
-    # Set the max and min values for the various histogram axis parameters
-    if invkin:
-        zmax = 0
-        zmin = df['zpos_final'].min()
+    plotyn = input("\nWould you like to plot the simulated data? [Y/N]")
+    if plotyn == "N" or plotyn == "n":
+        print("\nNow exiting. You can plot the simulated data any time by running Plotter.py.")
     else:
-        zmin = 0
-        zmax = df['zpos_final'].max()
-
-    emax = df['Energy'].max()
-    #emin should always just be 0
-
-    thmax = df['Theta_Deg'].max()
-    thmin = df['Theta_Deg'].min()
-
-    print("\n\nChoose from the list below to plot histograms from the generated data.\n"
-          "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
-          "looking down the beam axis.")
-
-    while switch == 0:
-        plt.ion()
-        # plt.pause(0.0001)
-        while True:
-            try:
-                plotnum = int(input("\n1: Unblocked particles in all 4 detectors (2D).\n"
-                                    "2: Blocked particles in all 4 detectors (2D).\n"
-                                    "3: Unblocked and blocked particles in all 4 detectors (2D).\n"
-                                    "4: Total blocked counts vs angle (1D).\n"
-                                    "5: Blocked counts vs z  in all 4 detectors (1D)\n"
-                                    "6: Blocked counts vs z  in all 4 detectors stacked (1D)\n"
-                                    "7: Blocked counts vs lab angle in all 4 detectors stacked (1D)\n"
-                                    "8: Unblocked particles Energy vs ejected lab angle in all 4 detectors (2D)\n"
-                                    "9: Unblocked and blocked particles Energy vs ejected lab angle in all 4 detectors "
-                                    "(2D)\n"
-                                    "10: Unblocked particles Ex from detected energy and position (1D)\n"
-                                    "11: Unblocked and blocked particles Ex from detected energy and position (1D)\n"
-                                    "0: End\n"
-                                    "Enter a Histogram Number: "))
-                break
-            except:
-                print("\n*****Enter an integer number from the list!*****\n")
-
-        if plotnum > 0:
-            fig = plt.figure()
-
-            plt.rc('axes', labelsize=15)
-            plt.rc('xtick', labelsize=15)
-            plt.rc('ytick', labelsize=15)
-
-            for i in range(4):
-                if plotnum == 1 or plotnum == 3:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
-                               df['Energy'][detarr[i] & df["Unblocked"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
-                    plt.xlabel('z(m)')
-                    plt.ylabel('Energy (MeV)')
-
-                if plotnum == 2 or plotnum == 3:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                               df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                               df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                               df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
-                    plt.xlabel('z(m)')
-                    plt.ylabel('Energy (MeV)')
-
-                if plotnum == 4 and i == 0:
-                    plt.hist(df['Theta_Deg'][df['Blocked_Cone'] | df['Blocked_Pipe'] | df['Blocked_Nozzle']])
-                    plt.xlabel('Lab Angle (deg)')
-                    plt.ylabel('Counts')
-
-                if plotnum == 5:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist(df['zpos_final'][df['Blocked_Cone'] & detarr[i]], bins=375, range=[-0.5, 0],
-                             color=grn, alpha=1)
-                    plt.hist(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]], bins=375, range=[-0.5, 0],
-                             color=red, alpha=0.7)
-                    plt.hist(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]], bins=375, range=[-0.5, 0],
-                             color=blu, alpha=0.6)
-                    plt.xlabel('z(m)')
-                    plt.ylabel('Counts')
-
-                if plotnum == 6:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist((df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
-                              df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
-                              df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]]),
-                             bins=375, range=[-0.5, 0], color=(grn, red, blu), stacked=True)
-                    plt.xlabel('z(m)')
-                    plt.ylabel('Counts')
-
-                if plotnum == 7:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist((df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
-                              df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
-                              df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]]),
-                             bins=60, range=[90, 120], color=(grn, red, blu), stacked=True)
-                    plt.xlabel('Lab Angle (Deg)')
-                    plt.ylabel('Counts')
-
-                if plotnum == 8 or plotnum == 9:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist2d(df['Theta_Deg'][df['Unblocked'] & detarr[i]],
-                               df['Energy'][df['Unblocked'] & detarr[i]], bins=(750, 750), range=[[90, 180], [0, 11]],
-                               cmap=newcmpBlack)
-                    if plotnum == 9:
-                        plt.hist2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
-                                   range=[[90, 180], [0, 11]], cmap=newcmpGreen)
-                        plt.hist2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
-                                   range=[[90, 180], [0, 11]], cmap=newcmpRed)
-                        plt.hist2d(df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
-                                   range=[[90, 180], [0, 11]], cmap=newcmpBlue)
-                    plt.xlabel('Lab Angle (Deg)')
-                    plt.ylabel('Energy (MeV)')
-
-                if plotnum == 10 and i == 0:
-                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"]], bins=750, range=[0, 10])
-                    plt.xlabel('Excitation Energy (MeV)')
-                    plt.ylabel('Counts')
-
-                if plotnum == 11:
-                    plt.subplot(2, 2, i + 1)
-                    plt.hist((df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                             bins=1000, range=[0, 8], color=(blk, grn, red, blu), stacked=True)
-                    plt.xlabel('Excitation Energy (MeV)')
-                    plt.ylabel('Counts')
-
-                if (plotnum == 13 or plotnum == 12) and i == 0:
-                    # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 5
-                    # degrees. So,
-                    binstheta = np.zeros(19)
-                    for j in range(19):
-                        binstheta[j] = j*5+90
-                    # We'll also make the energy bins as well:
-                    binse = np.zeros(26)
-                    for j in range(26):
-                        binse[j] = j*.4
-
-                    unblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['AllPossible']],
-                                                                df['Energy'][df['AllPossible']],
-                                                                bins=(binstheta, binse))
-
-                    blockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] |
-                                                                                  df['Blocked_Pipe'] |
-                                                                                  df['Blocked_Nozzle']],
-                                                              df['Energy'][df['Blocked_Cone'] |
-                                                                               df['Blocked_Pipe'] |
-                                                                               df['Blocked_Nozzle']],
-                                                              bins=(binstheta, binse))
-
-                    #ratio = np.divide(blockedevt, unblockedevt, out=np.zeros_like(blockedevt), where=unblockedevt != 0)
-                    ratio = np.divide((unblockedevt-blockedevt), unblockedevt, out=np.zeros_like(blockedevt), where=unblockedevt != 0)
-                    #ratio = (unblockedevt-blockedevt)/unblockedevt
-                    ratio = ratio.T
-
-                    tbins2 = np.zeros(18)
-                    ebins2 = np.zeros(25)
-
-                    for k in range(25):
-                        if k < 18:
-                            tbins2[k] = (tbins[k] + tbins[k + 1]) / 2
-                        ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
-
-                    X, Y = np.meshgrid(tbins2, ebins2)
-                    X2, Y2 = np.meshgrid(tbins, ebins)
-
-                    if plotnum == 12:
-                        ax = plt.contourf(X, Y, ratio, 10, cmap='BuGn')
-                        #plt.clabel(ax, inline=-3, fontsize=10)
-                        #ax.colobar()
-                    if plotnum == 13:
-                        plt.pcolormesh(X2, Y2, ratio)
-
-                # Handle the legend here for each plot that needs it.
-                if i == 0 and (plotnum == 1 or plotnum == 2 or plotnum == 3 or plotnum == 5 or
-                               plotnum == 6 or plotnum == 7 or plotnum == 9 or plotnum == 11):
-                    handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
-                    labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
-                    if plotnum == 11:
-                        plt.legend(handles, labels, bbox_to_anchor=(1.0, .9), ncol=4)
-                    else:
-                        plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
-
-        elif plotnum == 0:
-            switch = 1
+        plot(filein[:-4] + ".pkl")
 
     input("\nPress ENTER to end.")
 

@@ -102,7 +102,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # makes a phi array the same size as the theta array, random number 0 to 1
     phi = np.random.rand(theta.size)
     # then multiply the phi array by 2pi to get a real phi value
-    phi = 6.0#phi * 2 * np.pi
+    phi = phi * 2 * np.pi
 
     #print(phi)
     # debugging
