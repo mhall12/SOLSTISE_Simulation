@@ -100,7 +100,7 @@ if pipeyn == "N" or pipeyn == "n":
     phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
     phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac)
 
 else:
     list_pipe_files = glob.glob('PipeOut*.txt')

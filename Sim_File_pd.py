@@ -8,8 +8,9 @@ from massreader import readmass
 import pandas as pd
 import scipy.ndimage as ndimage
 from mpl_toolkits import mplot3d
+import os
+import json
 from Plotter import plot
-
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
@@ -269,11 +270,50 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                      df['zpos_final']
     df['Ex_Reconstructed'] = tcm + qvalnoex - df['EnergyCM'] * (me + mr) / mr
 
-    df.to_pickle(filein[:-4] + ".pkl")
+    if rblock < rbore:
+        custpipe = False
+    else:
+        custpipe = True
 
-    print("\nOutput file named" + filein[:-4] + ".pkl was generated.")
+    dictparams = {
+        "Reaction": reac,
+        "Beam Energy": ebeam,
+        "Magnetic Field": B,
+        "Reaction Distance from Nozzle": reacdistbelownozzle,
+        "Nozzle-Cone Distance": nozzleconedistin,
+        "Bore Radius": rbore,
+        "Custom Pipe?": custpipe,
+        "Pipe Radius": rblock,
+        "Pipe Left Edge Angle": int(phi1block*180/np.pi),
+        "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
+        "Cone Opening Diameter": conedia,
+        "Cone Height": coneheight
+    }
 
-    plotyn = input("\nWould you like to plot the simulated data? [Y/N]")
+    dfparams = pd.DataFrame([dictparams])
+
+    df_all = pd.concat([df, dfparams], axis=1)
+
+    writefilebase = filein[:-4]
+    lnum = 0
+
+    writefile = writefilebase
+
+    if os.path.exists(writefilebase + ".pkl"):
+        fileyn = input("\n\nAn event file using this data already exists. Would you like to overwrite the file? [Y/N] ")
+        if fileyn == "n" or fileyn == "N":
+            print("\nA number will be appended onto the end of the file name.")
+            while os.path.exists(writefile + ".pkl"):
+                lnum = lnum + 1
+                writefile = writefilebase + str(lnum)
+        else:
+            writefile = writefilebase
+
+    df_all.to_pickle(writefile + ".pkl")
+
+    print("\nOutput file named " + writefile + ".pkl was generated.")
+
+    plotyn = input("\nWould you like to plot the simulated data? [Y/N] ")
     if plotyn == "N" or plotyn == "n":
         print("\nNow exiting. You can plot the simulated data any time by running Plotter.py.")
     else:
