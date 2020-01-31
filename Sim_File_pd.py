@@ -14,6 +14,10 @@ from Plotter import plot
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
+    if rblock < rbore:
+        phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
+        phi2block = 3/2*np.pi + np.arctan(rblock/(-1*cheight))
+
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
     masses = readmass(reac)
 
@@ -101,7 +105,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     df['t_reduced'] = tcyc - r0/(df['v0']*np.sin(df['Theta_CM']))
 
     # makes a phi array the same size as the theta array, random number 0 to 1
-    #np.random.seed = 18
     phi = np.random.rand(len(df))
     # then multiply the phi array by 2pi to get a real phi value and put it into the dataframe
     df['Phi'] = phi * 2 * np.pi
@@ -158,7 +161,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     rnozzle = lambda y: ((y + np.abs(reacdistbelownozzle - nozzletipdist)) * np.tan(nozzleang)) * 2.54 / 100
 
     # function determines the r coordinates of the 2nd circle that makes up the gas pipe.
-    rpipe = lambda ph: cheight*np.sin(ph) + np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
+    # Need pipepm to multiply rpipe by a minus sign if we are using an ISO 160 Pipe:
+    if rblock < rbore:
+        pipepm = -1
+    else:
+        pipepm = 1
+
+    rpipe = lambda ph: cheight*np.sin(ph) + pipepm * np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
     # *********************************************************************************************
 
@@ -317,7 +326,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     if plotyn == "N" or plotyn == "n":
         print("\nNow exiting. You can plot the simulated data any time by running Plotter.py.")
     else:
-        plot(filein[:-4] + ".pkl")
+        plot(writefile + ".pkl")
 
     input("\nPress ENTER to end.")
 

@@ -95,8 +95,8 @@ if pipeyn == "N" or pipeyn == "n":
     else:
         r1 = 0.9 / 2
 
-    piper = 0.148082/2
-    pipecenter = 0.148082/2-r1
+    piper = 0.152908/2
+    pipecenter = 0.152908/2-r1
     phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
     phi2 = 2*math.pi - (phi1 - math.pi)
 
