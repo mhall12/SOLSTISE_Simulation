@@ -9,7 +9,7 @@ import pandas as pd
 import scipy.ndimage as ndimage
 from mpl_toolkits import mplot3d
 import os
-import json
+import glob
 from Plotter import plot
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
@@ -48,7 +48,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     tcm = mt/(mb+mt)*ebeam
 
     amutokg = 1.66053907e-27  # amu to kg conversion
-    B = 1.915  # teslas
+    B = 2.75
+   # B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
 
 
@@ -233,17 +234,18 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
             maskz = zpos > 0
 
         # masknozzle determines if the the particle hits the nozzle.
-        masknozzle = masknozzle*((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
+        masknozzle = masknozzle & ((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
                                                                                  2.54 / 100))
 
         #print(rxzplane[masksides] * 100 / 2.54)
         #print(maskr.shape, phir.shape, zpos[np.invert(maskz)].shape)
 
         #maskmaster = maskmaster*np.invert(maskrpipe & maskphipipe)#np.invert(maskcone)*np.invert(masky)#*np.invert(maskz)
-        maskmaster = maskmaster*np.invert(maskcone)*np.invert(maskrpipe & maskphipipe)*np.invert(masknozzle)
-        maskmaster_cone = maskmaster_cone*np.invert(maskcone)
-        maskmaster_pipe = maskmaster_pipe*np.invert((maskrpipe & maskphipipe)*np.invert(maskcone)*np.invert(masknozzle))
-        maskmaster_nozzle = maskmaster_nozzle * np.invert(masknozzle)
+        maskmaster = maskmaster & np.invert(maskcone) & np.invert(maskrpipe & maskphipipe) & np.invert(masknozzle)
+        maskmaster_cone = maskmaster_cone & np.invert(maskcone)
+        maskmaster_pipe = maskmaster_pipe & np.invert((maskrpipe & maskphipipe)
+                                                      & np.invert(maskcone) & np.invert(masknozzle))
+        maskmaster_nozzle = maskmaster_nozzle & np.invert(masknozzle)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
@@ -328,7 +330,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     else:
         plot(writefile + ".pkl")
 
-    input("\nPress ENTER to end.")
+ #   input("\nPress ENTER to end.")
 
 
 
