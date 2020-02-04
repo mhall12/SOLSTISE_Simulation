@@ -266,15 +266,24 @@ def plot(pklin):
                     # degree.
                     binstheta = np.zeros(91)
                     for j in range(91):
-                        binstheta[j] = j * 1 + 90
+                        if invkin:
+                            binstheta[j] = j * 1 + 90
+                        else:
+                            binstheta[j] = j * 1
                     # We'll also make the energy bins as well:
-                    binse = np.zeros(151)
-                    for j in range(151):
-                        binse[j] = j * .0667
-                    binsz = np.zeros(101)
+                    numebins = 150
+                    binse = np.zeros(numebins + 1)
+                    for j in range(numebins + 1):
+                        binse[j] = j * (emax / numebins)
+
+                    numzbins = 100
+                    binsz = np.zeros(numzbins + 1)
                     # We'll also make the z bins here:
-                    for j in range(101):
-                        binsz[j] = (100-j) * -.0085
+                    for j in range(numzbins + 1):
+                        if invkin:
+                            binsz[j] = (100-j) * zmin / numzbins
+                        else:
+                            binsz[j] = j * zmax / numzbins
 
                     # Can't have detarr[i] alone. It has to include AllPossible because the Det masks do not contain
                     # the mask that detemines whether or not the particle hit the magnet bore. So, with detarr[0] you
