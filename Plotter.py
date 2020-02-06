@@ -9,6 +9,7 @@ import scipy.ndimage as ndimage
 from mpl_toolkits import mplot3d
 import glob
 import os
+import fnmatch
 
 def plot(pklin):
 
@@ -115,24 +116,28 @@ def plot(pklin):
           "9) Energy vs Lab Angle: Unblocked and blocked particles Energy vs ejected lab "
           "angle in all 4 detectors (2D)\n"
           "10) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D)\n"
-          "11) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position (1D)\n"
-          "12) Energy vs Lab Angle: Contour plot of detected particles. \n"
-          "13) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
-          "14) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
-          "15) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
-          "16) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
-          "17) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors.. \n"
-          "18) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors.. \n"
-          "19) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors.. \n"
-          "20) Energy vs z: Contour plot of detected particles. \n"
-          "21) Energy vs z: Contour plot of particles not blocked by the cone. \n"
-          "22) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
-          "23) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
-          "24) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
-          "25) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-          "26) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-          "27) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-          "0) End\n\n")
+          "11) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position (1D)\n")
+    if fnmatch.fnmatch(pklin, '*allE*'):
+        print("12) Energy vs Lab Angle: Contour plot of detected particles. \n"
+              "13) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
+              "14) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
+              "15) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
+              "16) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
+              "17) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+              "18) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+              "19) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
+              "20) Energy vs z: Contour plot of detected particles. \n"
+              "21) Energy vs z: Contour plot of particles not blocked by the cone. \n"
+              "22) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
+              "23) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
+              "24) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
+              "25) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+              "26) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+              "27) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n")
+    print("28) Fraction of particles blocked vs lab angle. \n"
+          "29) Fraction of particles blocked vs energy. \n"
+          "30) Fraction of particles blocked vs z position. \n")
+    print("0) End\n\n")
 
     while switch == 0:
         plt.ion()
@@ -667,7 +672,7 @@ def plot(pklin):
                     # Here we do something a little different, and instead of contour plots we do ratio plots,
                     # still using the bins that were defined above.
 
-                    if plotnum > 28:
+                    if plotnum > 27:
                         # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
                         # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
                         # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
