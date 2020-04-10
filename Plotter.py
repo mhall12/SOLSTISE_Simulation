@@ -156,9 +156,9 @@ def plot(pklin):
             fig = plt.figure()
 
             # Set the font sizes here and the font used below. The title font sizes are handled when the hist is made.
-            plt.rc('axes', labelsize=15)
-            plt.rc('xtick', labelsize=15)
-            plt.rc('ytick', labelsize=15)
+            plt.rc('axes', labelsize=18)
+            plt.rc('xtick', labelsize=18)
+            plt.rc('ytick', labelsize=18)
             plt.rcParams["font.family"] = "STIXGeneral"
 
             for i in range(5):
@@ -534,8 +534,10 @@ def plot(pklin):
                         cbar = fig.colorbar(cf)
                         plt.xlabel('Lab Angle (Deg)')
                         plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles That Could Be Detected (Not Blocked by the Pipe)',
-                                     fontsize=18)
+                        title18 = "Percentage of Particles Not Blocked by the Pipe B = " + \
+                                  str(df['Magnetic Field'][0]) + " T"
+                        plt.suptitle(title18, fontsize=18)
+
                     # 19 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
                     # same as 15
                     if plotnum == 19 and i > 0:
@@ -575,13 +577,15 @@ def plot(pklin):
                         cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.5, .6, .7, .8, .9], colors='k',
                                          linewidths=1.2)
                         manual_locations = [(-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
+                        labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=16, manual=manual_locations)
                         for l in labels:
                             l.set_rotation(-70)
                         cbar = fig.colorbar(cf)
                         plt.xlabel('z (m)')
                         plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
+                        title21 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
+                                  str(df['Magnetic Field'][0]) + " T"
+                        plt.suptitle(title21, fontsize=18)
 
                     if plotnum == 22 and i == 0:
 
@@ -637,8 +641,9 @@ def plot(pklin):
                         cbar = fig.colorbar(cf)
                         plt.xlabel('z (m)')
                         plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles That Could Be Detected (Not Blocked by the Cone)',
-                                     fontsize=18)
+                        title25 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
+                                  str(df['Magnetic Field'][0]) + " T"
+                        plt.suptitle(title25, fontsize=18)
 
                     if plotnum == 26 and i > 0:
                         plt.subplot(2, 2, i)
@@ -651,9 +656,9 @@ def plot(pklin):
                         cbar = fig.colorbar(cf)
                         plt.xlabel('z (m)')
                         plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles That Could Be Detected (Not Blocked by the Pipe)\n  '
-                                     'B = 2.75 T',
-                                     fontsize=18)
+                        title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe B = " + \
+                                  str(df['Magnetic Field'][0]) + " T"
+                        plt.suptitle(title26, fontsize=18)
 
                     if plotnum == 27 and i > 0:
                         plt.subplot(2, 2, i)
@@ -666,8 +671,9 @@ def plot(pklin):
                         cbar = fig.colorbar(cf)
                         plt.xlabel('z (m)')
                         plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles That Could Be Detected (Not Blocked by the Nozzle)',
-                                     fontsize=18)
+                        title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle B = " + \
+                                  str(df['Magnetic Field'][0]) + " T"
+                        plt.suptitle(title27, fontsize=18)
 
                     # Here we do something a little different, and instead of contour plots we do ratio plots,
                     # still using the bins that were defined above.

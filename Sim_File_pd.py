@@ -48,7 +48,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     tcm = mt/(mb+mt)*ebeam
 
     amutokg = 1.66053907e-27  # amu to kg conversion
-    B = 2.75
+    B = 2.0
    # B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
 
