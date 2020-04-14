@@ -63,31 +63,105 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     df_proj['A_proj'] = a_projectile
     df_proj['Energy_i'] = energy
 
+    #print(df_proj)
+    #print(df_abs)
+
+    df_fin = eloss(df_abs, df_proj)
+
+    return df_fin
+
 
 def eloss(absorberdf, projectiledf):
     # initial number of integrations that's hard coded into the original desorb code.
     num_integrations = 2
-    num_elements = 1  # keep this just one for now, can expand later
-
     k = 0
     projectiledf['Energy_curr'] = projectiledf['Energy_i']
+    projectiledf_dead = pd.DataFrame()
+    dednext = np.zeros_like(projectiledf['Energy_i'])
+    ded1st = np.zeros_like(dednext)
+    eps = 0.0001
+    valsdf = pd.DataFrame()
+    zeros = np.zeros(len(projectiledf.index))
+    valsdf['dednext'] = pd.Series(zeros)
 
     while k < num_integrations:
         k = k + 1
         j_end = len(absorberdf.index)
         j = 0
-        absorberdf['FX'] = absorberdf['Thickness'] / num_integrations
+
+        absorberdf['FX'] = absorberdf['Partial_Thickness'] / num_integrations
         while j < j_end:
+            # Loop through each row of the absorber dataframe by putting each row into df_currabsorber and using that
             df_currabsorber = absorberdf.iloc[j]
             # here we loop through each element, thickness etc to calculate how the energy changes after going through
             # each partial layer.
             projectiledf['Velocity'] = np.sqrt(2.13e-3 * projectiledf['Energy_curr'] / projectiledf['A_proj'])
+
             # Projectile velocity will change every loop step depending on the energy.
             # need to change Energy_curr in the dataframe.
-            projectiledf = dedx(df_currabsorber, projectiledf)
+            print("Enter")
+            projectiledf['deltaE'] = dedx(df_currabsorber, projectiledf)
+
+            # sign is always -1, so just hard code it in
+            projectiledf['Energy_curr'] = projectiledf['Energy_curr'] + \
+                                          projectiledf['deltaE'] * -1 * df_currabsorber['FX']
+
+            projectiledf['Egt0'] = projectiledf['Energy_curr'] > 0
+            print(projectiledf['Egt0'])
+
+            #print(projectiledf)
+
+            # Now we want to remove any values where the energy is 0 so the energy loss doesn't get calculated again
+
+            #print(projectiledf_dead)
+
+            # Collect all the particles that have 0 energy here:
+            projectiledf_dead = projectiledf_dead.append(projectiledf[~projectiledf['Egt0']])
+            projectiledf = projectiledf[projectiledf['Egt0']]
+            print(projectiledf_dead)
+
+            if k <= 2:
+                valsdf['dednext'] = valsdf['dednext'] + projectiledf['deltaE'] * df_currabsorber['FX']
+
+            j = j + 1
+
+            #if k < 50:
+             #   print(k)
+
+        if k == 1:
+            valsdf['ded1st'] = valsdf['dednext']
+            valsdf['dednext'] = pd.Series(zeros)
+        if k == 2:
+            valsdf['ddd'] = valsdf['ded1st'] - valsdf['dednext']
+
+            dddmask = valsdf['ddd'] < 0
+            valsdf.loc[dddmask, 'ddd'] = valsdf['ddd'] * -1
+
+            valsdf['dds'] = valsdf['ded1st'] + valsdf['dednext']
+            valsdf['ddr'] = valsdf['ddd'] / valsdf['dds']
+
+            ddr_mask = valsdf['ddr'] > eps
+
+            if len(valsdf[ddr_mask]) > 0:
+                projectiledf = projectiledf[ddr_mask]
+                projectiledf_dead = projectiledf_dead.append(projectiledf[np.invert(ddr_mask)])
+
+                num_integrations = num_integrations * 2
+                j = -1
+                k = 0
+                valsdf['dednext'] = pd.Series(zeros)
+                projectiledf['Energy_curr'] = projectiledf['Energy_i']
+
+                #print(projectiledf['Energy_curr'])
 
 
-    return 0
+
+    # Remake the original dataframe to include all of the rows that were removed previously.
+    projectiledf = (projectiledf.append(projectiledf_dead)).sort_index(ascending=True)
+
+    projectiledf['DeltaE_tot'] = projectiledf['Energy_i'] - projectiledf['Energy_curr']
+
+    return projectiledf
 
 def dedx(df_currabsorber, projectiledf):
     # Function calculates the differential energy loss dE/dX in solid targets using a semiempirical formula deduced
@@ -103,6 +177,8 @@ def dedx(df_currabsorber, projectiledf):
     # v is the velocity of the projectile in MeV/(mg/cm**2)
     # Z1 is atomic number - projectile
 
+    calcdf = pd.DataFrame()
+
     rho = 0
 
     # Set the density here. Not sure how it gets the density if it's a gas, but we'll see later maybe
@@ -111,7 +187,7 @@ def dedx(df_currabsorber, projectiledf):
     elif df_currabsorber['Gas?']:
         rho = 1
 
-    xi = projectiledf['Velocity']**2 / df_currabsorber['Z_absorber']
+    calcdf['xi'] = projectiledf['Velocity']**2 / df_currabsorber['Z_absorber']
 
     # Absorber function
     # G(XI) = Y(EXP) - Y(Theory) is deduced from experimental energy loss measurements
@@ -155,41 +231,103 @@ def dedx(df_currabsorber, projectiledf):
 
     # Calculation of G(XI)
 
-    gxi = 0
+    init = np.zeros(len(calcdf.index))
 
-    if 1.0e-9 <= xi <= 5.0e-4:
-        sqxi = np.sqrt(xi)
+    calcdf['gxi'] = pd.Series(init)
+
+    xi_mask = (1.0e-9 <= calcdf['xi']) & (calcdf['xi'] <= 5.0e-4)
+
+    calcdf_masked = calcdf[xi_mask]
+    calcdf = calcdf[~xi_mask]
+
+    #print(calcdf,calcdf_masked)
+
+    if xi_mask[xi_mask].size > 0:
+        sqxi = np.sqrt(calcdf_masked['xi'])
         c = 2.0 / df_currabsorber['Z_absorber'] * (sqxi / (1.0 + 1.0e4 * sqxi))
 
         if df_currabsorber['Gas?']:
             c = c / 2.0
 
-        fg0 = 1.0 / (1.0 + (xi * 10000.0) * (xi * 10000.0) * (xi * 10000.0))
-        al = np.log(xi) - alefg
-        gxi = (c - hz2 * al * np.exp(-0.32 * al * al)) * fg0
+        fg0 = 1.0 / (1.0 + (calcdf_masked['xi'] * 10000.0) * (calcdf_masked['xi'] * 10000.0) *
+                     (calcdf_masked['xi'] * 10000.0))
+        al = np.log(calcdf_masked['xi']) - alefg
+        calcdf_masked['gxi'] = (c - hz2 * al * np.exp(-0.32 * al * al)) * fg0
 
+    calcdf = (calcdf.append(calcdf_masked)).sort_index(ascending=True)
 
     # Calculation of Y(XI)
-    y = 3.3e-4 * np.log(1.0 + (xi * fy)) + gxi
+    calcdf['y'] = 3.3e-4 * np.log(1.0 + (calcdf['xi'] * fy)) + calcdf['gxi']
 
     # Energy loss of heavy ions
     # Effective charge
 
-    vv0 = projectiledf['Velocity'] * 137.0
-    fv = 1.0
+    calcdf['vv0'] = projectiledf['Velocity'] * 137.0
 
-    if projectiledf['Velocity'] >= 0.62:
-        fv = 1.0 - np.exp(-vv0)
+    fvinit = np.ones(len(calcdf.index))
+    calcdf['fv'] = pd.Series(fvinit)
 
-    az1 = np.log(1.035 - 0.4 * np.exp(-0.16 * projectiledf['Z_proj']))
+    velmask = projectiledf['Velocity'] >= 0.62
 
-    qq = projectiledf['Velocity'] / projectiledf['Z_proj']**0.509
-    
-    ghi = projectiledf['Z_proj']
+    calcdf.loc[velmask, 'fv'] = 1.0 - np.exp(-calcdf['vv0'])
 
-    vz1 = (-116.79 - 3350.4 * qq) * qq
+    calcdf['az1'] = np.log(1.035 - 0.4 * np.exp(-0.16 * projectiledf['Z_proj']))
 
-    return delta_E
+    calcdf['qq'] = projectiledf['Velocity'] / projectiledf['Z_proj']**0.509
+
+    calcdf['ghi'] = projectiledf['Z_proj']
+
+    calcdf['vz1'] = (-116.79 - 3350.4 * calcdf['qq']) * calcdf['qq']
+
+    vz1mask = calcdf['vz1'] > -85.2
+
+    calcdf.loc[vz1mask, 'ghi'] = projectiledf['Z_proj'] * (1.0 - np.exp(calcdf['vz1']))
+
+    zprojmask = projectiledf['Z_proj'] > 2.0
+    calcdf.loc[zprojmask, 'ghi'] = projectiledf['Z_proj'] * (1.0 - np.exp(calcdf['fv'] * calcdf['az1'] - 0.879 *
+                                                                          (calcdf['vv0'] /
+                                                                           projectiledf['Z_proj']**0.65)))
+
+    # Effective charge of protons and aphas
+    # Electronic energy loss DEDXHI
+
+    calcdf['dedxhi'] = calcdf['ghi']**2 * df_currabsorber['Z_absorber'] * calcdf['y'] / \
+                       (df_currabsorber['A_absorber'] * projectiledf['Velocity']**2)
+
+    # nuclear energy loss DEDXNU
+    calcdf['za'] = np.sqrt(np.cbrt(projectiledf['Z_proj'])**2 + z2zwd)
+
+    calcdf['eps'] = 3.25e4 * df_currabsorber['A_absorber'] * projectiledf['Energy_curr'] / \
+                    (projectiledf['Z_proj'] * df_currabsorber['Z_absorber'] *
+                     (projectiledf['A_proj'] + df_currabsorber['A_absorber']) * calcdf['za'])
+
+    calcdf['sigman'] = 1.7 * np.sqrt(calcdf['eps']) * np.log(calcdf['eps'] + 2.1718282) / \
+                       (1.0 + 6.8 * calcdf['eps'] + 3.4 * np.sqrt(calcdf['eps']) ** 3)
+
+    calcdf['dedxnu'] = calcdf['sigman'] * 5.105 * projectiledf['Z_proj'] * df_currabsorber['Z_absorber'] * \
+                       projectiledf['A_proj'] / (calcdf['za'] * df_currabsorber['A_absorber'] *
+                                                 (projectiledf['A_proj'] + df_currabsorber['A_absorber']))
+
+    dedx_tot = calcdf['dedxnu'] + calcdf['dedxhi']
+
+    return dedx_tot
 
 if __name__ == "__main__":
-    desorb(1, 3, 25, 13, 27, 1, False, 2.7, 137.16)
+
+    # only work with tritons going through Alumimum now so we can see how this works...
+    z_absorber = [[13]]
+    a_absorber = [[27]]
+    numa_absorber = [[1]]
+    pressure = [0]
+    length = [0]
+    density = [2.7]
+    thick = [137.16]
+    isgas = [False]
+
+    proj_z = [1,1]
+    proj_a = [3,3]
+    proj_ei = [10,10]
+
+    df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
+
+    print(df_f)
