@@ -73,7 +73,6 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
 
 def eloss(absorberdf, projectiledf):
     # initial number of integrations that's hard coded into the original desorb code.
-    num_integrations = 2
     k = 0
     projectiledf['Energy_curr'] = projectiledf['Energy_i']
     projectiledf_dead = pd.DataFrame()
@@ -83,31 +82,43 @@ def eloss(absorberdf, projectiledf):
     valsdf = pd.DataFrame()
     zeros = np.zeros(len(projectiledf.index))
     valsdf['dednext'] = pd.Series(zeros)
+    valsdf['ded1st'] = pd.Series(zeros)
+    valsdf['ddd'] = pd.Series(zeros)
+    valsdf['ddr'] = pd.Series(zeros)
+    valsdf['dds'] = pd.Series(zeros)
 
-    while k < num_integrations:
-        k = k + 1
+    valsdf['k'] = pd.Series(zeros)
+    valsdf['num_int'] = pd.Series(zeros) + 2
+    num_integrations = valsdf['num_int'].max()
+    k_min = valsdf['k'].min()
+
+    while k_min < num_integrations:
+        valsdf['k'] = valsdf['k'] + 1
+        k_min = valsdf['k'].min()
         j_end = len(absorberdf.index)
         j = 0
 
-        absorberdf['FX'] = absorberdf['Partial_Thickness'] / num_integrations
+        #absorberdf['FX'] = absorberdf['Partial_Thickness'] / num_integrations
         while j < j_end:
             # Loop through each row of the absorber dataframe by putting each row into df_currabsorber and using that
             df_currabsorber = absorberdf.iloc[j]
+            valsdf['FX'] = df_currabsorber['Partial_Thickness'] / valsdf['num_int']
             # here we loop through each element, thickness etc to calculate how the energy changes after going through
             # each partial layer.
             projectiledf['Velocity'] = np.sqrt(2.13e-3 * projectiledf['Energy_curr'] / projectiledf['A_proj'])
 
             # Projectile velocity will change every loop step depending on the energy.
             # need to change Energy_curr in the dataframe.
-            print("Enter")
+            #print("Enter")
+            #print(projectiledf)
             projectiledf['deltaE'] = dedx(df_currabsorber, projectiledf)
 
             # sign is always -1, so just hard code it in
             projectiledf['Energy_curr'] = projectiledf['Energy_curr'] + \
-                                          projectiledf['deltaE'] * -1 * df_currabsorber['FX']
+                                          projectiledf['deltaE'] * -1 * valsdf['FX']
 
             projectiledf['Egt0'] = projectiledf['Energy_curr'] > 0
-            print(projectiledf['Egt0'])
+            #print(projectiledf['Egt0'])
 
             #print(projectiledf)
 
@@ -116,45 +127,86 @@ def eloss(absorberdf, projectiledf):
             #print(projectiledf_dead)
 
             # Collect all the particles that have 0 energy here:
-            projectiledf_dead = projectiledf_dead.append(projectiledf[~projectiledf['Egt0']])
+            projectiledf_dead = projectiledf_dead.append(projectiledf[~projectiledf['Egt0']], sort=True)
+            valsdf = valsdf[projectiledf['Egt0']]
             projectiledf = projectiledf[projectiledf['Egt0']]
-            print(projectiledf_dead)
+            #print(projectiledf_dead)
 
             if k <= 2:
-                valsdf['dednext'] = valsdf['dednext'] + projectiledf['deltaE'] * df_currabsorber['FX']
+                valsdf['dednext'] = valsdf['dednext'] + projectiledf['deltaE'] * valsdf['FX']
 
             j = j + 1
 
             #if k < 50:
              #   print(k)
 
-        if k == 1:
-            valsdf['ded1st'] = valsdf['dednext']
-            valsdf['dednext'] = pd.Series(zeros)
-        if k == 2:
-            valsdf['ddd'] = valsdf['ded1st'] - valsdf['dednext']
+        k1mask = valsdf['k'] == 1
 
-            dddmask = valsdf['ddd'] < 0
-            valsdf.loc[dddmask, 'ddd'] = valsdf['ddd'] * -1
+        valsdf.loc[k1mask, 'ded1st'] = valsdf['dednext']
+        valsdf.loc[k1mask, 'dednext'] = pd.Series(zeros)
 
-            valsdf['dds'] = valsdf['ded1st'] + valsdf['dednext']
-            valsdf['ddr'] = valsdf['ddd'] / valsdf['dds']
+        k2mask = valsdf['k'] == 2
+        valsdf.loc[k2mask, 'ddd'] = valsdf['ded1st'] - valsdf['dednext']
 
-            ddr_mask = valsdf['ddr'] > eps
+        dddmask = valsdf['ddd'] < 0
+        k2dddmask = k2mask & dddmask
 
-            if len(valsdf[ddr_mask]) > 0:
-                projectiledf = projectiledf[ddr_mask]
-                projectiledf_dead = projectiledf_dead.append(projectiledf[np.invert(ddr_mask)])
+        valsdf.loc[k2dddmask, 'ddd'] = valsdf['ddd'] * -1
 
-                num_integrations = num_integrations * 2
-                j = -1
-                k = 0
-                valsdf['dednext'] = pd.Series(zeros)
-                projectiledf['Energy_curr'] = projectiledf['Energy_i']
+        valsdf.loc[k2mask, 'dds'] = valsdf['ded1st'] + valsdf['dednext']
+        valsdf.loc[k2mask, 'ddr'] = valsdf['ddd'] / valsdf['dds']
+
+        ddr_mask = valsdf['ddr'] > eps
+        k2ddrmask = k2mask & ddr_mask
+
+        if len(valsdf[k2ddrmask]) > 0:
+            #projectiledf_dead = projectiledf_dead.append(projectiledf[np.invert(k2ddrmask)])
+            #projectiledf = projectiledf[k2ddrmask]
+
+            valsdf.loc[k2ddrmask, 'num_int'] = valsdf['num_int'] * 2
+            j = -1
+            valsdf.loc[k2ddrmask, 'k'] = 0 * valsdf['k']
+            valsdf.loc[k2ddrmask, 'dednext'] = pd.Series(zeros)
+            projectiledf.loc[k2ddrmask, 'Energy_curr'] = projectiledf['Energy_i']
+
+        #print(valsdf['k'], valsdf['num_int'])
+
+        num_integrations = valsdf['num_int'].max()
+        k_min = valsdf['k'].min()
+
+        projectiledf['keqmax_mask'] = valsdf['k'] == valsdf['num_int']
+        valsdf = valsdf[~projectiledf['keqmax_mask']]
+        projectiledf_dead = projectiledf_dead.append(projectiledf[projectiledf['keqmax_mask']], sort=True)
+        projectiledf = projectiledf[~projectiledf['keqmax_mask']]
+        print(projectiledf, valsdf['k'], valsdf['num_int'])
+
+
+       # if k == 2:
+       #     valsdf['ddd'] = valsdf['ded1st'] - valsdf['dednext']
+
+       #     dddmask = valsdf['ddd'] < 0
+        #    valsdf.loc[dddmask, 'ddd'] = valsdf['ddd'] * -1
+
+        #    valsdf['dds'] = valsdf['ded1st'] + valsdf['dednext']
+        #    valsdf['ddr'] = valsdf['ddd'] / valsdf['dds']
+
+
+
+         #   ddr_mask = valsdf['ddr'] > eps
+
+         #   if len(valsdf[ddr_mask]) > 0:
+         #       projectiledf = projectiledf[ddr_mask]
+         #       projectiledf_dead = projectiledf_dead.append(projectiledf[np.invert(ddr_mask)])
+
+         #       num_integrations = num_integrations * 2
+         #       j = -1
+         #       k = 0
+         #       valsdf['dednext'] = pd.Series(zeros)
+         #       projectiledf['Energy_curr'] = projectiledf['Energy_i']
 
                 #print(projectiledf['Energy_curr'])
 
-
+    #print(projectiledf_dead)
 
     # Remake the original dataframe to include all of the rows that were removed previously.
     projectiledf = (projectiledf.append(projectiledf_dead)).sort_index(ascending=True)
@@ -176,6 +228,7 @@ def dedx(df_currabsorber, projectiledf):
     # ENER is the energy of the projectile in MeV
     # v is the velocity of the projectile in MeV/(mg/cm**2)
     # Z1 is atomic number - projectile
+
 
     calcdf = pd.DataFrame()
 
@@ -231,9 +284,7 @@ def dedx(df_currabsorber, projectiledf):
 
     # Calculation of G(XI)
 
-    init = np.zeros(len(calcdf.index))
-
-    calcdf['gxi'] = pd.Series(init)
+    calcdf['gxi'] = calcdf['xi'] * 0.0
 
     xi_mask = (1.0e-9 <= calcdf['xi']) & (calcdf['xi'] <= 5.0e-4)
 
@@ -264,8 +315,8 @@ def dedx(df_currabsorber, projectiledf):
 
     calcdf['vv0'] = projectiledf['Velocity'] * 137.0
 
-    fvinit = np.ones(len(calcdf.index))
-    calcdf['fv'] = pd.Series(fvinit)
+    calcdf['fv'] = calcdf['xi'] * 0.0 + 1.0
+    #print(calcdf['fv'])
 
     velmask = projectiledf['Velocity'] >= 0.62
 
@@ -310,6 +361,10 @@ def dedx(df_currabsorber, projectiledf):
 
     dedx_tot = calcdf['dedxnu'] + calcdf['dedxhi']
 
+    #print("IN DEDX WE HAVE")
+    #print(calcdf)
+    #print("DEDX END")
+
     return dedx_tot
 
 if __name__ == "__main__":
@@ -324,9 +379,9 @@ if __name__ == "__main__":
     thick = [137.16]
     isgas = [False]
 
-    proj_z = [1,1]
-    proj_a = [3,3]
-    proj_ei = [10,10]
+    proj_z = [1, 1]
+    proj_a = [3, 3]
+    proj_ei = [3, 30]
 
     df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
 
