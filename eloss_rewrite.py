@@ -130,6 +130,7 @@ def eloss(absorberdf, projectiledf):
             projectiledf_dead = projectiledf_dead.append(projectiledf[~projectiledf['Egt0']], sort=True)
             valsdf = valsdf[projectiledf['Egt0']]
             projectiledf = projectiledf[projectiledf['Egt0']]
+
             #print(projectiledf_dead)
 
             if k <= 2:
@@ -210,6 +211,8 @@ def eloss(absorberdf, projectiledf):
 
     # Remake the original dataframe to include all of the rows that were removed previously.
     projectiledf = (projectiledf.append(projectiledf_dead)).sort_index(ascending=True)
+    elt0mask = projectiledf['Energy_curr'] < 0
+    projectiledf.loc[elt0mask, 'Energy_curr'] = 0
 
     projectiledf['DeltaE_tot'] = projectiledf['Energy_i'] - projectiledf['Energy_curr']
 
