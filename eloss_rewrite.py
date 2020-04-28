@@ -179,7 +179,9 @@ def eloss(absorberdf, projectiledf):
         valsdf = valsdf[~projectiledf['keqmax_mask']]
         projectiledf_dead = projectiledf_dead.append(projectiledf[projectiledf['keqmax_mask']], sort=True)
         projectiledf = projectiledf[~projectiledf['keqmax_mask']]
-        print(projectiledf, valsdf['k'], valsdf['num_int'])
+        #print(projectiledf, valsdf['k'], valsdf['num_int'])
+        if projectiledf.empty:
+            break
 
 
        # if k == 2:
@@ -210,7 +212,7 @@ def eloss(absorberdf, projectiledf):
     #print(projectiledf_dead)
 
     # Remake the original dataframe to include all of the rows that were removed previously.
-    projectiledf = (projectiledf.append(projectiledf_dead)).sort_index(ascending=True)
+    projectiledf = (projectiledf.append(projectiledf_dead, sort=True)).sort_index(ascending=True)
     elt0mask = projectiledf['Energy_curr'] < 0
     projectiledf.loc[elt0mask, 'Energy_curr'] = 0
 
@@ -382,9 +384,9 @@ if __name__ == "__main__":
     thick = [137.16]
     isgas = [False]
 
-    proj_z = [1, 1]
-    proj_a = [3, 3]
-    proj_ei = [3, 30]
+    proj_z = [1]
+    proj_a = [3]
+    proj_ei = [13]
 
     df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
 
