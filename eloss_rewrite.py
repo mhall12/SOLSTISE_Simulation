@@ -25,13 +25,14 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     length_frac = []
     numa_ind = []
     gas = []
+
     for i in range(len(z_absorber)):
         a_tot = 0
         if not isgas[i]:
             for j in range(len(z_absorber[i])):
                 a_tot = a_tot + a_absorber[i][j] * numa_absorber[i][j]
             for j in range(len(z_absorber[i])):
-                a_frac = a_absorber[i][j] * numa_absorber[i][j] / a_tot
+                a_frac = (a_absorber[i][j] * numa_absorber[i][j]) / a_tot
                 thick_frac.append(thickness[i] * a_frac)
                 den_frac.append(density[i] * a_frac)
                 length_frac.append(thickness[i] / density[i] * 1000.0)
@@ -42,10 +43,16 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
         if isgas[i]:
             for j in range(len(z_absorber[i])):
                 a_tot = a_tot + a_absorber[i][j] * numa_absorber[i][j]
-                thick_frac.append((pressure[i] / 760) * (length[i] / 22.4) * a_absorber[i] * numa_absorber[i])
-                den_frac.append(thick_frac[i] / length[i])
+                thick_frac.append((pressure[i] / 760) * (length[i] / 22.4) * a_absorber[i][j] * numa_absorber[i][j])
+                den_frac.append(thick_frac[j] / length[i])
                 length_frac.append(length[i])
+                z_ind.append(z_absorber[i][j])
+                a_ind.append(a_absorber[i][j])
+                numa_ind.append(numa_absorber[i][j])
                 gas.append(True)
+
+
+    print(den_frac)
 
     # We can set up the DataFrame down here:
     df_abs = pd.DataFrame()
@@ -56,6 +63,8 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     df_abs['Partial_Density'] = den_frac
     df_abs['Partial_Thickness'] = thick_frac
     df_abs['Gas?'] = gas
+
+    print(df_abs)
 
     df_proj = pd.DataFrame()
 
@@ -267,7 +276,7 @@ def dedx(df_currabsorber, projectiledf):
 
     g2 = 0
     if df_currabsorber['Z_absorber'] < 38.0:
-        g2 = 17.12 * np.exp(-0.12 * (df_currabsorber['Z_absorber'] - 11.63) * (df_currabsorber['Z_absorber'] - 11.63))
+        g2 = 17.12 * np.exp(-0.12 * (df_currabsorber['Z_absorber'] - 11.63)**2)
     elif df_currabsorber['Z_absorber'] > 38.0:
         g2 = 0.0000001
 
@@ -300,6 +309,7 @@ def dedx(df_currabsorber, projectiledf):
 
     if xi_mask[xi_mask].size > 0:
         sqxi = np.sqrt(calcdf_masked['xi'])
+
         c = 2.0 / df_currabsorber['Z_absorber'] * (sqxi / (1.0 + 1.0e4 * sqxi))
 
         if df_currabsorber['Gas?']:
@@ -323,7 +333,7 @@ def dedx(df_currabsorber, projectiledf):
     calcdf['fv'] = calcdf['xi'] * 0.0 + 1.0
     #print(calcdf['fv'])
 
-    velmask = projectiledf['Velocity'] >= 0.62
+    velmask = projectiledf['Velocity'] <= 0.62
 
     calcdf.loc[velmask, 'fv'] = 1.0 - np.exp(-calcdf['vv0'])
 
@@ -374,19 +384,18 @@ def dedx(df_currabsorber, projectiledf):
 
 if __name__ == "__main__":
 
-    # only work with tritons going through Alumimum now so we can see how this works...
-    z_absorber = [[13]]
-    a_absorber = [[27]]
-    numa_absorber = [[1]]
-    pressure = [0]
-    length = [0]
-    density = [2.7]
-    thick = [137.16]
-    isgas = [False]
+    z_absorber = [[6,1]]
+    a_absorber = [[12,1]]
+    numa_absorber = [[2,2]]
+    pressure = [150]
+    length = [10]
+    density = [0]
+    thick = [0]
+    isgas = [True]
 
-    proj_z = [1]
+    proj_z = [2]
     proj_a = [3]
-    proj_ei = [13]
+    proj_ei = [30]
 
     df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
 
