@@ -100,22 +100,21 @@ def eloss(absorberdf, projectiledf):
     dednext = np.zeros_like(projectiledf['Energy_i'])
     ded1st = np.zeros_like(dednext)
     eps = 0.0001
-    valsdf = pd.DataFrame()
-    zeros = np.zeros(len(projectiledf.index))
-    valsdf['dednext'] = pd.Series(zeros)
-    valsdf['ded1st'] = pd.Series(zeros)
-    valsdf['ddd'] = pd.Series(zeros)
-    valsdf['ddr'] = pd.Series(zeros)
-    valsdf['dds'] = pd.Series(zeros)
 
-    valsdf['k'] = pd.Series(zeros)
-    valsdf['num_int'] = pd.Series(zeros) + 2
-    num_integrations = valsdf['num_int'].max()
-    k_min = valsdf['k'].min()
+    zeros = np.zeros(len(projectiledf.index))
+
+    ddd = zeros
+    ddr = zeros
+    dds = np.ones_like(zeros)
+
+    k = zeros
+    num_int = zeros + 2
+    num_integrations = np.amax(num_int)
+    k_min = np.amin(k)
 
     while k_min < num_integrations:
-        valsdf['k'] = valsdf['k'] + 1
-        k_min = valsdf['k'].min()
+        k = k + 1
+        k_min = np.amin(k)
         j_end = len(absorberdf.index)
         j = 0
 
@@ -123,7 +122,8 @@ def eloss(absorberdf, projectiledf):
         while j < j_end:
             # Loop through each row of the absorber dataframe by putting each row into df_currabsorber and using that
             df_currabsorber = absorberdf.iloc[j]
-            valsdf['FX'] = df_currabsorber['Partial_Thickness'] / valsdf['num_int']
+
+            fx = df_currabsorber['Partial_Thickness'] / num_int
             # here we loop through each element, thickness etc to calculate how the energy changes after going through
             # each partial layer.
             projectiledf['Velocity'] = np.sqrt(2.13e-3 * projectiledf['Energy_curr'] / projectiledf['A_proj'])
@@ -136,7 +136,7 @@ def eloss(absorberdf, projectiledf):
 
             # sign is always -1, so just hard code it in
             projectiledf['Energy_curr'] = projectiledf['Energy_curr'] + \
-                                          projectiledf['deltaE'] * -1 * valsdf['FX']
+                                          projectiledf['deltaE'] * -1 * fx
 
             projectiledf['Egt0'] = projectiledf['Energy_curr'] > 0
             #print(projectiledf['Egt0'])
@@ -149,55 +149,68 @@ def eloss(absorberdf, projectiledf):
 
             # Collect all the particles that have 0 energy here:
             projectiledf_dead = projectiledf_dead.append(projectiledf[~projectiledf['Egt0']], sort=True)
-            valsdf = valsdf[projectiledf['Egt0']]
+            k = k[projectiledf['Egt0']]
+            fx = fx[projectiledf['Egt0']]
+            num_int = num_int[projectiledf['Egt0']]
+            dednext = dednext[projectiledf['Egt0']]
+            ded1st = ded1st[projectiledf['Egt0']]
+            ddd = ddd[projectiledf['Egt0']]
+            ddr = ddr[projectiledf['Egt0']]
+            dds = dds[projectiledf['Egt0']]
             projectiledf = projectiledf[projectiledf['Egt0']]
 
             #print(projectiledf_dead)
 
-            klte2mask = valsdf['k'] <= 2
-            valsdf.loc[klte2mask, 'dednext'] = valsdf['dednext'] + projectiledf['deltaE'] * valsdf['FX']
+            klt2mask = k <= 2
+            dednext = np.where(np.invert(klt2mask), dednext, dednext + projectiledf['deltaE'] * fx)
 
             j = j + 1
 
             #if k < 50:
              #   print(k)
 
-        k1mask = valsdf['k'] == 1
+        k1mask = k == 1
 
-        valsdf.loc[k1mask, 'ded1st'] = valsdf['dednext']
-        valsdf.loc[k1mask, 'dednext'] = pd.Series(zeros)
+        ded1st = np.where(np.invert(k1mask), ded1st, dednext)
+        dednext = np.where(np.invert(k1mask), dednext, zeros)
 
-        k2mask = valsdf['k'] == 2
-        valsdf.loc[k2mask, 'ddd'] = valsdf['ded1st'] - valsdf['dednext']
+        k2mask = k == 2
+        ddd = np.where(np.invert(k2mask), ddd, ded1st - dednext)
 
-        dddmask = valsdf['ddd'] < 0
+        dddmask = ddd < 0
         k2dddmask = k2mask & dddmask
 
-        valsdf.loc[k2dddmask, 'ddd'] = valsdf['ddd'] * -1
+        ddd = np.where(np.invert(k2dddmask), ddd, ddd * -1.0)
 
-        valsdf.loc[k2mask, 'dds'] = valsdf['ded1st'] + valsdf['dednext']
-        valsdf.loc[k2mask, 'ddr'] = valsdf['ddd'] / valsdf['dds']
+        dds = np.where(np.invert(k2mask), dds, ded1st + dednext)
 
-        ddr_mask = valsdf['ddr'] > eps
+        ddr = np.where(np.invert(k2mask), ddr, ddd / dds)
+
+        ddr_mask = ddr > eps
         k2ddrmask = k2mask & ddr_mask
 
-        if len(valsdf[k2ddrmask]) > 0:
-            #projectiledf_dead = projectiledf_dead.append(projectiledf[np.invert(k2ddrmask)])
-            #projectiledf = projectiledf[k2ddrmask]
+        if len(ddr[k2ddrmask]) > 0:
+            num_int = np.where(np.invert(k2ddrmask), num_int, num_int * 2)
 
-            valsdf.loc[k2ddrmask, 'num_int'] = valsdf['num_int'] * 2
             j = -1
-            valsdf.loc[k2ddrmask, 'k'] = 0 * valsdf['k']
-            valsdf.loc[k2ddrmask, 'dednext'] = pd.Series(zeros)
+            k = np.where(np.invert(k2ddrmask), k, k * 0.0)
+            dednext = np.where(np.invert(k2ddrmask), dednext, zeros)
+
             projectiledf.loc[k2ddrmask, 'Energy_curr'] = projectiledf['Energy_i']
 
-        #print(valsdf['k'], valsdf['num_int'])
+        num_integrations = np.amax(num_int)
+        k_min = np.amin(k)
 
-        num_integrations = valsdf['num_int'].max()
-        k_min = valsdf['k'].min()
+        projectiledf['keqmax_mask'] = k == num_int
 
-        projectiledf['keqmax_mask'] = valsdf['k'] == valsdf['num_int']
-        valsdf = valsdf[~projectiledf['keqmax_mask']]
+        k = k[~projectiledf['keqmax_mask']]
+        num_int = num_int[~projectiledf['keqmax_mask']]
+        dednext = dednext[~projectiledf['keqmax_mask']]
+        ded1st = ded1st[~projectiledf['keqmax_mask']]
+        ddd = ddd[~projectiledf['keqmax_mask']]
+        ddr = ddr[~projectiledf['keqmax_mask']]
+        dds = dds[~projectiledf['keqmax_mask']]
+
         projectiledf_dead = projectiledf_dead.append(projectiledf[projectiledf['keqmax_mask']], sort=True)
         projectiledf = projectiledf[~projectiledf['keqmax_mask']]
         #print(projectiledf, valsdf['k'], valsdf['num_int'])
@@ -228,142 +241,143 @@ def dedx(df_currabsorber, projectiledf):
     # v is the velocity of the projectile in MeV/(mg/cm**2)
     # Z1 is atomic number - projectile
 
+    z_abs = df_currabsorber['Z_absorber']
+    a_abs = df_currabsorber['A_absorber']
+    isg = df_currabsorber['Gas?']
+    part_den = df_currabsorber['Partial_Density']
 
-    calcdf = pd.DataFrame()
+    vel = projectiledf['Velocity'].to_numpy()
+    z_proj = projectiledf['Z_proj'].to_numpy()
+    a_proj = projectiledf['A_proj'].to_numpy()
+    en = projectiledf['Energy_curr'].to_numpy()
 
     rho = 0
 
     # Set the density here. Not sure how it gets the density if it's a gas, but we'll see later maybe
-    if not df_currabsorber['Gas?']:
-        rho = df_currabsorber['Partial_Density']
-    elif df_currabsorber['Gas?']:
+    if not isg:
+        rho = part_den
+    elif isg:
         rho = 1
 
-    calcdf['xi'] = projectiledf['Velocity']**2 / df_currabsorber['Z_absorber']
+    xi = vel**2 / z_abs
+
 
     # Absorber function
     # G(XI) = Y(EXP) - Y(Theory) is deduced from experimental energy loss measurements
     fy = 0
     # fy is function y
-    if not df_currabsorber['Gas?']:
-        fy = 54721.0 * (1.0 + 5.15e-2 * np.sqrt(df_currabsorber['A_absorber'] / rho) -
-                        np.exp(-0.23 * df_currabsorber['Z_absorber']))
-    elif df_currabsorber['Gas?']:
-        fy = 54721.0 * (1.35 - np.exp(df_currabsorber['Z_absorber'] * (-0.13 + 0.0014 * df_currabsorber['Z_absorber'])))
+    if not isg:
+        fy = 54721.0 * (1.0 + 5.15e-2 * np.sqrt(a_abs / rho) -
+                        np.exp(-0.23 * z_abs))
+    elif isg:
+        fy = 54721.0 * (1.35 - np.exp(z_abs * (-0.13 + 0.0014 * z_abs)))
 
     # G(XI) is the derivation of a gaussian with variable height H(Z2)
 
     g1 = 0
-    if df_currabsorber['Z_absorber'] <= 26.0:
-        g1 = 19.84 * np.exp(-0.17 * (df_currabsorber['Z_absorber'] - 4.25) * (df_currabsorber['Z_absorber'] - 4.25))
-    elif df_currabsorber['Z_absorber'] > 26.0:
+    if z_abs <= 26.0:
+        g1 = 19.84 * np.exp(-0.17 * (z_abs - 4.25) * (z_abs - 4.25))
+    elif z_abs > 26.0:
         g1 = 0.000001
 
     g2 = 0
-    if df_currabsorber['Z_absorber'] < 38.0:
-        g2 = 17.12 * np.exp(-0.12 * (df_currabsorber['Z_absorber'] - 11.63)**2)
-    elif df_currabsorber['Z_absorber'] > 38.0:
+    if z_abs < 38.0:
+        g2 = 17.12 * np.exp(-0.12 * (z_abs - 11.63)**2)
+    elif z_abs > 38.0:
         g2 = 0.0000001
 
-    g3 = 7.95 * np.exp(-0.015 * (df_currabsorber['Z_absorber'] - 30.2) * (df_currabsorber['Z_absorber'] - 30.2))
-    g4 = 5.84 * np.exp(-0.022 * (df_currabsorber['Z_absorber'] - 48.63) * (df_currabsorber['Z_absorber'] - 48.63))
-    g5 = 7.27 * np.exp(-0.005 * (df_currabsorber['Z_absorber'] - 73.06) * (df_currabsorber['Z_absorber'] - 73.06))
+    g3 = 7.95 * np.exp(-0.015 * (z_abs - 30.2) * (z_abs - 30.2))
+    g4 = 5.84 * np.exp(-0.022 * (z_abs - 48.63) * (z_abs - 48.63))
+    g5 = 7.27 * np.exp(-0.005 * (z_abs - 73.06) * (z_abs - 73.06))
     hz2 = (9.0 - (g1 + g2 + g3 + g4 + g5)) * 1.32e-5
 
-    z2zwd = np.cbrt(df_currabsorber['Z_absorber']) * np.cbrt(df_currabsorber['Z_absorber'])
+    z2zwd = np.cbrt(z_abs) * np.cbrt(z_abs)
 
     # Multiplication factors of G(XI)
-    fg = 1.2e-4 * df_currabsorber['Z_absorber'] * df_currabsorber['Z_absorber'] + \
-         (2.49e-2 * df_currabsorber['A_absorber'] / rho)
+    fg = 1.2e-4 * z_abs * z_abs + \
+         (2.49e-2 * a_abs / rho)
 
-    if df_currabsorber['Gas?']:
-        fg = 1.3 / (1.0 + np.exp(3.0 - (df_currabsorber['Z_absorber'] / 5.0)))
+    if isg:
+        fg = 1.3 / (1.0 + np.exp(3.0 - (z_abs / 5.0)))
 
     alefg = np.log(2.7e-5 / fg)
 
     # Calculation of G(XI)
 
-    calcdf['gxi'] = calcdf['xi'] * 0.0
+    gxi = xi * 0.0
 
-    xi_mask = (1.0e-9 <= calcdf['xi']) & (calcdf['xi'] <= 5.0e-4)
-
-    calcdf_masked = calcdf[xi_mask]
-    calcdf = calcdf[~xi_mask]
+    xi_mask = (1.0e-9 <= xi) & (xi <= 5.0e-4)
 
     #print(calcdf,calcdf_masked)
 
     if xi_mask[xi_mask].size > 0:
-        sqxi = np.sqrt(calcdf_masked['xi'])
+        sqxi = np.sqrt(xi)
 
-        c = 2.0 / df_currabsorber['Z_absorber'] * (sqxi / (1.0 + 1.0e4 * sqxi))
+        c = 2.0 / z_abs * (sqxi / (1.0 + 1.0e4 * sqxi))
 
-        if df_currabsorber['Gas?']:
+        if isg:
             c = c / 2.0
 
-        fg0 = 1.0 / (1.0 + (calcdf_masked['xi'] * 10000.0) * (calcdf_masked['xi'] * 10000.0) *
-                     (calcdf_masked['xi'] * 10000.0))
-        al = np.log(calcdf_masked['xi']) - alefg
-        calcdf_masked['gxi'] = (c - hz2 * al * np.exp(-0.32 * al * al)) * fg0
+        fg0 = 1.0 / (1.0 + (xi * 10000.0) * (xi * 10000.0) *
+                     (xi * 10000.0))
+        al = np.log(xi) - alefg
 
-    calcdf = (calcdf.append(calcdf_masked)).sort_index(ascending=True)
+        gxi = np.where(np.invert(xi_mask), gxi, (c - hz2 * al * np.exp(-0.32 * al * al)) * fg0)
+
 
     # Calculation of Y(XI)
-    calcdf['y'] = 3.3e-4 * np.log(1.0 + (calcdf['xi'] * fy)) + calcdf['gxi']
+    y = 3.3e-4 * np.log(1.0 + (xi * fy)) + gxi
 
     # Energy loss of heavy ions
     # Effective charge
 
-    calcdf['vv0'] = projectiledf['Velocity'] * 137.0
+    vv0 = vel * 137.0
 
-    calcdf['fv'] = calcdf['xi'] * 0.0 + 1.0
+    fv = xi * 0.0 + 1.0
     #print(calcdf['fv'])
 
-    velmask = projectiledf['Velocity'] <= 0.62
+    velmask = vel <= 0.62
 
-    calcdf.loc[velmask, 'fv'] = 1.0 - np.exp(-calcdf['vv0'])
+    fv = np.where(np.invert(velmask), fv, 1.0 - np.exp(-vv0))
 
-    calcdf['az1'] = np.log(1.035 - 0.4 * np.exp(-0.16 * projectiledf['Z_proj']))
+    az1 = np.log(1.035 - 0.4 * np.exp(-0.16 * z_proj))
 
-    calcdf['qq'] = projectiledf['Velocity'] / projectiledf['Z_proj']**0.509
+    qq = vel / z_proj**0.509
 
-    calcdf['ghi'] = projectiledf['Z_proj']
+    ghi = z_proj
 
-    calcdf['vz1'] = (-116.79 - 3350.4 * calcdf['qq']) * calcdf['qq']
+    vz1 = (-116.79 - 3350.4 * qq) * qq
 
-    vz1mask = calcdf['vz1'] > -85.2
+    vz1mask = vz1 > -85.2
 
-    calcdf.loc[vz1mask, 'ghi'] = projectiledf['Z_proj'] * (1.0 - np.exp(calcdf['vz1']))
+    ghi = np.where(np.invert(vz1mask), ghi, z_proj * (1.0 - np.exp(vz1)))
 
-    zprojmask = projectiledf['Z_proj'] > 2.0
-    calcdf.loc[zprojmask, 'ghi'] = projectiledf['Z_proj'] * (1.0 - np.exp(calcdf['fv'] * calcdf['az1'] - 0.879 *
-                                                                          (calcdf['vv0'] /
-                                                                           projectiledf['Z_proj']**0.65)))
+    zprojmask = z_proj > 2.0
+
+    ghi = np.where(np.invert(zprojmask), ghi, z_proj * (1.0 - np.exp(fv * az1 - 0.879 * (vv0 / z_proj**0.65))))
+
 
     # Effective charge of protons and aphas
     # Electronic energy loss DEDXHI
 
-    calcdf['dedxhi'] = calcdf['ghi']**2 * df_currabsorber['Z_absorber'] * calcdf['y'] / \
-                       (df_currabsorber['A_absorber'] * projectiledf['Velocity']**2)
+    dedxhi = ghi**2 * z_abs * y / \
+                       (a_abs * vel**2)
 
     # nuclear energy loss DEDXNU
-    calcdf['za'] = np.sqrt(np.cbrt(projectiledf['Z_proj'])**2 + z2zwd)
+    za = np.sqrt(np.cbrt(z_proj)**2 + z2zwd)
 
-    calcdf['eps'] = 3.25e4 * df_currabsorber['A_absorber'] * projectiledf['Energy_curr'] / \
-                    (projectiledf['Z_proj'] * df_currabsorber['Z_absorber'] *
-                     (projectiledf['A_proj'] + df_currabsorber['A_absorber']) * calcdf['za'])
+    eps = 3.25e4 * a_abs * en / \
+                    (z_proj * z_abs *
+                     (a_proj + a_abs) * za)
 
-    calcdf['sigman'] = 1.7 * np.sqrt(calcdf['eps']) * np.log(calcdf['eps'] + 2.1718282) / \
-                       (1.0 + 6.8 * calcdf['eps'] + 3.4 * np.sqrt(calcdf['eps']) ** 3)
+    sigman = 1.7 * np.sqrt(eps) * np.log(eps + 2.1718282) / \
+                       (1.0 + 6.8 * eps + 3.4 * np.sqrt(eps) ** 3)
 
-    calcdf['dedxnu'] = calcdf['sigman'] * 5.105 * projectiledf['Z_proj'] * df_currabsorber['Z_absorber'] * \
-                       projectiledf['A_proj'] / (calcdf['za'] * df_currabsorber['A_absorber'] *
-                                                 (projectiledf['A_proj'] + df_currabsorber['A_absorber']))
+    dedxnu = sigman * 5.105 * z_proj * z_abs * \
+                       a_proj / (za * a_abs *
+                                                 (a_proj + a_abs))
 
-    dedx_tot = calcdf['dedxnu'] + calcdf['dedxhi']
-
-    #print("IN DEDX WE HAVE")
-    #print(calcdf)
-    #print("DEDX END")
+    dedx_tot = dedxnu + dedxhi
 
     return dedx_tot
 
