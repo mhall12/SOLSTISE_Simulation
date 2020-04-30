@@ -148,6 +148,7 @@ def eloss(absorberdf, projectiledf):
             #print(projectiledf_dead)
 
             # Collect all the particles that have 0 energy here:
+
             projectiledf_dead = projectiledf_dead.append(projectiledf[~projectiledf['Egt0']], sort=True)
             valsdf = valsdf[projectiledf['Egt0']]
             projectiledf = projectiledf[projectiledf['Egt0']]
@@ -369,18 +370,18 @@ def dedx(df_currabsorber, projectiledf):
 
 if __name__ == "__main__":
 
-    z_absorber = [[6,8],[6,1]]
-    a_absorber = [[12,16],[12,1]]
-    numa_absorber = [[1,2],[1,2]]
-    pressure = [100,0]
-    length = [2,0]
-    density = [0,.9]
-    thick = [0,1]
-    isgas = [True, False]
+    z_absorber = [[6,8],[6,1],[13]]
+    a_absorber = [[12,16],[12,1],[26]]
+    numa_absorber = [[1,2],[1,2],[1]]
+    pressure = [100,0,0]
+    length = [2,0,0]
+    density = [0,.9, 2.7]
+    thick = [0,1, 130]
+    isgas = [True, False, False]
 
-    proj_z = [3,3,3,3,3,3,3,3]
-    proj_a = [6,6,6,6,6,6,6,6]
-    proj_ei = [30,30,30,30,30,30,30,30]
+    proj_z = np.array([1,1,1,1,1,1,1,1])
+    proj_a = np.array([3,3,3,3,3,3,3,3])
+    proj_ei = np.array([4,10,20,50,15,7,33,30])
 
     df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
 
