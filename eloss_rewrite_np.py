@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import random
+import re
 
 
 class ab():
@@ -417,19 +418,102 @@ def dedx(z_proj_in, a_proj_in, e_curr_in, vel_in, j):
 
 if __name__ == "__main__":
 
-    z_absorber = [[6,8],[6,1],[13]]
-    a_absorber = [[12,16],[12,1],[26]]
-    numa_absorber = [[1,2],[1,2],[1]]
-    pressure = [100,0,0]
-    length = [2,0,0]
-    density = [0,.9, 2.7]
-    thick = [0,1, 130]
-    isgas = [True, False, False]
+#    z_absorber = [[6,8]]
+#    a_absorber = [[12,16]]
+#    numa_absorber = [[1,2]]
+#    pressure = [1]
+#    length = [2]
+#    density = [0]
+#    thick = [0]
+#    isgas = [True]
 
-    proj_z = np.array([1,1,1,1,1,1,1,1])
-    proj_a = np.array([3,3,3,3,3,3,3,3])
-    proj_ei = np.array([4,10,20,50,15,7,33,30])
+#    proj_z = np.array([1,1,1,1,1,1,1,1])
+#    proj_a = np.array([3,3,3,3,3,3,3,3])
+#    proj_ei = np.array([4,10,20,50,15,7,33,30])
 
-    df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
+#    df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas, density, thick, pressure, length)
 
-    print(df_f)
+ #   print(df_f)
+
+
+    print("1) Define stopping particles. \n"
+          "2) Define stopping medium. \n"
+          "3) Run the energy loss code. \n"
+          "0) Exit.")
+
+    option = int(input("Input: "))
+
+    inFile = "isotopetable.txt"
+    isotable = np.genfromtxt(inFile, delimiter='\t', dtype = 'unicode')
+
+    symb = isotable[:, 0]
+    zarr = isotable[:, 1]
+    aarr = isotable[:, 2]
+
+    if option == 2:
+        numa_absorber = []
+        ele_absorber = []
+        a_absorber = []
+        z_absorber = []
+        prs = []
+        layerdata = input("Enter the material in each layer, separated by spaces (i.e. CO2 3He Si): ")
+        numlayers = layerdata.count(" ") + 1
+
+        individuallayers = layerdata.split()
+
+        for i in individuallayers:
+            ele = []
+            numele = []
+            aind = []
+            zind = []
+            if i[0].isdigit():
+                isotope = re.split('(\d+)', i)
+                a_absorber.append([int(isotope[1])])
+                ele_absorber.append([isotope[2]])
+                numa_absorber.append([1])
+                symbmask = symb == isotope[2]
+                z_absorber.append([int(zarr[symbmask][0])])
+            else:
+                buff = re.split('(\d+)', i)
+                for j in range(len(buff)):
+                    if buff[j] != '' and not buff[j].isdigit():
+                        ind = re.findall('([A-Z][a-z]*)', buff[j])
+                        for k in range(len(ind)):
+                            ele.append(ind[k])
+
+                            symbmask = symb == ind[k]
+                            zind.append(int(zarr[symbmask][0]))
+                            aind.append(int(aarr[symbmask][0]))
+
+                            if k == len(ind) - 1 and len(buff) > 1 and j < len(buff) - 1:
+                                numele.append(int(buff[j + 1]))
+                            else:
+                                numele.append(1)
+                a_absorber.append(aind)
+                z_absorber.append(zind)
+                numa_absorber.append(numele)
+                ele_absorber.append(ele)
+
+        print(a_absorber)
+        print(z_absorber)
+        gslist = []
+        while len(gslist) != numlayers:
+            gs = input("For each layer, indicate if the layer is a gas (g) or solid (s), "
+                       "separated by spaces (i.e. g s g): ")
+            gslist = gs.split()
+            if len(gslist) != numlayers:
+                print("ERROR: Gas/Solid not specified for every layer... \n")
+        isgas = [True if i == 'g' else False for i in gslist]
+        print(isgas)
+
+        for i in range(numlayers):
+            if isgas[i]:
+                prs.append(float(input("For the " + individuallayers[i] + " layer, enter the pressure in Torr: ")))
+
+
+
+
+
+
+
+
