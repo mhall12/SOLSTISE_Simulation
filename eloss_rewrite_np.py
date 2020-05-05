@@ -450,12 +450,67 @@ if __name__ == "__main__":
     zarr = isotable[:, 1]
     aarr = isotable[:, 2]
 
+    if option == 1:
+        proj_zin = []
+        proj_ain = []
+        proj_ei = []
+
+        proj_z = []
+        proj_a = []
+
+        proj = input("\nEnter the isotopes of the particles to undergo the energy loss calculations, "
+                     "\nseparated by spaces (i.e. 3He 18F 16O): ")
+        projnum = proj.count(" ") + 1
+        individual_proj = proj.split()
+
+        for i in range(len(individual_proj)):
+            projsplit = re.split('(\d+)', individual_proj[i])
+
+            proj_ain.append(int(projsplit[1]))
+            symbmask = symb == projsplit[2]
+            proj_zin.append(int(zarr[symbmask][0]))
+
+            eninput = input("\nEnter the energies of the " + individual_proj[i] + " in MeV, OR enter an energy "
+                                                                                  "range and step size, \nseparated "
+                                                                                  "by spaces (i.e. 1 4 0.5): ")
+
+            # is it divisible? if not, enter each energy as an individual number.
+
+            einsplit = eninput.split()
+
+            print(float(einsplit[1]))
+
+            if len(einsplit) == 3:
+                if (((float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2])) == 0 and \
+                        (float(einsplit[1]) > float(einsplit[0]))):
+                    ensteps = int((float(einsplit[1]) - float(einsplit[0])) / float(einsplit[2])) + 1
+                else:
+                    ensteps = len(einsplit)
+            else:
+                ensteps = len(einsplit)
+
+            for j in range(ensteps):
+                print((float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]))
+                if (float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]) == 0 and (float(einsplit[1]) > float(einsplit[0])):
+                    proj_ei.append(float(einsplit[0]) + j*float(einsplit[2]))
+                else:
+                    proj_ei.append(float(einsplit[j]))
+                proj_z.append(proj_zin[i])
+                proj_a.append(proj_ain[i])
+
+        print(proj_ei)
+
+        print(proj_z)
+        print(proj_a)
+
     if option == 2:
         numa_absorber = []
         ele_absorber = []
         a_absorber = []
         z_absorber = []
         prs = []
+        den = []
+        thk = []
         layerdata = input("Enter the material in each layer, separated by spaces (i.e. CO2 3He Si): ")
         numlayers = layerdata.count(" ") + 1
 
@@ -510,7 +565,22 @@ if __name__ == "__main__":
             if isgas[i]:
                 prs.append(float(input("For the " + individuallayers[i] + " layer, enter the pressure in Torr: ")))
 
+                prs.append(float(input("For the " + individuallayers[i] + " layer, enter the length in cm: ")))
 
+                den.append(0)
+                thk.append(0)
+            if not isgas[i]:
+                if individuallayers[i] == "CH2":
+                    den.append(0.954)
+                elif individuallayers[i] == "Si":
+                    den.append(2.33)
+                else:
+                    den.append(float(input("For the " + individuallayers[i] + " layer, enter the density in g/cm^3: ")))
+
+                thk.append(float(input("For the " + individuallayers[i] + " layer, enter the thickness in mg/cm^2: ")))
+
+                prs.append(0)
+                thk.append(0)
 
 
 
