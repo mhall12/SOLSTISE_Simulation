@@ -17,6 +17,14 @@ class ab():
 def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_absorber, isgas,
            density, thickness, pressure, length):
 
+    ab.thick_frac = np.empty(0)
+    ab.den_frac = np.empty(0)
+    # length_frac = np.empty(0)
+    ab.isgas = np.empty(0)
+    ab.a = np.empty(0)
+    ab.z = np.empty(0)
+    ab.numa = np.empty(0)
+
     # desorb functions close to what the old desorb does. However, it is rewritten to use pandas and numpy.
     # the old functions SETABG and SETABS are no longer used, and are replaced by the for loops below.
     # nsand is the number of elements in the absorber.
@@ -435,14 +443,6 @@ if __name__ == "__main__":
 
  #   print(df_f)
 
-
-    print("1) Define stopping particles. \n"
-          "2) Define stopping medium. \n"
-          "3) Run the energy loss code. \n"
-          "0) Exit.")
-
-    option = int(input("Input: "))
-
     inFile = "isotopetable.txt"
     isotable = np.genfromtxt(inFile, delimiter='\t', dtype = 'unicode')
 
@@ -450,140 +450,276 @@ if __name__ == "__main__":
     zarr = isotable[:, 1]
     aarr = isotable[:, 2]
 
-    if option == 1:
-        proj_zin = []
-        proj_ain = []
-        proj_ei = []
+    option = 100
 
-        proj_z = []
-        proj_a = []
+    individuallayers = []
+    individual_proj = []
 
-        proj = input("\nEnter the isotopes of the particles to undergo the energy loss calculations, "
-                     "\nseparated by spaces (i.e. 3He 18F 16O): ")
-        projnum = proj.count(" ") + 1
-        individual_proj = proj.split()
+    while option != 0:
 
-        for i in range(len(individual_proj)):
-            projsplit = re.split('(\d+)', individual_proj[i])
+        print("\n1) Define stopping particles. \n"
+              "2) Define the absorber layers. \n"
+              "3) Run the energy loss code. \n\n"
+              "4) Find the layer thickness for a final projectile energy. \n"
+              "0) Exit.")
 
-            proj_ain.append(int(projsplit[1]))
-            symbmask = symb == projsplit[2]
-            proj_zin.append(int(zarr[symbmask][0]))
+        option = int(input("Input: "))
+        print("\n")
 
-            eninput = input("\nEnter the energies of the " + individual_proj[i] + " in MeV, OR enter an energy "
-                                                                                  "range and step size, \nseparated "
-                                                                                  "by spaces (i.e. 1 4 0.5): ")
+        if option == 1:
+            proj_zin = []
+            proj_ain = []
+            proj_ei = []
 
-            # is it divisible? if not, enter each energy as an individual number.
+            proj_z = []
+            proj_a = []
 
-            einsplit = eninput.split()
+            proj = input("\nEnter the isotopes of the particles to undergo the energy loss calculations, "
+                         "\nseparated by spaces (i.e. 3He 18F 16O): ")
+            projnum = proj.count(" ") + 1
+            individual_proj = proj.split()
 
-            print(float(einsplit[1]))
+            for i in range(len(individual_proj)):
+                projsplit = re.split('(\d+)', individual_proj[i])
 
-            if len(einsplit) == 3:
-                if (((float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2])) == 0 and \
-                        (float(einsplit[1]) > float(einsplit[0]))):
-                    ensteps = int((float(einsplit[1]) - float(einsplit[0])) / float(einsplit[2])) + 1
+                proj_ain.append(int(projsplit[1]))
+                symbmask = symb == projsplit[2]
+                proj_zin.append(int(zarr[symbmask][0]))
+
+                eninput = input("\nEnter the energies of the " + individual_proj[i] + " in MeV, OR enter an energy "
+                                                                                      "range and step size, \nseparated "
+                                                                                      "by spaces (i.e. 1 4 0.5): ")
+
+                # is it divisible? if not, enter each energy as an individual number.
+
+                einsplit = eninput.split()
+
+                #print(float(einsplit[1]))
+
+                if len(einsplit) == 3:
+                    if (float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]) == 0 and \
+                            (float(einsplit[1]) > float(einsplit[0])):
+                        ensteps = int((float(einsplit[1]) - float(einsplit[0])) / float(einsplit[2])) + 1
+                    else:
+                        ensteps = len(einsplit)
                 else:
                     ensteps = len(einsplit)
-            else:
-                ensteps = len(einsplit)
 
-            for j in range(ensteps):
-                print((float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]))
-                if (float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]) == 0 and (float(einsplit[1]) > float(einsplit[0])):
-                    proj_ei.append(float(einsplit[0]) + j*float(einsplit[2]))
+                for j in range(ensteps):
+
+                    if len(einsplit) == 3:
+                        if (float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]) == 0 and \
+                                (float(einsplit[1]) > float(einsplit[0])):
+                            proj_ei.append(float(einsplit[0]) + j*float(einsplit[2]))
+                        else:
+                            proj_ei.append(float(einsplit[j]))
+                    else:
+                        proj_ei.append(float(einsplit[j]))
+
+                    proj_z.append(proj_zin[i])
+                    proj_a.append(proj_ain[i])
+
+            proj_z = np.array(proj_z)
+            proj_a = np.array(proj_a)
+            proj_ei = np.array(proj_ei)
+
+        if option == 2:
+            numa_absorber = []
+            ele_absorber = []
+            a_absorber = []
+            z_absorber = []
+            prs = []
+            den = []
+            thk = []
+            leng = []
+            layerdata = input("Enter the material in each layer, separated by spaces (i.e. CO2 3He Si): ")
+            numlayers = layerdata.count(" ") + 1
+
+            individuallayers = layerdata.split()
+
+            for i in individuallayers:
+                ele = []
+                numele = []
+                aind = []
+                zind = []
+                isgas = []
+                if i[0].isdigit():
+                    isotope = re.split('(\d+)', i)
+                    a_absorber.append([int(isotope[1])])
+                    ele_absorber.append([isotope[2]])
+                    numa_absorber.append([1])
+                    symbmask = symb == isotope[2]
+                    z_absorber.append([int(zarr[symbmask][0])])
                 else:
-                    proj_ei.append(float(einsplit[j]))
-                proj_z.append(proj_zin[i])
-                proj_a.append(proj_ain[i])
+                    buff = re.split('(\d+)', i)
+                    for j in range(len(buff)):
+                        if buff[j] != '' and not buff[j].isdigit():
+                            ind = re.findall('([A-Z][a-z]*)', buff[j])
+                            for k in range(len(ind)):
+                                ele.append(ind[k])
 
-        print(proj_ei)
+                                symbmask = symb == ind[k]
+                                zind.append(int(zarr[symbmask][0]))
+                                aind.append(int(aarr[symbmask][0]))
 
-        print(proj_z)
-        print(proj_a)
+                                if k == len(ind) - 1 and len(buff) > 1 and j < len(buff) - 1:
+                                    numele.append(int(buff[j + 1]))
+                                else:
+                                    numele.append(1)
+                    a_absorber.append(aind)
+                    z_absorber.append(zind)
+                    numa_absorber.append(numele)
+                    ele_absorber.append(ele)
 
-    if option == 2:
-        numa_absorber = []
-        ele_absorber = []
-        a_absorber = []
-        z_absorber = []
-        prs = []
-        den = []
-        thk = []
-        layerdata = input("Enter the material in each layer, separated by spaces (i.e. CO2 3He Si): ")
-        numlayers = layerdata.count(" ") + 1
+            print(a_absorber)
+            print(z_absorber)
+            gslist = []
+         #   while len(gslist) != numlayers:
+         #       gs = input("For each layer, indicate if the layer is a gas (g) or solid (s), "
+         #                  "separated by spaces (i.e. g s g): ")
+         #       gslist = gs.split()
+         #       if len(gslist) != numlayers:
+         #           print("ERROR: Gas/Solid not specified for every layer... \n")
+         #   isgas = [True if i == 'g' else False for i in gslist]
+         #   print(isgas)
 
-        individuallayers = layerdata.split()
-
-        for i in individuallayers:
-            ele = []
-            numele = []
-            aind = []
-            zind = []
-            if i[0].isdigit():
-                isotope = re.split('(\d+)', i)
-                a_absorber.append([int(isotope[1])])
-                ele_absorber.append([isotope[2]])
-                numa_absorber.append([1])
-                symbmask = symb == isotope[2]
-                z_absorber.append([int(zarr[symbmask][0])])
-            else:
-                buff = re.split('(\d+)', i)
-                for j in range(len(buff)):
-                    if buff[j] != '' and not buff[j].isdigit():
-                        ind = re.findall('([A-Z][a-z]*)', buff[j])
-                        for k in range(len(ind)):
-                            ele.append(ind[k])
-
-                            symbmask = symb == ind[k]
-                            zind.append(int(zarr[symbmask][0]))
-                            aind.append(int(aarr[symbmask][0]))
-
-                            if k == len(ind) - 1 and len(buff) > 1 and j < len(buff) - 1:
-                                numele.append(int(buff[j + 1]))
-                            else:
-                                numele.append(1)
-                a_absorber.append(aind)
-                z_absorber.append(zind)
-                numa_absorber.append(numele)
-                ele_absorber.append(ele)
-
-        print(a_absorber)
-        print(z_absorber)
-        gslist = []
-        while len(gslist) != numlayers:
-            gs = input("For each layer, indicate if the layer is a gas (g) or solid (s), "
-                       "separated by spaces (i.e. g s g): ")
-            gslist = gs.split()
-            if len(gslist) != numlayers:
-                print("ERROR: Gas/Solid not specified for every layer... \n")
-        isgas = [True if i == 'g' else False for i in gslist]
-        print(isgas)
-
-        for i in range(numlayers):
-            if isgas[i]:
-                prs.append(float(input("For the " + individuallayers[i] + " layer, enter the pressure in Torr: ")))
-
-                prs.append(float(input("For the " + individuallayers[i] + " layer, enter the length in cm: ")))
-
-                den.append(0)
-                thk.append(0)
-            if not isgas[i]:
-                if individuallayers[i] == "CH2":
-                    den.append(0.954)
-                elif individuallayers[i] == "Si":
-                    den.append(2.33)
+            for i in range(numlayers):
+                # Define standardized media gas/solid, else indicate for each layer
+                if individuallayers[i] == "CH2" or individuallayers[i] == "Si" or individuallayers[i] == "CD2" or \
+                        individuallayers[i] == "C" or individuallayers[i] == "Al":
+                    isgas.append(False)
+                elif individuallayers[i] == "CO2" or individuallayers[i] == "C4H10" or individuallayers[i] == "CF4":
+                    isgas.append(True)
                 else:
-                    den.append(float(input("For the " + individuallayers[i] + " layer, enter the density in g/cm^3: ")))
+                    gs = input("Indicate whether the " + individuallayers[i] + " layer is a gas (g) or solid (s): ")
+                    if gs == 'g':
+                        gs = True
+                    else:
+                        gs = False
 
-                thk.append(float(input("For the " + individuallayers[i] + " layer, enter the thickness in mg/cm^2: ")))
+                    isgas.append(gs)
 
-                prs.append(0)
-                thk.append(0)
+                if isgas[i]:
+                    prs.append(float(input("For the " + individuallayers[i] + " layer, enter the pressure in Torr: ")))
+
+                    leng.append(float(input("For the " + individuallayers[i] + " layer, enter the length in cm: ")))
+
+                    den.append(0)
+                    thk.append(0)
+                if not isgas[i]:
+                    if individuallayers[i] == "CH2" or individuallayers[i] == "CD2":
+                        den.append(0.94)
+                    elif individuallayers[i] == "C":
+                        den.append(2.267)
+                    elif individuallayers[i] == "Al":
+                        den.append(2.7)
+                    elif individuallayers[i] == "Si":
+                        den.append(2.33)
+                        thsi = float(input("For the " +
+                                           individuallayers[i] + " (" +
+                                           str(i+1) + ") layer, enter the thickness in microns: "))
+
+                        # thickness in micron x density x 0.1 to convert um*g/cm^3 to mg/cm^2
+                        thk.append(thsi * 2.33 * 0.1)
+
+                    else:
+                        den.append(float(input("For the " + individuallayers[i] +
+                                               " layer, enter the density in g/cm^3: ")))
+
+                    if individuallayers[i] != "Si":
+                        thk.append(float(input("For the " + individuallayers[i] +
+                                               " layer, enter the thickness in mg/cm^2: ")))
+
+                    prs.append(0)
+                    leng.append(0)
+
+        if option == 3:
+            if len(individual_proj) == 0:
+                print("Please define the stopping particles using Option 1 first.")
+            elif len(individuallayers) == 0:
+                print("Please define the stopping layers using Option 2 first.")
+            else:
+                df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas,
+                          den, thk, prs, leng)
+
+            print(df_f)
+
+        if option == 4:
+            proj_ei = []
+            proj_z = []
+            proj_a = []
+
+            solidupper = 1000
+            err = 1000
+
+            if len(individuallayers) == 0:
+                print("Please define the stopping layers using Option 2 first.")
+            else:
+                proj = input("\nEnter the isotope to use in the thickness estimation (i.e. 12C): ")
+                projsplit = re.split('(\d+)', proj)
+
+                proj_a.append(int(projsplit[1]))
+                symbmask = symb == projsplit[2]
+                proj_z.append(int(zarr[symbmask][0]))
+
+                proj_ei.append(float(input("\nEnter the initial energy in MeV: ")))
+                efin = float(input("\nEnter the final energy in MeV: "))
+
+                proj_z = np.array(proj_z)
+                proj_a = np.array(proj_a)
+                proj_ei = np.array(proj_ei)
+
+                efin_calc = 0
+                eratio = efin_calc / efin
+
+                if len(individuallayers) > 1:
+                    layer = int(input("\nWhich layer thickness would you like to vary?: ")) - 1
+                else:
+                    layer = 0
+
+                thk[layer] = 0.01
+
+                while eratio < .998 or eratio > 1.002:
+                    df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas,
+                                  den, thk, prs, leng)
+                    efin_calc = proj_ei[0] - df_f['DeltaE_tot'][0]
+                    eratio = efin_calc / efin
+
+                    #print(df_f)
+                    #print(eratio)
+
+                    if eratio > 1:
+                        thk[layer] = thk[layer] + err
+                        err = err / 2
+                    if eratio < 1:
+                        thk[layer] = thk[layer] - err
+                        if thk[layer] < 0:
+                            thk[layer] = 0.01
+                        err = err / 2
+
+                    #print(err)
+                #    if 1 < eratio < 1.005:
+                #        thk[layer] = thk[layer] + thk[layer] * 0.05
+                #    elif eratio > 1.005:
+                #        thk[layer] = thk[layer] + thk[layer] * 0.25
+                #    if .995 < eratio < 1:
+                #        thk[layer] = thk[layer] - thk[layer] * 0.05
+                #    elif eratio < .995:
+                #        thk[layer] = thk[layer] - thk[layer] * 0.25
+
+                    #print(thk[layer])
 
 
 
+
+
+
+                    #proj_ei[0] = efin_calc
+
+
+                    #print(eratio)
+
+                print("The thickness you seek is: " + str(thk[layer]) + " mg/cm^2...")
 
 
 
