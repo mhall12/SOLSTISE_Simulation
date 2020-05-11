@@ -459,11 +459,15 @@ if __name__ == "__main__":
 
         print("\n1) Define stopping particles. \n"
               "2) Define the absorber layers. \n"
-              "3) Run the energy loss code. \n\n"
+              "3) Run the energy loss code. \n"
               "4) Find the layer thickness for a final projectile energy. \n"
               "0) Exit.")
 
-        option = int(input("Input: "))
+        try:
+            option = int(input("\nInput: "))
+        except ValueError:
+            print("\n*****Enter an integer number from the list!*****\n")
+
         print("\n")
 
         if option == 1:
@@ -473,6 +477,7 @@ if __name__ == "__main__":
 
             proj_z = []
             proj_a = []
+            proj_symblist = []
 
             proj = input("\nEnter the isotopes of the particles to undergo the energy loss calculations, "
                          "\nseparated by spaces (i.e. 3He 18F 16O): ")
@@ -493,8 +498,6 @@ if __name__ == "__main__":
                 # is it divisible? if not, enter each energy as an individual number.
 
                 einsplit = eninput.split()
-
-                #print(float(einsplit[1]))
 
                 if len(einsplit) == 3:
                     if (float(einsplit[1]) - float(einsplit[0])) % float(einsplit[2]) == 0 and \
@@ -518,10 +521,13 @@ if __name__ == "__main__":
 
                     proj_z.append(proj_zin[i])
                     proj_a.append(proj_ain[i])
+                    proj_symblist.append(individual_proj[i])
 
             proj_z = np.array(proj_z)
             proj_a = np.array(proj_a)
             proj_ei = np.array(proj_ei)
+            proj_symblistnp = np.array(proj_symblist)
+            print(proj_symblistnp)
 
         if option == 2:
             numa_absorber = []
@@ -571,17 +577,7 @@ if __name__ == "__main__":
                     numa_absorber.append(numele)
                     ele_absorber.append(ele)
 
-            print(a_absorber)
-            print(z_absorber)
             gslist = []
-         #   while len(gslist) != numlayers:
-         #       gs = input("For each layer, indicate if the layer is a gas (g) or solid (s), "
-         #                  "separated by spaces (i.e. g s g): ")
-         #       gslist = gs.split()
-         #       if len(gslist) != numlayers:
-         #           print("ERROR: Gas/Solid not specified for every layer... \n")
-         #   isgas = [True if i == 'g' else False for i in gslist]
-         #   print(isgas)
 
             for i in range(numlayers):
                 # Define standardized media gas/solid, else indicate for each layer
@@ -634,23 +630,41 @@ if __name__ == "__main__":
                     leng.append(0)
 
         if option == 3:
+
             if len(individual_proj) == 0:
                 print("Please define the stopping particles using Option 1 first.")
-            elif len(individuallayers) == 0:
+            if len(individuallayers) == 0:
                 print("Please define the stopping layers using Option 2 first.")
-            else:
+            if len(individual_proj) > 0 and len(individuallayers) > 0:
                 df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas,
                           den, thk, prs, leng)
+                df_out = pd.DataFrame()
+                absorberdf_out = pd.DataFrame()
+                absorberdf_out['Layer'] = individuallayers
+                absorberdf_out['State'] = ['Gas' if i else 'Solid' for i in isgas]
+                absorberdf_out['Density (g/cm^3)'] = [den[i] if not isgas[i] else 'N/A' for i in range(len(isgas))]
+                absorberdf_out['Thickness (mg/cm^2)'] = [thk[i] if not isgas[i] else 'N/A' for i in range(len(isgas))]
+                absorberdf_out['Pressure (Torr)'] = [prs[i] if isgas[i] else 'N/A' for i in range(len(isgas))]
+                absorberdf_out['Length (cm)'] = [leng[i] if isgas[i] else 'N/A' for i in range(len(isgas))]
 
-            print(df_f)
+                print(absorberdf_out)
+                df_out['Isotope'] = proj_symblistnp
+                df_out['Initial Energy (MeV)'] = df_f['Energy_i']
+                df_out['Energy lost (MeV)'] = df_f['DeltaE_tot']
+                df_out['Final Energy (MeV)'] = df_f['Energy_i'] - df_f['DeltaE_tot']
+                df_out['Estimated Straggling (MeV)'] = df_f['E_strag_FWHM']
+                print(df_out)
+                input("Press ENTER to continue.")
 
         if option == 4:
-            proj_ei = []
-            proj_z = []
-            proj_a = []
+            proj_ei4 = []
+            proj_z4 = []
+            proj_a4 = []
 
-            solidupper = 1000
-            err = 1000
+            solidupper = 1000  # mg/cm2
+            gaslengthup = 1000  # cm
+            gaspressup = 2000  # Torr
+
 
             if len(individuallayers) == 0:
                 print("Please define the stopping layers using Option 2 first.")
@@ -658,68 +672,82 @@ if __name__ == "__main__":
                 proj = input("\nEnter the isotope to use in the thickness estimation (i.e. 12C): ")
                 projsplit = re.split('(\d+)', proj)
 
-                proj_a.append(int(projsplit[1]))
+                proj_a4.append(int(projsplit[1]))
                 symbmask = symb == projsplit[2]
-                proj_z.append(int(zarr[symbmask][0]))
+                proj_z4.append(int(zarr[symbmask][0]))
 
-                proj_ei.append(float(input("\nEnter the initial energy in MeV: ")))
+                proj_ei4.append(float(input("\nEnter the initial energy in MeV: ")))
                 efin = float(input("\nEnter the final energy in MeV: "))
 
-                proj_z = np.array(proj_z)
-                proj_a = np.array(proj_a)
-                proj_ei = np.array(proj_ei)
+                proj_z4 = np.array(proj_z4)
+                proj_a4 = np.array(proj_a4)
+                proj_ei4 = np.array(proj_ei4)
 
                 efin_calc = 0
                 eratio = efin_calc / efin
 
                 if len(individuallayers) > 1:
-                    layer = int(input("\nWhich layer thickness would you like to vary?: ")) - 1
+                    layer = int(input("\nWhich layer would you like to vary?: ")) - 1
                 else:
                     layer = 0
 
+                if isgas[layer]:
+                    lenprsq = int(input("\nWould you like to vary the gas length (1) or gas pressure (2)?: "))
+                    if lenprsq == 1:
+                        err = gaslengthup
+                    else:
+                        err = gaspressup
+                else:
+                    err = solidupper
+                    lenprsq = 29
+
                 thk[layer] = 0.01
+                broken = False
 
                 while eratio < .998 or eratio > 1.002:
-                    df_f = desorb(proj_z, proj_a, proj_ei, z_absorber, a_absorber, numa_absorber, isgas,
+                    df_f = desorb(proj_z4, proj_a4, proj_ei4, z_absorber, a_absorber, numa_absorber, isgas,
                                   den, thk, prs, leng)
-                    efin_calc = proj_ei[0] - df_f['DeltaE_tot'][0]
+                    efin_calc = proj_ei4[0] - df_f['DeltaE_tot'][0]
                     eratio = efin_calc / efin
 
-                    #print(df_f)
-                    #print(eratio)
-
                     if eratio > 1:
-                        thk[layer] = thk[layer] + err
-                        err = err / 2
+                        if lenprsq == 29:
+                            thk[layer] = thk[layer] + err
+                        if lenprsq == 1:
+                            leng[layer] = leng[layer] + err
+                        else:
+                            prs[layer] = prs[layer] + err
                     if eratio < 1:
-                        thk[layer] = thk[layer] - err
-                        if thk[layer] < 0:
-                            thk[layer] = 0.01
-                        err = err / 2
+                        if lenprsq == 29:
+                            thk[layer] = thk[layer] - err
+                            if thk[layer] < 0:
+                                thk[layer] = 0.01
+                        if lenprsq == 1:
+                            leng[layer] = leng[layer] - err
+                            if leng[layer] < 0:
+                                leng[layer] = 0.01
+                        else:
+                            prs[layer] = prs[layer] - err
+                            if prs[layer] < 0:
+                                prs[layer] = 0.01
 
-                    #print(err)
-                #    if 1 < eratio < 1.005:
-                #        thk[layer] = thk[layer] + thk[layer] * 0.05
-                #    elif eratio > 1.005:
-                #        thk[layer] = thk[layer] + thk[layer] * 0.25
-                #    if .995 < eratio < 1:
-                #        thk[layer] = thk[layer] - thk[layer] * 0.05
-                #    elif eratio < .995:
-                #        thk[layer] = thk[layer] - thk[layer] * 0.25
+                    err = err / 2
 
-                    #print(thk[layer])
+                    if err < 0.1:
+                        print("No results found for the parameters specified...")
+                        broken = True
+                        break
 
+                if not broken:
+                    if lenprsq == 29:
+                        print("The thickness you seek is: " + str(round(thk[layer], 2)) + " mg/cm^2...")
+                    if lenprsq == 1:
+                        print("The gas length you seek is: " + str(round(leng[layer], 2)) + " cm...")
+                    else:
+                        print("The pressure you seek is: " + str(round(prs[layer], 2)) + " Torr...")
 
+                input("Press ENTER to continue.")
 
-
-
-
-                    #proj_ei[0] = efin_calc
-
-
-                    #print(eratio)
-
-                print("The thickness you seek is: " + str(thk[layer]) + " mg/cm^2...")
 
 
 
