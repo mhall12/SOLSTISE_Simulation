@@ -11,15 +11,25 @@ from mpl_toolkits import mplot3d
 import os
 import glob
 from Plotter import plot
+import fnmatch
+from stopyt import desorb
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
+
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, targetparms):
 
     if rblock < rbore:
         phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
         phi2block = 3/2*np.pi + np.arctan(rblock/(-1*cheight))
 
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
-    masses = readmass(reac)
+    masses, ztarg, atarg, zeject, aeject = readmass(reac)
+
+    # Change target params here if the target is a gas:
+    if targetparms[7][0]:
+        targetparms[0] = [ztarg]
+        targetparms[1] = [atarg]
+
+    # targetparms now contains all the information needed for the desorb calculation.
 
     # reaction of form t(b,e)R
     utoMeV = 931.4941
@@ -52,9 +62,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
    # B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
 
+    if fnmatch.fnmatch(filein, '*nosm*'):
+        elossbool = True
+    else:
+        elossbool = False
 
     # Generates a pandas data frame of shape (xxx,2) whose columns are theta angle and energy.
-    df = pd.read_csv(filein, sep="\t", header=None, low_memory = False)
+    df = pd.read_csv(filein, sep="\t", header=None, low_memory=False)
     df.columns = ["Theta_Deg", "Energy"]
 
     # Determine whether or not the particles are coming out at backward or forward angles:
@@ -174,10 +188,41 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     dummy = df['Energy']
 
+    # The last position of the particle, to determine how far the particle travelled in the last time step
+    xlast = np.zeros_like(phic)
+    ylast = np.zeros_like(phic)
+    zlast = np.zeros_like(phic)
+
+    if elossbool:
+        # Need to set up the projectile data here that goes into desorb:
+        zp = np.zeros_like(phic) + zeject
+        ap = np.zeros_like(phic) + aeject
+        ecurr = df['Energy'].to_numpy()
+
+        # We also need to set up the absorber data in the right format. All of these will just have one layer so it
+        # is fairly straight forward.
+        z_abs = targetparms[0]
+        a_abs = targetparms[1]
+        numabs = targetparms[2]
+        ig = targetparms[7]
+        den = targetparms[3]
+        thk = targetparms[4]
+        jetprs = targetparms[5]
+        champrs = targetparms[6]
+
+        # Set the jet radius here:
+        jetr = 0.0015  # 3 mm diameter jet
+
+        # Length and pressure for the gas absorber needs to be set within the code.
+
+        # The distance that the particle must traverse to get out of the jet is set here.
+        jetlength = np.abs(jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy())**2 * np.cos(df['Phi'].to_numpy())**2 +
+                                          np.cos(df['Theta_Rad'].to_numpy())**2))
+
     # Simulating events status bar for the for loop
     print("Simulating Events...")
     statbar = "[                              ]"
-
+    print(df['Theta_Deg'])
     # Splits the flight time into 300 segments for tracking purposes to see whether or not the particle is blocked.
     for i in range(300):
 
@@ -186,11 +231,35 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
             print(statbar, end='\r', flush=True)
 
         t = df['t_reduced']/300 * (i+1)
-        xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
-        ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
-        zpos = df['vel_par']*t
 
-        #print(ypos)
+        # If we aren't doing the energy loss I want the code to function like normal.
+        if not elossbool:
+            xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
+            ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
+            zpos = df['vel_par']*t
+        if elossbool:
+            xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
+            ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
+            zpos = df['vel_par']*t
+            if (i+1) % 30 == 0:
+                disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (ylast - ypos) ** 2)
+                #print(disttravl)
+
+                th2 = 180 - np.arctan(np.sqrt(xpos**2 + ypos**2) / (-1*zpos)) * 180 / np.pi
+
+                print(th2)
+            # If we want the energy loss, a bunch of parameters need to be updated every time step
+
+            # Velocity of the ejectile in the lab frame (m/s) added to dataframe
+            #df['vel_ejec'] = np.sqrt((2 * df['Energy'] * mevtoj) / (me * amutokg))
+            # Velocities parallel to the z-axis and perpendicular to the z-axis.
+            #df['vel_perp'] = df['vel_ejec'] * np.sin(df['Theta_Rad'])
+            #df['vel_par'] = df['vel_ejec'] * np.cos(df['Theta_Rad'])
+
+            # The parameters that have to be updated are phi, theta, and E every 30 time steps. Then we have to recalc
+            # the velocities. The new phi/theta/E are like new initial conditions, and since omega is a constant,
+            # we can get the xpos, ypos, and zpos relative to xlast, ylast, and zlast, then we can get the true xpos,
+            # ypos, and zpos by adding the relative one to the last ones. To update theta,
 
         # r is the radial position of the particle
         r = np.sqrt(xpos**2 + ypos**2)
@@ -248,6 +317,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         maskmaster_nozzle = maskmaster_nozzle & np.invert(masknozzle)
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
+
+        if (i+1) % 30 == 0 and elossbool:
+            xlast = xpos
+            ylast = ypos
+            zlast = zpos
+
+            tlast = t
 
     # Adds the final phi position to the dataframe
     df['zpos_final'] = zpos

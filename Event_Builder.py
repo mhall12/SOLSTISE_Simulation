@@ -48,6 +48,13 @@ def BuildEvts():
         for i in range(levnum):
             levels.append(float(input("Enter the energy of a level in MeV: ")))
 
+    # We now have an energy loss code, so we need to see if the user wants artificial
+    # smearing if the allE option isn't used.
+    smearopt = 2
+    if levnum > 0:
+        smearopt = int(input("If you want to calculate energy loss in the code, "
+                             "enter (1), otherwise enter (0): "))
+
     numevents = int(input("Input the number of events you would like to generate: "))
 
     # Take the reaction and replace all the parentheses with underscores so we can use it in the text file name
@@ -55,8 +62,10 @@ def BuildEvts():
     reac = reac.replace(",", "_")
     reac = reac.replace(")", "_")
 
-    if levnum > 0:
+    if levnum > 0 and smearopt == 1:
         outfilename = reac + str(int(beamenergy)) + "_evts.txt"
+    elif levnum > 0 and smearopt == 0:
+        outfilename = reac + str(int(beamenergy)) + "_evts_nosm.txt"
     else:
         outfilename = reac + str(int(beamenergy)) + "_evts_allE.txt"
 
@@ -114,8 +123,10 @@ def BuildEvts():
                 break
 
         # Smear the results a little to make it look like there is energy loss.
-        Eejec2 = random.gauss(Eejec2, .01)
-        theta = random.gauss(theta, .1)
+        # or if the user has put smearopt = 0, we don't want the gaussian smearing.
+        if smearopt == 1:
+            Eejec2 = random.gauss(Eejec2, .01)
+            theta = random.gauss(theta, .1)
 
         # Write the results to a text file so we can read it in later.
         file.write(str(theta) + '\t' + str(Eejec2) + '\n')

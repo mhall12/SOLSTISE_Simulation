@@ -2,10 +2,12 @@
 from Sim_File_pd import sim_pd
 from Event_Builder import BuildEvts
 from PipeMaker import makepipe
+import numpy as np
 import glob
 import os
 import re
 import math
+import fnmatch
 
 print("")
 print("########   ########  ##       ########  ########  ########  ########  ######## ")
@@ -77,7 +79,64 @@ ebeam = int(filein[(uslocs[2]+1):uslocs[3]])
 
 print("The beam energy is: " + str(ebeam) + " MeV")
 
-pipeyn = input("\nWould you like to use a custom shaped pipe for the gas return? [Y/N] ")
+# Here, we need to determine whether or not the user has a nosm file, and then have them define the target...
+
+# need to load the file into a numpy array to do genfromtxt to determine whether or not the reaction is going to be
+# measured in normal or inverse kinematics, then ask which way the return pipe is facing. If the pipe is facing the
+# opposite direction, we'll just skip over the pipe definition and make the radius of the pipe tiny so it doesn't
+# interfere with the reaction products...
+targetparms = []
+if fnmatch.fnmatch(filein, '*nosm*'):
+    # need to set up the absorber data here, which should be easy because we know the target:
+
+    target = filein[:uslocs[0]]
+
+    if target == 'd' or target == 'p':
+        gs = int(input("\nIs the target a gas (1) or solid (2)?: "))
+        if gs == 2:
+            if target == 'p':
+                print("\nA CH2 target will be assumed.")
+                zt = [6, 1]
+                at = [12, 1]
+                num = [1, 2]
+            elif target == 'd':
+                print("\nA CD2 target will be assumed.")
+                zt = [6, 1]
+                at = [12, 2]
+                num = [1, 2]
+            density = [0.94]
+            thickness = [float(input("\nEnter the thickness in mg/cm^2: "))]
+            jetpress = [0]
+            champress = [0]
+            gas = [False]
+    else:
+        gs = 1
+
+    if gs == 1:
+        zt = []
+        at = []
+        num = [1]
+        density = [0]
+        thickness = [0]
+        jetpress = [float(input("\nEnter the pressure in the jet in Torr: "))]
+        champress = [float(input("\nEnter the ambient pressure in the magnet in Torr: "))]
+        gas = [True]
+
+    targetparms = [zt, at, num, density, thickness, jetpress, champress, gas]
+
+
+datas = np.genfromtxt(filein)
+if datas[:, 0].mean() > 90:
+    invkin = 1
+else:
+    invkin = 0
+
+pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the magnet?: "))
+
+if pipefb != invkin:
+    pipeyn = 'n'
+else:
+    pipeyn = input("\nWould you like to use a custom shaped pipe for the gas return? [Y/N] ")
 
 if pipeyn == "N" or pipeyn == "n":
 
@@ -95,12 +154,18 @@ if pipeyn == "N" or pipeyn == "n":
     else:
         r1 = 0.9 / 2
 
-    piper = 0.152908/2
-    pipecenter = 0.152908/2-r1
-    phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
-    phi2 = 2*math.pi - (phi1 - math.pi)
+    if pipefb != invkin:
+        piper = 0.001
+        pipecenter = -r1
+        phi1 = 3/2*math.pi
+        phi2 = 3/2*math.pi
+    else:
+        piper = 0.152908/2
+        pipecenter = 0.152908/2-r1
+        phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
+        phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, targetparms)
 
 else:
     list_pipe_files = glob.glob('PipeOut*.txt')
@@ -144,4 +209,5 @@ else:
 
     lines = file.readlines()
 
-    sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac)
+    sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac,
+           targetparms)

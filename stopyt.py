@@ -462,7 +462,6 @@ def dedx(z_proj, a_proj, en, vel, j):
     # Returns the dedx for that integration step
     return dedx_tot
 
-
 if __name__ == "__main__":
 
     print("")
