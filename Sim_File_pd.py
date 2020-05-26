@@ -14,9 +14,12 @@ from Plotter import plot
 import fnmatch
 from stopyt import desorb
 import pickle
+import warnings
 
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
+    # suppress warnings that occur in the code calculations:
+    warnings.filterwarnings("ignore")
 
     # Open the targetparms pkl:
     # targetparms now contains all the information needed for the desorb calculation.
@@ -28,6 +31,18 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
         # The list has to contain other lists, so many of the parameters will require [][0]
         ebeam = targetparms[9][0]
+
+        # Put the targetparms into useful variables:
+        ztarg = targetparms[0]
+        atarg = targetparms[1]
+        numtarg = targetparms[2]
+        density = targetparms[3][0]
+        thickness = targetparms[4][0]
+        jetpress = targetparms[5][0]
+        jetrad = targetparms[6][0]
+        champress = targetparms[7][0]
+        gas = targetparms[8][0]
+
         elossbool = True
     else:
         elossbool = False
@@ -36,10 +51,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
         phi2block = 3/2*np.pi + np.arctan(rblock/(-1*cheight))
 
-    print(ebeam)
-
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
-    masses, ztarg, atarg, zeject, aeject, zbeam, abeam = readmass(reac)
+
+    # Get the various parameters from readmass. In this case, we don't actually want z/atarg to be defined here
+    # because they'll be wrong if it's a solid target
+    masses, ztarg_buff, atarg_buff, zeject, aeject, zbeam, abeam = readmass(reac)
+
 
     # reaction of form t(b,e)R
     utoMeV = 931.4941
@@ -198,27 +215,20 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     ylast = np.zeros_like(phic)
     zlast = np.zeros_like(phic)
 
+    # For the ejectile energy loss, the energy loss will be split into two layers (if gas target).
+    # The first layer will be the jetlength, defined below which is the approximate straight-line distance the
+    # ejectile will traverse the jet, and the total distance (disttravl) that the particle will traverse in its orbit.
+    # I make the assumption that the energy loss and angular spread will be tiny and don't take it into account here.
+    disttravl = np.zeros_like(phic)
+
     if elossbool:
         # Need to set up the projectile data here that goes into desorb:
         zp = np.zeros_like(phic) + zeject
         ap = np.zeros_like(phic) + aeject
-        ecurr = df['Energy'].to_numpy()
-
-        # We also need to set up the absorber data in the right format. All of these will just have one layer so it
-        # is fairly straight forward.
-        #z_abs = targetparms[0]
-        #a_abs = targetparms[1]
-        #numabs = targetparms[2]
-        #ig = targetparms[7]
-        #den = targetparms[3]
-        #thk = targetparms[4]
-        #jetprs = targetparms[5]
-        #champrs = targetparms[6]
+        proj_e = df['Energy'].to_numpy()
 
         # Set the jet radius here:
         jetr = 0.0015  # 3 mm diameter jet
-
-        # Length and pressure for the gas absorber needs to be set within the code.
 
         # The distance that the particle must traverse to get out of the jet is set here.
         jetlength = np.abs(jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy())**2 * np.cos(df['Phi'].to_numpy())**2 +
@@ -238,33 +248,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         t = df['t_reduced']/300 * (i+1)
 
         # If we aren't doing the energy loss I want the code to function like normal.
-        if not elossbool:
-            xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
-            ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
-            zpos = df['vel_par']*t
-        if elossbool:
-            xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
-            ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
-            zpos = df['vel_par']*t
-            if (i+1) % 30 == 0:
-                disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (ylast - ypos) ** 2)
-                #print(disttravl)
 
-                th2 = 180 - np.arctan(np.sqrt(xpos**2 + ypos**2) / (-1*zpos)) * 180 / np.pi
+        xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
+        ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
+        zpos = df['vel_par']*t
 
-                print(th2)
-            # If we want the energy loss, a bunch of parameters need to be updated every time step
-
-            # Velocity of the ejectile in the lab frame (m/s) added to dataframe
-            #df['vel_ejec'] = np.sqrt((2 * df['Energy'] * mevtoj) / (me * amutokg))
-            # Velocities parallel to the z-axis and perpendicular to the z-axis.
-            #df['vel_perp'] = df['vel_ejec'] * np.sin(df['Theta_Rad'])
-            #df['vel_par'] = df['vel_ejec'] * np.cos(df['Theta_Rad'])
-
-            # The parameters that have to be updated are phi, theta, and E every 30 time steps. Then we have to recalc
-            # the velocities. The new phi/theta/E are like new initial conditions, and since omega is a constant,
-            # we can get the xpos, ypos, and zpos relative to xlast, ylast, and zlast, then we can get the true xpos,
-            # ypos, and zpos by adding the relative one to the last ones. To update theta,
+        if (i+1) % 10 == 0 and elossbool:
+            disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (ylast - ypos) ** 2) + disttravl
 
         # r is the radial position of the particle
         r = np.sqrt(xpos**2 + ypos**2)
@@ -323,12 +313,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
-        if (i+1) % 30 == 0 and elossbool:
+        if (i+1) % 10 == 0 and elossbool:
             xlast = xpos
             ylast = ypos
             zlast = zpos
 
-            tlast = t
+    print(disttravl)
 
     # Adds the final phi position to the dataframe
     df['zpos_final'] = zpos
