@@ -23,7 +23,7 @@ class ab():
 
 
 def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_absorber, isgas,
-           density, thickness, pressure, length):
+           density, thickness, pressure, length, ei):
     # desorb functions close to what the old desorb does. However, it is rewritten to use pandas and numpy.
     # the old functions SETABG and SETABS are no longer used, and are replaced by the for loops below.
 
@@ -88,35 +88,52 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     # eloss runs the energy loss code and outputs a dataframe with the final energies and projectile params
     df_fin = eloss(z_projectile, a_projectile, energy, index)
 
+    dEtotsum = ei - (energy - df_fin['DeltaE_tot'])
+
     # Here, the energy straggling is estimated. The equation used changes based on the energy loss. The mask picks out
     # the particles that lost a low amount of energy.
-    de_mask = df_fin['DeltaE_tot'] > 0.05
+    de_mask = dEtotsum > 0.05
 
     # These equations were found based on LISE calculations. The straggling is close to those calculated values but
     # are just estimates.
-    df_fin.loc[de_mask, 'E_strag_FWHM'] = 0.03520 * df_fin['DeltaE_tot']**(-0.69964) * df_fin['DeltaE_tot']
-    df_fin.loc[~de_mask, 'E_strag_FWHM'] = 0.0207 * df_fin['DeltaE_tot'] ** (-0.583) * df_fin['DeltaE_tot']
+    df_fin.loc[de_mask, 'E_strag_FWHM'] = 0.03520 * dEtotsum**(-0.69964) * dEtotsum
+    df_fin.loc[~de_mask, 'E_strag_FWHM'] = 0.0207 * dEtotsum ** (-0.583) * dEtotsum
 
     nanmask = np.isnan(df_fin['DeltaE_tot'])
     nanmask2 = np.isnan(df_fin['E_strag_FWHM'])
     df_fin.loc[nanmask, 'DeltaE_tot'] = 0.0
     df_fin.loc[nanmask2, 'E_strag_FWHM'] = 0.0
 
+    # Also want to estimate angular straggling. This only really works if we have one layer: we got this from
+    # R.Anne et al, NIM B34(1988) 295 - 308.
+
+    angstrag = np.zeros_like(energy)
+
+    for j in range(len(z_absorber)):
+        tau = 41.5e3 * ab.thick_frac[j] / (ab.a[j] * (z_projectile**(2/3) + ab.z[j]**(2/3)))
+        at12 = 1.0 * tau**0.55
+
+        angstrag = angstrag + at12 * (z_projectile * ab.z[j] * np.sqrt(z_projectile**(2/3) +
+                                                                       ab.z[j]**(2/3))) / (16.26 * energy)
+
+    # Put the total angular straggling in the data frame for output.
+    df_fin['AngleStrag'] = angstrag / 1000 * 180/np.pi
+
     # The final dE is calculated for each particle as a normal distribution centered on the calculated energy whose
     # FWHM is the straggling energy calculated above
 
-    df_fin['dE_wStrag'] = np.random.normal(df_fin['DeltaE_tot'], df_fin['E_strag_FWHM'])
+    #df_fin['dE_wStrag'] = np.random.normal(df_fin['DeltaE_tot'], df_fin['E_strag_FWHM'])
 
     # Need to make the final energy 0 if all the energy is lost. With the normal distribution, the energy loss could
     # actually be negative, so we need to fix that here as well...
-    allelostmask = df_fin['Energy_i'] == df_fin['DeltaE_tot']
+    #allelostmask = df_fin['Energy_i'] == df_fin['DeltaE_tot']
 
-    df_fin['E_fin'] = df_fin['Energy_i'] - df_fin['dE_wStrag']
+    #df_fin['E_fin'] = df_fin['Energy_i'] - df_fin['dE_wStrag']
 
-    df_fin.loc[allelostmask, 'E_fin'] = 0
+    #df_fin.loc[allelostmask, 'E_fin'] = 0
 
-    negeloss_mask = df_fin['E_fin'] > df_fin['Energy_i']
-    df_fin.loc[negeloss_mask, 'E_fin'] = df_fin['Energy_i']
+    #negeloss_mask = df_fin['E_fin'] > df_fin['Energy_i']
+    #df_fin.loc[negeloss_mask, 'E_fin'] = df_fin['Energy_i']
 
     # Return the final dataframe.
     return df_fin
@@ -784,8 +801,8 @@ if __name__ == "__main__":
                 for i in range(len(z_absorber)):
                     warnings.filterwarnings("ignore")
                     df_f = desorb(proj_z, proj_a, proj_energycurr, z_absorber[i], a_absorber[i], numa_absorber[i], isgas[i],
-                              den[i], thk[i], prs[i], leng[i])
-                    proj_energycurr = df_f['Energy_i'] - df_f['DeltaE_tot']
+                              den[i], thk[i], prs[i], leng[i], proj_ei)
+
                     proj_energycurr = df_f['Energy_i'] - df_f['DeltaE_tot']
                     de_tot_layer.append(df_f['DeltaE_tot'])
 

@@ -235,7 +235,7 @@ class Common:
         k = 0
         while k < N1:
             k = k + 1
-            #print(k)
+            #print(N1)
             J1 = int(Common.aINN[I1])
             ISGW = Common.aISG[I1]
             I = I1
@@ -251,11 +251,12 @@ class Common:
                 Z, A, ZX, AX, DENST, EH, VH, ISGW, DEX, DE = Common.dedx(1, Z, A, ZX, AX, DENST, EH, VH, ISGW,
                                                                              DEX, DE)
                 EH = EH + DE * sign * FX
-                #print(FX)
-
-                print(EH, DE, sign, FX)
+                #print(DE)
+                #if k == 1:
+                    #print(EH, DE, sign, FX)
                 if EH <= 0.0:
                     if k <= 2:
+
                         N1 = N1 * 2
                         XN1 = float(N1)
                         j = -1
@@ -269,6 +270,7 @@ class Common:
                     DEDNEXT = DEDNEXT + DE * FX
 
                 j = j + 1
+                #print(k)
             if k == 1:
                 DED1ST = DEDNEXT
                 DEDNEXT = 0.0
@@ -282,18 +284,23 @@ class Common:
                 DDR = DDD / DDS
 
                 if DDR > EPS:
+                    print("DDR " + str(DDR))
+                    print("EPS " + str(EPS))
+                    #print("derp")
                     N1 = N1 * 2
+                    print("yellllo")
                     XN1 = float(N1)
                     j = -1
                     k = 0
                     DEDNEXT = 0.0
                     EH = E
+                    print(EH)
 
 
 
         ISTAT = 0
         DEE = EH - E
-        print(DEE)
+        #print(DEE)
 
         pI1 = I1
         pISTAT = ISTAT
@@ -452,7 +459,7 @@ def defprta(energy, thickness, density, zstop, astop, zproj, aproj):
     Target.aXLN[0] = 10.0
     Target.aCONCN[0] = 1.0
 
-    Target.aISG[0] = 1
+    Target.aISG[0] = 0
     Target.aINN[0] = 1
     Target.aDEN[0] = density  #this is the density of the stopping medium
     Target.aZNUMB[0][0] = zstop  #this is the Z of the stopping medium
@@ -481,7 +488,7 @@ if __name__ == "__main__":
     # dt = input("Density of target in g/cm^3")
     # tt = input("Thickness of target in g/cm^2")
 
-    de = defprta(25, 137.16, 2.7, 13, 27, 1, 3)
+    de = defprta(14.2, 137.16, 2.7, 13, 27, 1, 3)
 
 
 

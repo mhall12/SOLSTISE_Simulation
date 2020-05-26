@@ -13,23 +13,33 @@ import glob
 from Plotter import plot
 import fnmatch
 from stopyt import desorb
+import pickle
 
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, targetparms):
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
+
+    # Open the targetparms pkl:
+    # targetparms now contains all the information needed for the desorb calculation.
+    if fnmatch.fnmatch(filein, '*eloss*'):
+        pklname = filein[:-14] + 'tgt.pkl'
+
+        with open(pklname, 'rb') as f:
+            targetparms = pickle.load(f)
+
+        # The list has to contain other lists, so many of the parameters will require [][0]
+        ebeam = targetparms[9][0]
+        elossbool = True
+    else:
+        elossbool = False
 
     if rblock < rbore:
         phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
         phi2block = 3/2*np.pi + np.arctan(rblock/(-1*cheight))
 
+    print(ebeam)
+
     # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
-    masses, ztarg, atarg, zeject, aeject = readmass(reac)
-
-    # Change target params here if the target is a gas:
-    if targetparms[7][0]:
-        targetparms[0] = [ztarg]
-        targetparms[1] = [atarg]
-
-    # targetparms now contains all the information needed for the desorb calculation.
+    masses, ztarg, atarg, zeject, aeject, zbeam, abeam = readmass(reac)
 
     # reaction of form t(b,e)R
     utoMeV = 931.4941
@@ -61,11 +71,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, ta
     B = 2.0
    # B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
-
-    if fnmatch.fnmatch(filein, '*nosm*'):
-        elossbool = True
-    else:
-        elossbool = False
 
     # Generates a pandas data frame of shape (xxx,2) whose columns are theta angle and energy.
     df = pd.read_csv(filein, sep="\t", header=None, low_memory=False)
@@ -201,14 +206,14 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, ta
 
         # We also need to set up the absorber data in the right format. All of these will just have one layer so it
         # is fairly straight forward.
-        z_abs = targetparms[0]
-        a_abs = targetparms[1]
-        numabs = targetparms[2]
-        ig = targetparms[7]
-        den = targetparms[3]
-        thk = targetparms[4]
-        jetprs = targetparms[5]
-        champrs = targetparms[6]
+        #z_abs = targetparms[0]
+        #a_abs = targetparms[1]
+        #numabs = targetparms[2]
+        #ig = targetparms[7]
+        #den = targetparms[3]
+        #thk = targetparms[4]
+        #jetprs = targetparms[5]
+        #champrs = targetparms[6]
 
         # Set the jet radius here:
         jetr = 0.0015  # 3 mm diameter jet
