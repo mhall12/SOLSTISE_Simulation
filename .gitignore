@@ -1,0 +1,21 @@
+# ignore Holly's code
+/Holly_SOLSTISE_Code
+
+ParticlesClass.py
+Kinematics_Calc.py
+ConeParams.txt
+ConeMaker.py
+README
+__init__.py
+/__pycache__
+jupyter-notebook-browser
+*.pkl
+PipeOut*
+Untitled*
+*evts*
+desorb*
+eloss*
+untitled*
+*.json
+Desorb*
+.ipynb_checkpoints/
