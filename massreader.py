@@ -98,6 +98,10 @@ def readmass(reac):
     zbeam = int(z[maskbeam])
     zejectile = int(z[maskejectile])
 
+    aejectile = int(a[maskejectile])
+    atarget = int(a[masktarget])
+    abeam = int(a[maskbeam])
+
     # The proton number of the recoil is found here.
     zrecoil = ztarget + zbeam - zejectile
     # The mass A of the recoil is found here.
@@ -110,7 +114,7 @@ def readmass(reac):
     masses = [float(massu[masktarget][0]), float(massu[maskbeam][0]), float(massu[maskejectile][0]),
               float(massu[maskrecoil][0])]
 
-    return masses
+    return masses, ztarget, atarget, zejectile, aejectile, zbeam, abeam
 
 
 #readmass()

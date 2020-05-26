@@ -116,6 +116,7 @@ def makepipe():
         x1, y1 = [0, r1 * math.cos(anginrad)], [0, r1 * math.sin(anginrad)]
         x2, y2 = [0, r1 * math.cos(angin2rad)], [0, r1 * math.sin(angin2rad)]
         plt.plot(x1, y1, x2, y2, color='black')
+        input("Press Enter")
 
     plt.ioff()
 

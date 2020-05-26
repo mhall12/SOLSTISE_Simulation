@@ -104,6 +104,7 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # then multiply the phi array by 2pi to get a real phi value
     phi = phi * 2 * np.pi
 
+    #print(phi)
     # debugging
     # print(energy.shape)
     # print(phi.shape)
@@ -177,6 +178,8 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # function determines the r coordinates of the 2nd circle that makes up the gas pipe.
     rpipe = lambda ph: cheight*np.sin(ph) + np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
+
+    dummy = energy
     # Simulating events status bar for the for loop
     print("Simulating Events...")
     statbar = "[                              ]"
@@ -204,18 +207,23 @@ def sim(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # rpipe determines the r position of the 2nd circle boundary
         # so if the particle radius is greater than that, it gets blocked
         maskrpipe = (r > rpipe(phic))
+
         # maskphipipe is the mask that determines whether or not the particle is within the phi boundaries of the pipe
         # if maskphipipe and maskrpipe are true, then the particle is blocked by the pipe
         maskphipipe = (phic > phi1block) & (phic < phi2block)
 
         # maskcone determines if the particle is within the opening of the cone
         # Since if statements on the arrays are so slow, we'll break up the cone mask into three: tube (top), sides,
-        # and ISO base. In the future, the base could be gotten rid of.
+        # and ISO base. In the future, the base could be gotten rid of depending on final geometry.
         # masktop = (rxzplane < rcone) & (ypos > reacheight) & (ypos < sideheight)
         # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
         # the cone has been removed.
         masksides = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight)) & (ypos < baseheight)
         maskbase = (rxzplane < rISObase) & (ypos > baseheight)
+
+        #print(rconeside(ypos * 100 / 2.54),"\n")
+
+        #print(ypos[masksides])
 
         maskcone = masksides | maskbase
 

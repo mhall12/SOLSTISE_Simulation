@@ -1,11 +1,13 @@
 # SOLSTISE Simulation Code Front End
-from Sim_File import sim
+from Sim_File_pd import sim_pd
 from Event_Builder import BuildEvts
 from PipeMaker import makepipe
+import numpy as np
 import glob
 import os
 import re
 import math
+import fnmatch
 
 print("")
 print("########   ########  ##       ########  ########  ########  ########  ######## ")
@@ -53,7 +55,7 @@ else:
                     while len(list_file2) == 0 or numuscore != 4:
                         filein = input("\nEnter the name of an existing input file (.dat or .txt): ")
                         list_file2 = glob.glob(filein)
-                        numuscore = filein.count("_")
+                        numuscopre = filein.count("_")
                         if len(list_file2) == 0 or numuscore != 4:
                             print("\nERROR: Incorrect file name syntax or the file does not exist...")
         else:
@@ -77,7 +79,23 @@ ebeam = int(filein[(uslocs[2]+1):uslocs[3]])
 
 print("The beam energy is: " + str(ebeam) + " MeV")
 
-pipeyn = input("\nWould you like to use a custom shaped pipe for the gas return? [Y/N] ")
+# need to load the file into a numpy array to do genfromtxt to determine whether or not the reaction is going to be
+# measured in normal or inverse kinematics, then ask which way the return pipe is facing. If the pipe is facing the
+# opposite direction, we'll just skip over the pipe definition and make the radius of the pipe tiny so it doesn't
+# interfere with the reaction products...
+
+datas = np.genfromtxt(filein)
+if datas[:, 0].mean() > 90:
+    invkin = 1
+else:
+    invkin = 0
+
+pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the magnet?: "))
+
+if pipefb != invkin:
+    pipeyn = 'n'
+else:
+    pipeyn = input("\nWould you like to use a custom shaped pipe for the gas return? [Y/N] ")
 
 if pipeyn == "N" or pipeyn == "n":
 
@@ -95,12 +113,18 @@ if pipeyn == "N" or pipeyn == "n":
     else:
         r1 = 0.9 / 2
 
-    piper = 0.148082/2
-    pipecenter = 0.148082/2-r1
-    phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
-    phi2 = 2*math.pi - (phi1 - math.pi)
+    if pipefb != invkin:
+        piper = 0.001
+        pipecenter = -r1
+        phi1 = 3/2*math.pi
+        phi2 = 3/2*math.pi
+    else:
+        piper = 0.152908/2
+        pipecenter = 0.152908/2-r1
+        phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
+        phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac)
 
 else:
     list_pipe_files = glob.glob('PipeOut*.txt')
@@ -144,4 +168,4 @@ else:
 
     lines = file.readlines()
 
-    sim(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac)
+    sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac)
