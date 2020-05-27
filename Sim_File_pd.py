@@ -221,19 +221,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # I make the assumption that the energy loss and angular spread will be tiny and don't take it into account here.
     disttravl = np.zeros_like(phic)
 
-    if elossbool:
-        # Need to set up the projectile data here that goes into desorb:
-        zp = np.zeros_like(phic) + zeject
-        ap = np.zeros_like(phic) + aeject
-        proj_e = df['Energy'].to_numpy()
-
-        # Set the jet radius here:
-        jetr = 0.0015  # 3 mm diameter jet
-
-        # The distance that the particle must traverse to get out of the jet is set here.
-        jetlength = np.abs(jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy())**2 * np.cos(df['Phi'].to_numpy())**2 +
-                                          np.cos(df['Theta_Rad'].to_numpy())**2))
-
     # Simulating events status bar for the for loop
     print("Simulating Events...")
     statbar = "[                              ]"
@@ -254,7 +241,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         zpos = df['vel_par']*t
 
         if (i+1) % 10 == 0 and elossbool:
-            disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (ylast - ypos) ** 2) + disttravl
+            disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (zlast - zpos) ** 2) + disttravl
 
         # r is the radial position of the particle
         r = np.sqrt(xpos**2 + ypos**2)
@@ -319,6 +306,25 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
             zlast = zpos
 
     print(disttravl)
+
+    if elossbool:
+        # Need to set up the projectile data here that goes into desorb:
+        zp = np.zeros_like(phic) + zeject
+        ap = np.zeros_like(phic) + aeject
+        proj_e = df['Energy'].to_numpy()
+
+        # Set the jet radius here:
+        jetr = 0.0015  # 3 mm diameter jet
+
+        # The distance that the particle must traverse to get out of the jet is set here.
+        jetlength = np.abs(jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy())**2 * np.cos(df['Phi'].to_numpy())**2 +
+                                          np.cos(df['Theta_Rad'].to_numpy())**2))
+        if gas:
+            chamlength = disttravl - jetlength
+            # Make an empty data frame to store the output:
+            df_elossout = pd.DataFrame()
+            
+
 
     # Adds the final phi position to the dataframe
     df['zpos_final'] = zpos
