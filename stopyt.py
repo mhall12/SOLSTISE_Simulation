@@ -9,8 +9,10 @@ class ab():
     # The ab class defines the numpy arrays used for the absorber in the energy loss calculations
     # thick_frac is the fractional thickness of each isotope based on the layer composition and total layer thickness
     # in units of mg/cm^2
+    thick_frac_lst = []
     thick_frac = np.empty(0)
     # den_frac is the fractional density (g/cm^3)
+    den_frac_lst = []
     den_frac = np.empty(0)
     # isgas is a boolean array that specifies if the layer is a solid or gas
     isgas = np.empty(0)
@@ -57,7 +59,7 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
         for j in range(len(z_absorber)):
             # the sum is then used to calculate the fracitional thicknesses and densities for each element
             a_frac = (a_absorber[j] * numa_absorber[j]) / a_tot
-            ab.thick_frac = np.append(ab.thick_frac, thickness * a_frac)
+            ab.thick_frac_lst.append(thickness * a_frac)
             ab.den_frac = np.append(ab.den_frac, density * a_frac)
             # the z, a, numa, and isgas bool from each layer element are appended to the numpy arrays
             ab.z = np.append(ab.z, z_absorber[j])
@@ -65,21 +67,25 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
             ab.numa = np.append(ab.numa, numa_absorber[j])
             ab.isgas = np.append(ab.isgas, False)
 
+        ab.thick_frac = np.asarray(ab.thick_frac_lst)
+
     if isgas:
         # we have to do something different if it's a gas, though it's similar.
         for j in range(len(z_absorber)):
             a_tot = a_tot + a_absorber[j] * numa_absorber[j]
             # the fractional thickness for the gas layer is calculated here. The pressure is in torr, so the 760
             # converts that to atms, and the 22.4 is the molar gas volume at STP in L.
-            ab.thick_frac = np.append(ab.thick_frac, (pressure / 760) * (length / 22.4) * a_absorber[j] *
-                                          numa_absorber[j])
-            ab.den_frac = np.append(ab.den_frac, ab.thick_frac[j] / length)
+            ab.thick_frac_lst.append((pressure / 760) * (length / 22.4) * a_absorber[j] * numa_absorber[j])
+            ab.den_frac_lst.append(ab.thick_frac_lst[j] / length)
             # the rest of this section proceeds the same as the first. Actually, some of this is redundant and could
             # be reorganized in the future. i.e. move to one for loop
             ab.z = np.append(ab.z, z_absorber[j])
             ab.a = np.append(ab.a, a_absorber[j])
             ab.numa = np.append(ab.numa, numa_absorber[j])
             ab.isgas = np.append(ab.isgas, True)
+
+        ab.thick_frac = np.asarray(ab.thick_frac_lst)
+        ab.den_frac = np.asarray(ab.den_frac_lst)
 
     # index is the original position of each of the stopping particles. Keeping this consistent is important for the
     # simulation especially.
