@@ -744,6 +744,14 @@ def plot(pklin):
                             plt.xlabel('z (m)')
                             plt.ylabel('Fraction of Particles Blocked')
 
+                        if (plotnum == 31) and i > 0:
+                            plt.subplot(2, 2, i)
+                            plt.hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
+                                       df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
+                                       range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
+                            plt.xlabel('z(m)')
+                            plt.ylabel('Energy (MeV)')
+
                 # Handle the legend here for each plot that needs it.
                 if i == 1 and (plotnum == 2 or plotnum == 3 or plotnum == 5 or
                                plotnum == 6 or plotnum == 7 or plotnum == 9 or plotnum == 11):

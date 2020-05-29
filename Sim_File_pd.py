@@ -313,6 +313,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         ap = np.zeros_like(phic) + aeject
         proj_e = df['Energy'].to_numpy()
 
+        emaxinit = df['Energy'].max()
+
         # Make an empty data frame to store the output:
         df_elossout = pd.DataFrame()
         proj_ein = proj_e
@@ -351,7 +353,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
             proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
             estragtot = np.average(df_elossout['E_strag_FWHM'].to_numpy())
 
-        emask = proj_e < df['Energy']
+        emask = emaxinit > proj_e
         df['Energy'] = np.random.normal(proj_e, estragtot)
 
         # Detector energy resolution assumed to be 25 keV
@@ -384,6 +386,11 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     df["Det3"] = (phic > np.pi) & (phic < 3*np.pi/2)
     df["Det4"] = (phic > 3*np.pi/2) & (phic < 2*np.pi)
 
+    if invkin:
+        masktheta = df["Theta_Deg"] > 95
+    else:
+        masktheta = df["Theta_Deg"] < 85
+
     # Each element of df_det contains the info for the particles that hit that detector quadrant.
     # i.e. element 0 = quad 1, 1 = quad 2 etc..
 
@@ -399,6 +406,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # All particles blocked by the pipe
     df["Blocked_Pipe"] = np.invert(maskmaster_pipe) & maskz & maskrbore
 
+    df["UnblockedSolidTarg"] = maskz & maskrbore & masktheta
+
     # We'll also reconstruct the Q-value spectrum from the "detected" particles.
     # First we have to calculate the CM Energy:
     df['EnergyCM'] = df['Energy'] + .5 * me * utoMeV * (vcm / c) ** 2 - me * utoMeV * (vcm / c ** 2) / tcyc * \
@@ -410,6 +419,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     else:
         custpipe = True
 
+    # Ensure nothing weird has happened and get rid of any high energy events that I saw a few times
     if elossbool:
         df = df[emask]
         print(df['Energy'].max())
@@ -426,7 +436,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         "Pipe Left Edge Angle": int(phi1block*180/np.pi),
         "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
         "Cone Opening Diameter": conedia,
-        "Cone Height": coneheight
+        "Cone Height": coneheight,
+        "Calculated Energy Loss?": elossbool,
+        "Gas?": gas
     }
 
     dfparams = pd.DataFrame([dictparams])
