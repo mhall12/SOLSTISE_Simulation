@@ -35,7 +35,9 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     # Resets the absorber between desorb calls, so if the user running the program changes the absorber or runs it again
     # the program doesn't save the old absorber data and just append the new data onto the old.
     ab.thick_frac = np.empty(0)
+    ab.thick_frac_lst = []
     ab.den_frac = np.empty(0)
+    ab.den_frac_lst = []
     # length_frac = np.empty(0)
     ab.isgas = np.empty(0)
     ab.a = np.empty(0)
@@ -84,6 +86,7 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
             ab.numa = np.append(ab.numa, numa_absorber[j])
             ab.isgas = np.append(ab.isgas, True)
 
+        #print(ab.thick_frac_lst)
         ab.thick_frac = np.asarray(ab.thick_frac_lst)
         ab.den_frac = np.asarray(ab.den_frac_lst)
 
@@ -122,7 +125,7 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
         angstrag = angstrag + at12 * (z_projectile * ab.z[j] * np.sqrt(z_projectile**(2/3) +
                                                                        ab.z[j]**(2/3))) / (16.26 * energy)
 
-    # Put the total angular straggling in the data frame for output.
+    # Put the total angular straggling in the data frame for output in Degrees. above equation is in mrad
     df_fin['AngleStrag'] = angstrag / 1000 * 180/np.pi
 
     # The final dE is calculated for each particle as a normal distribution centered on the calculated energy whose
@@ -155,6 +158,7 @@ def eloss(z_projectile, a_projectile, energy, index):
     a_proj = a_projectile
     z_proj = z_projectile
     indx = index
+    thkfracin = ab.thick_frac
 
     # the _dead numpy arrays collect the particles that have hit the max number of integrations or have lost all their
     # energy.
@@ -222,6 +226,8 @@ def eloss(z_projectile, a_projectile, energy, index):
 
             # We also need to remove those elements from the calculation parameters because we don't need them anymore.
             k = k[egt0mask]
+            if ab.thick_frac.ndim > 1:
+                ab.thick_frac = ab.thick_frac[:, egt0mask]
             fx = fx[egt0mask]
             num_int = num_int[egt0mask]
             dednext = dednext[egt0mask]
@@ -292,9 +298,14 @@ def eloss(z_projectile, a_projectile, energy, index):
         # integrations and add them to the _dead arrays.
         num_integrations = np.amax(num_int)
         k_min = np.amin(k)
+
         keqmax_mask = k == num_int
+
         k = k[np.invert(keqmax_mask)]
         num_int = num_int[np.invert(keqmax_mask)]
+
+        if ab.thick_frac.ndim > 1:
+            ab.thick_frac = ab.thick_frac[:, np.invert(keqmax_mask)]
         dednext = dednext[np.invert(keqmax_mask)]
 
         ded1st = ded1st[np.invert(keqmax_mask)]
@@ -347,6 +358,8 @@ def eloss(z_projectile, a_projectile, energy, index):
     projectiledf['A_proj'] = a_proj
 
     projectiledf['DeltaE_tot'] = e_init - e_curr
+
+    ab.thick_frac = thkfracin
 
     return projectiledf
 

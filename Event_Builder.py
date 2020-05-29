@@ -131,7 +131,7 @@ def BuildEvts():
             dfout = desorb(zbeam, abeam, beame, zt, at, num, gas[0], density[0], thickness[0], prs, leng, beamei)
             beame = dfout['Energy_i'] - dfout['DeltaE_tot']
             # We have two layers, so get the total sum of the energy and angular straggling:
-            beamstrag = dfout['E_strag_FWHM'][0] + beamstrag
+            beamstrag = dfout['E_strag_FWHM'][0]
             angstrag = dfout['AngleStrag'][0] + angstrag
 
         print(beame)
@@ -172,7 +172,7 @@ def BuildEvts():
 
         # if the energy loss is calculated, we want the beam energy to be smeared by the energy straggling:
         if elossopt == 1:
-            beamenergy = random.gauss(beame, beamstrag)
+            beamenergy = random.gauss(beame[0], beamstrag)
 
         # randomly get a level nnumber if the levels were specified and then its excitation E
         if levnum > 0:
