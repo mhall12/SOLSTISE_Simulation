@@ -194,6 +194,9 @@ def eloss(z_projectile, a_projectile, energy, index):
         j_end = len(ab.z)
         j = 0
 
+        printstring = "k is currently: " + str(k_min) + " and k_max is currently: " + str(num_integrations)
+        print(printstring, end='\r', flush=True)
+
         while j < j_end:
 
             # Loop through each row of the absorber array (jth element).

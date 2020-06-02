@@ -248,7 +248,7 @@ def plot(pklin):
 
                 # 10 is the Excitation Energy reconstructed from the "detected" energy and z position
                 if plotnum == 10 and i == 0:
-                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"]], bins=750, range=[0, 10])
+                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"]], bins=750, range=[-.2, 10])
                     plt.xlabel('Excitation Energy (MeV)')
                     plt.ylabel('Counts')
 

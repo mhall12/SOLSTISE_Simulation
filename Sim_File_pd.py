@@ -24,7 +24,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # Open the targetparms pkl:
     # targetparms now contains all the information needed for the desorb calculation.
     if fnmatch.fnmatch(filein, '*eloss*'):
-        pklname = filein[:-14] + 'tgt.pkl'
+        pklname = filein[:-16] + 'tgt_' + filein[-5] + '.pkl'
 
         with open(pklname, 'rb') as f:
             targetparms = pickle.load(f)
@@ -66,6 +66,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     me = masses[2]
     mr = masses[3]
 
+    mevtoj = 1.6021766e-13
+    c = 2.998e8
+
     qvalnoex = (mt + mb - me - mr)*utoMeV
 
     #ebeam = 168 # MeV, for d(28Si,p) it is 6 MeV/u
@@ -74,9 +77,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     cheight = np.array(cheight, dtype=np.float64)
     phi1block = np.array(phi1block, dtype=np.float64)
     phi2block = np.array(phi2block, dtype=np.float64)
-
-    mevtoj = 1.6021766e-13
-    c = 2.998e8
 
     # finite radius of the detector array
     r0 = 0.011
@@ -145,8 +145,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     phi = np.random.rand(len(df))
     # then multiply the phi array by 2pi to get a real phi value and put it into the dataframe
     df['Phi'] = phi * 2 * np.pi
-
-    #print(df['Phi'])
 
     # creates a mask the same shape as the energy array
     # maskmaster is the mask that keeps track of the overall mask in the loop
@@ -346,7 +344,11 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                     proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
                     estragtot = np.average(df_elossout['E_strag_FWHM'].to_numpy())
         if not gas:
-            indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
+            print("\nYou're using a solid target, so the energy loss calculation is going to take a minute or two...")
+            if invkin:
+                indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
+            else:
+                indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy())
             print(indthickness)
             # We don't need a for loop here because there's only one layer for the protons to lose energy
             df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, density, indthickness, 0, 0, proj_e)
@@ -410,8 +412,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     # We'll also reconstruct the Q-value spectrum from the "detected" particles.
     # First we have to calculate the CM Energy:
-    df['EnergyCM'] = df['Energy'] + .5 * me * utoMeV * (vcm / c) ** 2 - me * utoMeV * (vcm / c ** 2) / tcyc * \
-                     df['zpos_final']
+
+    df['EnergyCM'] = df['Energy'] + .5 * me * utoMeV * (vcm / c) ** 2 - me * utoMeV * (vcm / c) / df['t_reduced'] * \
+                     df['zpos_final'] / c
     df['Ex_Reconstructed'] = tcm + qvalnoex - df['EnergyCM'] * (me + mr) / mr
 
     if rblock < rbore:
@@ -423,6 +426,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     if elossbool:
         df = df[emask]
         print(df['Energy'].max())
+    else:
+        gas = False
 
     dictparams = {
         "Reaction": reac,
@@ -446,11 +451,25 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     df_all = pd.concat([df, dfparams], axis=1)
 
     writefilebase = filein[:-4]
-    lnum = 0
 
-    writefile = writefilebase
+    writefile = writefilebase + str(1)
+    lnum = 1
 
-    if os.path.exists(writefilebase + ".pkl"):
+    pklstring = writefilebase + '*.pkl'
+
+    list_pkls = glob.glob(pklstring)
+
+    # The point of the following section is to change writefile if a file with the same data already exists
+    # so we don't overwrite something we don't want to.
+
+    if len(list_pkls) > 0:
+        latest_pkl = max(list_pkls, key=os.path.getctime)
+        if not latest_pkl[-6].isdigit():
+            lnum = int(latest_pkl[-5])
+        else:
+            # Gets lnum if the filename is in double digits.
+            lnum = int(latest_pkl[-6:-4])
+
         fileyn = input("\n\nAn event file using this data already exists. Would you like to overwrite the file? [Y/N] ")
         if fileyn == "n" or fileyn == "N":
             print("\nA number will be appended onto the end of the file name.")
@@ -458,7 +477,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                 lnum = lnum + 1
                 writefile = writefilebase + str(lnum)
         else:
-            writefile = writefilebase
+            # Latest pkl already contains lnum
+            writefile = latest_pkl[:-4]
 
     df_all.to_pickle(writefile + ".pkl")
 

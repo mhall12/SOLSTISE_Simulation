@@ -69,6 +69,7 @@ def BuildEvts():
         if ztarget == 1:
             gs = int(input("\nIs the target a gas (1) or solid (2)?: "))
             if gs == 2:
+                gasorsolid = "s"
                 if atarget == 1:
                     print("\nA CH2 target will be assumed.")
                     zt = [6, 1]
@@ -92,19 +93,20 @@ def BuildEvts():
             gs = 1
 
         if gs == 1:
-                zt = [ztarget]
-                at = [atarget]
-                num = [int(input("Enter the number of atoms in the molecule: "))]
-                density = [0]
-                thickness = [0]
-                jetpress = [float(input("\nEnter the pressure in the jet in Torr: "))]
-                jetrad = [float(input("\nEnter the radius of the jet in mm: "))]
-                champress = [float(input("\nEnter the ambient pressure in the magnet in Torr: "))]
-                chamdist = [float(input("\nEnter the distance from the end of the magnet to the jet in cm "
-                                        "\n(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
-                # Convert jetrad into cm
-                jetrad[0] = jetrad[0] / 10
-                gas = [True]
+            gasorsolid = "g"
+            zt = [ztarget]
+            at = [atarget]
+            num = [int(input("Enter the number of atoms in the molecule: "))]
+            density = [0]
+            thickness = [0]
+            jetpress = [float(input("\nEnter the pressure in the jet in Torr: "))]
+            jetrad = [float(input("\nEnter the radius of the jet in mm: "))]
+            champress = [float(input("\nEnter the ambient pressure in the magnet in Torr: "))]
+            chamdist = [float(input("\nEnter the distance from the end of the magnet to the jet in cm "
+                                    "\n(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
+            # Convert jetrad into cm
+            jetrad[0] = jetrad[0] / 10
+            gas = [True]
 
         targetparms = [zt, at, num, density, thickness, jetpress, jetrad, champress, gas]
         dfout = pd.DataFrame()
@@ -152,7 +154,7 @@ def BuildEvts():
     if levnum > 0 and elossopt == 0:
         outfilename = reac + str(int(beamenergy)) + "_evts.txt"
     elif levnum > 0 and elossopt == 1:
-        outfilename = reac + str(int(beamenergy)) + "_evts_eloss.txt"
+        outfilename = reac + str(int(beamenergy)) + "_evts_eloss_" + gasorsolid + ".txt"
     else:
         outfilename = reac + str(int(beamenergy)) + "_evts_allE.txt"
 
@@ -160,7 +162,7 @@ def BuildEvts():
 
     # Need to create a pickle of targetparms so we can open it again later.
     if elossopt == 1:
-        pklname = reac + str(int(beamenergy)) + "_tgt.pkl"
+        pklname = reac + str(int(beamenergy)) + "_tgt_" + gasorsolid + ".pkl"
         with open(pklname, 'wb') as f:
             pickle.dump(targetparms, f)
 
