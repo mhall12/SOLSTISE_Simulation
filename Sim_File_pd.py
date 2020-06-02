@@ -303,7 +303,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
             ylast = ypos
             zlast = zpos
 
-    #print(disttravl)
+    print("\n")
 
     if elossbool:
         # Need to set up the projectile data here that goes into desorb:
@@ -316,7 +316,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         # Make an empty data frame to store the output:
         df_elossout = pd.DataFrame()
         proj_ein = proj_e
-        print(proj_e.shape)
+
         if gas:
             # Set the jet radius here, gets set from targetparms. Redefinition could be removed:
             jetr = jetrad / 1000
@@ -335,25 +335,24 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
                 if j == 0:
                     df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, 0, 0, jetpress, jetlength,
                                          proj_e)
-                    print(df_elossout)
+
                     proj_ein = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
                 if j == 1:
                     df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, 0, 0, champress, chamlength,
                                          proj_e)
-                    print(df_elossout)
+
                     proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
-                    estragtot = np.average(df_elossout['E_strag_FWHM'].to_numpy())
+                    estragtot = df_elossout['E_strag_FWHM'].to_numpy()
         if not gas:
             print("\nYou're using a solid target, so the energy loss calculation is going to take a minute or two...")
             if invkin:
                 indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
             else:
                 indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy())
-            print(indthickness)
             # We don't need a for loop here because there's only one layer for the protons to lose energy
             df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, density, indthickness, 0, 0, proj_e)
             proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
-            estragtot = np.average(df_elossout['E_strag_FWHM'].to_numpy())
+            estragtot = df_elossout['E_strag_FWHM'].to_numpy()
 
         emask = emaxinit > proj_e
         df['Energy'] = np.random.normal(proj_e, estragtot)
@@ -371,6 +370,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         e2to4 = (df['Energy'] > 2) & (df['Energy'] < 4)
         e4to6 = (df['Energy'] > 4) & (df['Energy'] < 6)
         egt6 = df['Energy'] > 6
+
+        # Mask the energies to include the detector position resolution:
         zpos = np.where(e0to2, np.random.normal(zpos, 0.00117), zpos)
         zpos = np.where(e2to4, np.random.normal(zpos, 0.00085), zpos)
         zpos = np.where(e4to6, np.random.normal(zpos, 0.000532), zpos)
@@ -421,13 +422,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
         custpipe = False
     else:
         custpipe = True
-
-    # Ensure nothing weird has happened and get rid of any high energy events that I saw a few times
-    if elossbool:
-        df = df[emask]
-        print(df['Energy'].max())
-    else:
-        gas = False
 
     dictparams = {
         "Reaction": reac,

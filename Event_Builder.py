@@ -62,6 +62,7 @@ def BuildEvts():
     # Here we need to calculate the energy loss of the beam in the magnet and target. Moving that section of code
     # from SOLSTISE_Sim.py:
     if elossopt == 1:
+
         # Have them define the target...
         targetparms = []
         # need to set up the absorber data here, which should be easy because we know the target:
@@ -71,18 +72,18 @@ def BuildEvts():
             if gs == 2:
                 gasorsolid = "s"
                 if atarget == 1:
-                    print("\nA CH2 target will be assumed.")
+                    print("A CH2 target will be assumed.")
                     zt = [6, 1]
                     at = [12, 1]
                     num = [1, 2]
                 elif atarget == 2:
-                    print("\nA CD2 target will be assumed.")
+                    print("A CD2 target will be assumed.")
                     zt = [6, 1]
                     at = [12, 2]
                     num = [1, 2]
                 density = [0.94]
-                thickness = [float(input("\nEnter the thickness in mg/cm^2: "))]
-                # Assume the beam interacts at the center of the target:
+                thickness = [float(input("Enter the thickness in mg/cm^2: "))]
+                # Assume the beam interacts at the center of the target, divide target thickness by 2:
                 thickness[0] = thickness[0] / 2
                 jetpress = [0]
                 champress = [0]
@@ -91,19 +92,25 @@ def BuildEvts():
                 gas = [False]
         else:
             gs = 1
+            print("\nA gas target will be assumed...")
 
         if gs == 1:
             gasorsolid = "g"
             zt = [ztarget]
             at = [atarget]
-            num = [int(input("Enter the number of atoms in the molecule: "))]
+            if ztarget == 1:
+                num = [2]
+            else:
+                num = [int(input("Enter the number of atoms in the molecule: "))]
+
+            # Density and thickness are 0 for gasses.
             density = [0]
             thickness = [0]
-            jetpress = [float(input("\nEnter the pressure in the jet in Torr: "))]
-            jetrad = [float(input("\nEnter the radius of the jet in mm: "))]
-            champress = [float(input("\nEnter the ambient pressure in the magnet in Torr: "))]
-            chamdist = [float(input("\nEnter the distance from the end of the magnet to the jet in cm "
-                                    "\n(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
+            jetpress = [float(input("Enter the pressure in the jet in Torr: "))]
+            jetrad = [float(input("Enter the radius of the jet in mm: "))]
+            champress = [float(input("Enter the ambient pressure in the magnet in Torr: "))]
+            chamdist = [float(input("Enter the distance from the end of the magnet to the jet in cm \n"
+                                    "(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
             # Convert jetrad into cm
             jetrad[0] = jetrad[0] / 10
             gas = [True]
@@ -136,9 +143,6 @@ def BuildEvts():
             beamstrag = dfout['E_strag_FWHM'][0]
             angstrag = dfout['AngleStrag'][0] + angstrag
 
-        print(beame)
-        print(beamstrag)
-        print(angstrag)
         targetparms.append([beame[0]])
 
     else:

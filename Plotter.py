@@ -95,7 +95,10 @@ def plot(pklin):
         zmin = 0
         zmax = df['zpos_final'].max()
 
-    emax = df['Energy'].max()
+    emax = 2 * df['Energy'].mean() + 2
+
+    exmax = 2 * df['Ex_Reconstructed'].mean() + 0.5
+
     # emin should always just be 0
 
     thmax = df['Theta_Deg'].max()
@@ -104,39 +107,49 @@ def plot(pklin):
     print("\n\nChoose from the list below to plot histograms from the generated data.\n"
           "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
           "looking down the beam axis.\n")
-
-    print("\n1) Energy vs z: Unblocked particles in all 4 detectors (2D).\n"
-          "2) Energy vs z: Blocked particles in all 4 detectors (2D).\n"
-          "3) Energy vs z: Unblocked and blocked particles in all 4 detectors (2D).\n"
-          "4) Counts vs Lab Angle: Total blocked counts vs angle (1D).\n"
-          "5) Counts vs z: Blocked counts vs z in all 4 detectors (1D)\n"
-          "6) Counts vs z: Blocked counts vs z in all 4 detectors stacked (1D)\n"
-          "7) Counts vs Lab Angle: Blocked counts vs lab angle in all 4 detectors stacked (1D)\n"
-          "8) Energy vs Lab Angle: Unblocked particles Energy vs ejected lab angle in all 4 detectors (2D)\n"
-          "9) Energy vs Lab Angle: Unblocked and blocked particles Energy vs ejected lab "
-          "angle in all 4 detectors (2D)\n"
-          "10) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D)\n"
-          "11) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position (1D)\n")
+    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
+        print("\n1) Energy vs z: Unblocked particles in all 4 detectors (2D).\n"
+              "2) Energy vs z: Blocked particles in all 4 detectors (2D).\n"
+              "3) Energy vs z: Unblocked and blocked particles in all 4 detectors (2D).\n"
+              "4) Counts vs Lab Angle: Total blocked counts vs angle (1D).\n"
+              "5) Counts vs z: Blocked counts vs z in all 4 detectors (1D)\n"
+              "6) Counts vs z: Blocked counts vs z in all 4 detectors stacked (1D)\n"
+              "7) Counts vs Lab Angle: Blocked counts vs lab angle in all 4 detectors stacked (1D)\n"
+              "8) Energy vs Lab Angle: Unblocked particles Energy vs ejected lab angle in all 4 detectors (2D)\n"
+              "9) Energy vs Lab Angle: Unblocked and blocked particles Energy vs ejected lab "
+              "angle in all 4 detectors (2D)\n"
+              "10) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D)\n"
+              "11) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
+              "detectors (1D)\n"
+              "12) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
     if fnmatch.fnmatch(pklin, '*allE*'):
-        print("12) Energy vs Lab Angle: Contour plot of detected particles. \n"
-              "13) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
-              "14) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
-              "15) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
-              "16) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
-              "17) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-              "18) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-              "19) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-              "20) Energy vs z: Contour plot of detected particles. \n"
-              "21) Energy vs z: Contour plot of particles not blocked by the cone. \n"
-              "22) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
-              "23) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
-              "24) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
-              "25) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-              "26) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-              "27) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n")
-    print("28) Fraction of particles blocked vs lab angle. \n"
-          "29) Fraction of particles blocked vs energy. \n"
-          "30) Fraction of particles blocked vs z position. \n")
+        print("13) Energy vs Lab Angle: Contour plot of detected particles. \n"
+              "14) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
+              "15) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
+              "16) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
+              "17) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
+              "18) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+              "19) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+              "20) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
+              "21) Energy vs z: Contour plot of detected particles. \n"
+              "22) Energy vs z: Contour plot of particles not blocked by the cone. \n"
+              "23) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
+              "24) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
+              "25) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
+              "26) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+              "27) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+              "28) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n")
+    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
+        print("29) Fraction of particles blocked vs lab angle. \n"
+              "30) Fraction of particles blocked vs energy. \n"
+              "31) Fraction of particles blocked vs z position. \n")
+    if fnmatch.fnmatch(pklin, '*eloss_s*'):
+        print("32) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
+              "33) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
+              "34) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D) \n"
+              "35) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
+              "detectors (1D)\n"
+              "36) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
     print("0) End\n\n")
 
     while switch == 0:
@@ -248,7 +261,7 @@ def plot(pklin):
 
                 # 10 is the Excitation Energy reconstructed from the "detected" energy and z position
                 if plotnum == 10 and i == 0:
-                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"]], bins=750, range=[-.2, 10])
+                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"]], bins=750, range=[-.2, exmax])
                     plt.xlabel('Excitation Energy (MeV)')
                     plt.ylabel('Counts')
 
@@ -259,13 +272,19 @@ def plot(pklin):
                               df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
                               df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
                               df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                             bins=1000, range=[0, 8], color=(blk, grn, red, blu), stacked=True)
+                             bins=1000, range=[0, exmax], color=(blk, grn, red, blu), stacked=True)
                     plt.xlabel('Excitation Energy (MeV)')
                     plt.ylabel('Counts')
 
-                # 12-27 are contour plots of blocked particles. These should only be used with "allE" simulated files
+                if plotnum == 12 and i > 0:
+                    plt.subplot(2, 2, i)
+                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]], bins=750, range=[-.2, exmax])
+                    plt.xlabel('Excitation Energy (MeV)')
+                    plt.ylabel('Counts')
+
+                # 14-29 are contour plots of blocked particles. These should only be used with "allE" simulated files
                 # because they don't really make sense with specific excited states populated.
-                if 11 < plotnum < 35:
+                if 12 < plotnum < 33:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
                     # degree.
@@ -427,8 +446,8 @@ def plot(pklin):
                     ratiopipeevz_blurr = ndimage.gaussian_filter(ratiopipeevz, sigma=1.6, order=0)
                     rationozzleevz_blurr = ndimage.gaussian_filter(rationozzleevz, sigma=1.6, order=0)
 
-                    # 12 is the contour plot of percentage of detected particles.
-                    if plotnum == 12 and i == 0:
+                    # 13 is the contour plot of percentage of detected particles.
+                    if plotnum == 13 and i == 0:
 
                         cf = plt.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
                                                                        .85, .9, .95, 1], cmap='YlGnBu')
@@ -442,8 +461,8 @@ def plot(pklin):
                         plt.ylabel('Energy (MeV)')
                         plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
 
-                    # 13 is a contour plot of percetage of particles not blocked by the cone.
-                    if plotnum == 13 and i == 0:
+                    # 14 is a contour plot of percetage of particles not blocked by the cone.
+                    if plotnum == 14 and i == 0:
 
                         cf = plt.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
                                                                            .8, .85, .9, .95, 1], cmapbb='Greens')
@@ -459,8 +478,8 @@ def plot(pklin):
                         plt.title("Percentage of Particles Not Blocked by the Cone",
                                   fontdict={'fontsize': 16})
 
-                    # 14 is the percentage of particles not blocked by the pipe
-                    if plotnum == 14 and i == 0:
+                    # 15 is the percentage of particles not blocked by the pipe
+                    if plotnum == 15 and i == 0:
 
                         cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
                                           [.65, .7, .75, .8, .85, .9, .95, 1], cmap='Reds')
@@ -475,8 +494,8 @@ def plot(pklin):
                         plt.title("Percentage of Particles Not Blocked by the Pipe",
                                   fontdict={'fontsize': 16})
 
-                    # 14 is the percentage of particles not blocked by the nozzle
-                    if plotnum == 15 and i == 0:
+                    # 16 is the percentage of particles not blocked by the nozzle
+                    if plotnum == 16 and i == 0:
 
                         cf = plt.contourf(xevt, yevt, rationozzleevt_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
                                                                              .96, .98, 1], cmap='Blues')
@@ -491,8 +510,8 @@ def plot(pklin):
                         plt.title("Percentage of Particles Detected (Not Blocked by the Nozzle)",
                                   fontdict={'fontsize': 16})
 
-                    # 16 is the Energy vs angle split into the four detector quadrants, same as 12
-                    if plotnum == 16 and i > 0:
+                    # 17 is the Energy vs angle split into the four detector quadrants, same as 12
+                    if plotnum == 17 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevt, yevt, ratioevt_blurr,
                                           [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
@@ -505,9 +524,9 @@ def plot(pklin):
                         plt.ylabel('Energy (MeV)')
                         plt.suptitle('Percentage of Particles Detected', fontsize=18)
 
-                    # 17 is the Energy vs angle not blocked by the cone split into the four detector quadrants,
+                    # 18 is the Energy vs angle not blocked by the cone split into the four detector quadrants,
                     # same as 13
-                    if plotnum == 17 and i > 0:
+                    if plotnum == 18 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevt, yevt, ratioconeevt_blurr,
                                           [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
@@ -521,9 +540,9 @@ def plot(pklin):
                         plt.suptitle('Percentage of Particles Not Blocked by the Cone',
                                      fontsize=18)
 
-                    # 18 is the Energy vs angle not blocked by the pipe split into the four detector quadrants,
+                    # 19 is the Energy vs angle not blocked by the pipe split into the four detector quadrants,
                     # same as 14
-                    if plotnum == 18 and i > 0:
+                    if plotnum == 19 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
                                           [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
@@ -538,9 +557,9 @@ def plot(pklin):
                                   str(df['Magnetic Field'][0]) + " T"
                         plt.suptitle(title18, fontsize=18)
 
-                    # 19 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
-                    # same as 15
-                    if plotnum == 19 and i > 0:
+                    # 20 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
+                    # same as 16
+                    if plotnum == 20 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevt, yevt, rationozzleevt_blurr,
                                           [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
@@ -556,7 +575,7 @@ def plot(pklin):
 
                     # The contour plot cycle repeats here but is instead made with Energy vs z position.
 
-                    if plotnum == 20 and i == 0:
+                    if plotnum == 21 and i == 0:
 
                         cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
                                                                        .85, .9, .95, 1], cmap='YlGnBu')
@@ -570,7 +589,7 @@ def plot(pklin):
                         plt.ylabel('Energy (MeV)')
                         plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
 
-                    if plotnum == 21 and i == 0:
+                    if plotnum == 22 and i == 0:
 
                         cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
                                                                            .8, .85, .9, .95, 1], cmap='Greens')
@@ -587,7 +606,7 @@ def plot(pklin):
                                   str(df['Magnetic Field'][0]) + " T"
                         plt.suptitle(title21, fontsize=18)
 
-                    if plotnum == 22 and i == 0:
+                    if plotnum == 23 and i == 0:
 
                         cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.74, .78, .82, .86, .90, .94, .98, 1],
                                           cmap='Reds')
@@ -602,7 +621,7 @@ def plot(pklin):
                         plt.ylabel('Energy (MeV)')
                         plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
 
-                    if plotnum == 23 and i == 0:
+                    if plotnum == 24 and i == 0:
 
                         cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
                                                                              .96, .98, 1], cmap='Blues')
@@ -617,7 +636,7 @@ def plot(pklin):
                         plt.ylabel('Energy (MeV)')
                         plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
 
-                    if plotnum == 24 and i > 0:
+                    if plotnum == 25 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
                                                                        .5, .55, .6, .65, .7, .75, .8, .85,
@@ -630,7 +649,7 @@ def plot(pklin):
                         plt.ylabel('Energy (MeV)')
                         plt.suptitle('Percentage of Particles Detected', fontsize=18)
 
-                    if plotnum == 25 and i > 0:
+                    if plotnum == 26 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
                                                                            .5, .55, .6, .65, .7, .75, .8, .85,
@@ -645,7 +664,7 @@ def plot(pklin):
                                   str(df['Magnetic Field'][0]) + " T"
                         plt.suptitle(title25, fontsize=18)
 
-                    if plotnum == 26 and i > 0:
+                    if plotnum == 27 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
                                                                            .5, .55, .6, .65, .7, .75, .8, .85,
@@ -660,7 +679,7 @@ def plot(pklin):
                                   str(df['Magnetic Field'][0]) + " T"
                         plt.suptitle(title26, fontsize=18)
 
-                    if plotnum == 27 and i > 0:
+                    if plotnum == 28 and i > 0:
                         plt.subplot(2, 2, i)
                         cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
                                                                              .5, .55, .6, .65, .7, .75, .8, .85,
@@ -678,7 +697,7 @@ def plot(pklin):
                     # Here we do something a little different, and instead of contour plots we do ratio plots,
                     # still using the bins that were defined above.
 
-                    if plotnum > 27:
+                    if plotnum > 28:
                         # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
                         # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
                         # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
@@ -723,34 +742,65 @@ def plot(pklin):
                         divz = divz.tolist()
 
                         # The next 3 hists are the ratio plots broken up by detector on the same plot:
-                        if plotnum == 28:
+                        if plotnum == 29:
                             plt.plot(tbins2, divt, marker='o')
                             plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                        loc='lower right', fontsize=16)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Fraction of Particles Blocked')
 
-                        if plotnum == 29:
+                        if plotnum == 30:
                             plt.plot(ebins2, dive, marker='o')
                             plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                        loc='lower left', fontsize=16)
                             plt.xlabel('Energy (MeV)')
                             plt.ylabel('Fraction of Particles Blocked')
 
-                        if plotnum == 30:
+                        if plotnum == 31:
                             plt.plot(zbins2, divz, marker='o')
                             plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                        loc='lower left', fontsize=16)
                             plt.xlabel('z (m)')
                             plt.ylabel('Fraction of Particles Blocked')
 
-                        if (plotnum == 31) and i > 0:
-                            plt.subplot(2, 2, i)
-                            plt.hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
-                                       df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
-                                       range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
-                            plt.xlabel('z(m)')
-                            plt.ylabel('Energy (MeV)')
+                # This next section is for solid targets only:
+                if plotnum > 31:
+                    if (plotnum == 32) and i > 0:
+                        plt.subplot(2, 2, i)
+                        plt.hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
+                                    df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
+                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
+                        plt.xlabel('z(m)')
+                        plt.ylabel('Energy (MeV)')
+
+                    if (plotnum == 33) and i > 0:
+                        plt.subplot(2, 2, i)
+                        plt.hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
+                                    df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
+                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
+                        plt.xlabel('z(m)')
+                        plt.ylabel('Energy (MeV)')
+
+                    if plotnum == 34 and i == 0:
+                        plt.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"]], bins=750, range=[-0.2, exmax])
+                        plt.xlabel('Excitation Energy (MeV)')
+                        plt.ylabel('Counts')
+
+                        # 35 is the same as 11 but also showing blocked particles.
+                    if plotnum == 35 and i > 0:
+                        plt.subplot(2, 2, i)
+                        plt.hist((df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]],
+                                  df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]),
+                                 bins=1000, range=[-0.2, exmax], color=(blk, red), stacked=True)
+                        plt.xlabel('Excitation Energy (MeV)')
+                        plt.ylabel('Counts')
+
+                    if plotnum == 36 and i > 0:
+                        plt.subplot(2, 2, i)
+                        plt.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
+                                 range=[-0.2, exmax])
+                        plt.xlabel('Excitation Energy (MeV)')
+                        plt.ylabel('Counts')
 
                 # Handle the legend here for each plot that needs it.
                 if i == 1 and (plotnum == 2 or plotnum == 3 or plotnum == 5 or

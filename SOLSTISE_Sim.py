@@ -90,7 +90,11 @@ if datas[:, 0].mean() > 90:
 else:
     invkin = 0
 
-pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the magnet?: "))
+# Remove this question if the user is using a solid target:
+if not fnmatch.fnmatch(filein, '*eloss_s*'):
+    pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the magnet?: "))
+else:
+    pipefb = 0
 
 if pipefb != invkin:
     pipeyn = 'n'
