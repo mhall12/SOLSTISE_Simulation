@@ -4,12 +4,14 @@
 ParticlesClass.py
 Kinematics_Calc.py
 ConeParams.txt
-ConeMaker.py
+ConeMaker_forSpreadsheet.py
 README
 __init__.py
 /__pycache__
 jupyter-notebook-browser
-*.pkl
+*evts*.pkl
+*tgt*.pkl
+cust*.pkl
 PipeOut*
 Untitled*
 *evts*

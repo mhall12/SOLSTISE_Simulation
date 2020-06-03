@@ -2,6 +2,7 @@
 from Sim_File_pd import sim_pd
 from Event_Builder import BuildEvts
 from PipeMaker import makepipe
+from ConeMaker import makecone
 import numpy as np
 import glob
 import os
@@ -89,6 +90,45 @@ if datas[:, 0].mean() > 90:
     invkin = 1
 else:
     invkin = 0
+
+coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)?: "))
+
+if coneopt == 0:
+    conepkl = "SOLSTISE_cone_3_2-6in.pkl"
+
+else:
+    list_cones = glob.glob('*cone*.pkl')
+    latest_cone = max(list_cones, key=os.path.getctime)
+    print("\nThe most recently created cone input file is: " + latest_cone)
+    yn = input("\nWould you like to use this file? [Y/N] ")
+
+    if yn == 'n' or yn == 'N':
+        newconeyn = input("Would you like to create a new cone input file? [Y/N] ")
+
+        if newconeyn == 'n' or newconeyn == 'N':
+            print("\n")
+            for i in range(len(list_cones)):
+                print(str(i + 1) + ") " + list_cones[i])
+
+            filenum = 1000000
+            while filenum > len(list_cones):
+                filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
+
+                if len(list_cones) >= filenum > 0:
+                    conepkl = list_cones[filenum - 1]
+                elif filenum > len(list_cones):
+                    print("ERROR: Number entered is greater than the number of cone input files...")
+                else:
+                    list_file_check = []
+                    while len(list_file_check) == 0:
+                        conepkl = input("Enter the name of the pipe input file: ")
+                        list_file_check = glob.glob(conepkl)
+                        if len(list_file_check) == 0:
+                            print("ERROR: The file does not exist...")
+        else:
+            conepkl = makecone()
+    else:
+        conepkl = latest_cone
 
 # Remove this question if the user is using a solid target:
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
