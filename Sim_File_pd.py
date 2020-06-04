@@ -17,7 +17,7 @@ import pickle
 import warnings
 
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conepkl):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -163,10 +163,14 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
     # ***************************************************************************************
     # Parameters of the nozzle, cone, and pipe get entered here:
 
-    nozzleconedistin = 3.83  # dist between nozzle and cone in inches
+    # Have to open the cone pickle:
+    with open(conepkl, 'rb') as f:
+        coneparms = pickle.load(f)
+
+    nozzleconedistin = coneparms[0]  # dist between nozzle and cone in inches
     reacdistbelownozzle = 0.09843  # dist below nozzle the reaction happens in inches
-    conedia = 2.6  # cone outer diameter in inches
-    coneheight = 3.02  # cone height in inches as measured from the top of the ISO base.
+    conedia = coneparms[1]  # cone outer diameter in inches
+    coneheight = coneparms[2]  # cone height in inches as measured from the top of the ISO base.
 
     # Height above the cone that the reaction occursfrom massreader import readmass
     reacheight = ((nozzleconedistin - reacdistbelownozzle) * 2.54) / 100
@@ -182,10 +186,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac):
 
     # Polynomial coefficients for the current best cone: Top of cone is 3.83 in away from nozzle
 
-    poly3 = [0.0611, -0.8077, 3.5255, -3.7867]
+    # poly3 = [0.0611, -0.8077, 3.5255, -3.7867]
+    poly3 = [coneparms[4], coneparms[5], coneparms[6], coneparms[7]]
 
-    rconeside = lambda y: (poly3[0] * (y + reacdistbelownozzle) ** 3 + poly3[1] * (y + reacdistbelownozzle) ** 2 +
-                           poly3[2] * (y + reacdistbelownozzle) + poly3[3]) * 2.54 / 100
+    rconeside = lambda y: (poly3[0] * (y + reacdistbelownozzle - nozzleconedistin) ** 3 +
+                           poly3[1] * (y + reacdistbelownozzle - nozzleconedistin) ** 2 +
+                           poly3[2] * (y + reacdistbelownozzle - nozzleconedistin) + poly3[3]) * 2.54 / 100
 
     # parameters for nozzle shadowing here:
     # cone tip dist is the extra vertical height added onto the nozzle "cone" shape if it extended out to a point

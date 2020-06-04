@@ -91,7 +91,10 @@ if datas[:, 0].mean() > 90:
 else:
     invkin = 0
 
-coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)?: "))
+try:
+    coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)?: "))
+except ValueError:
+    coneopt = 0
 
 if coneopt == 0:
     conepkl = "SOLSTISE_cone_3_2-6in.pkl"
@@ -132,7 +135,11 @@ else:
 
 # Remove this question if the user is using a solid target:
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
-    pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the magnet?: "))
+    try:
+        pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the "
+                           "magnet?: "))
+    except ValueError:
+        pipefb = 0
 else:
     pipefb = 0
 
@@ -168,7 +175,7 @@ if pipeyn == "N" or pipeyn == "n":
         phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
         phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conepkl)
 
 else:
     list_pipe_files = glob.glob('PipeOut*.txt')
@@ -212,4 +219,5 @@ else:
 
     lines = file.readlines()
 
-    sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]), ebeam, filein, reac)
+    sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]),
+           ebeam, filein, reac, conepkl)

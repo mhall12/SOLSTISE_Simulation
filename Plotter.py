@@ -186,18 +186,23 @@ def plot(pklin):
                     plt.ylabel('Energy (MeV)')
 
                 if (plotnum == 2 or plotnum == 3) and i > 0:
+
+                    # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
                     plt.subplot(2, 2, i)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                               df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                               df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
-                    plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                               df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
-                    plt.xlabel('z(m)')
-                    plt.ylabel('Energy (MeV)')
+                    try:
+                        plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
+                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
+                        plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
+                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                        plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
+                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
+                        plt.xlabel('z(m)')
+                        plt.ylabel('Energy (MeV)')
+                    except KeyError:
+                        print("")
 
                 # This hist is just a 1D number of blocked counts vs theta. A better percentage version broken up by
                 # detector is made in hist 28, this was just a first pass.
@@ -834,7 +839,7 @@ if __name__ == "__main__":
     input("\n\n\nTo continue, press ENTER")
 
     # Get a list of all the pkl files that are already created:
-    list_pickles = glob.glob('*.pkl')
+    list_pickles = glob.glob('*evt*.pkl')
 
     # If there aren't any pickles, prompt the user to make one.
     if len(list_pickles) == 0:
