@@ -53,9 +53,14 @@ def BuildEvts():
         for i in range(levnum):
             levels.append(float(input("Enter the energy of a level in MeV: ")))
 
+    numevents = int(input("\nInput the number of events you would like to generate: "))
+
+    beamenp = np.zeros(numevents) + beamenergy
+
     # We now have an energy loss code, so we need to see if the user wants artificial
     # smearing if the allE option isn't used.
-    elossopt = 2
+    # Elossopt also initialized for the allE option.
+    elossopt = 0
     if levnum > 0:
         elossopt = int(input("If you want to calculate energy loss in the code, "
                              "enter (1), otherwise enter (0): "))
@@ -63,7 +68,6 @@ def BuildEvts():
     # Here we need to calculate the energy loss of the beam in the magnet and target. Moving that section of code
     # from SOLSTISE_Sim.py:
     if elossopt == 1:
-
         # Have them define the target...
         targetparms = []
         # need to set up the absorber data here, which should be easy because we know the target:
@@ -71,6 +75,9 @@ def BuildEvts():
         if ztarget == 1:
             gs = int(input("\nIs the target a gas (1) or solid (2)?: "))
             if gs == 2:
+                # depth is a random number between 0 and 1, which when multiplied by the thickness of the absorber
+                # gives the position in the target that the reaction occurs.
+                depth = np.random.rand(numevents)
                 gasorsolid = "s"
                 if atarget == 1:
                     print("A CH2 target will be assumed.")
@@ -85,7 +92,7 @@ def BuildEvts():
                 density = [0.94]
                 thickness = [float(input("Enter the thickness in mg/cm^2: "))]
                 # Assume the beam interacts at the center of the target, divide target thickness by 2:
-                thickness[0] = thickness[0] / 2
+                thkin = thickness[0] * depth
                 jetpress = [0]
                 champress = [0]
                 jetrad = [0]
@@ -107,6 +114,7 @@ def BuildEvts():
             # Density and thickness are 0 for gasses.
             density = [0]
             thickness = [0]
+            thkin = [0]
             jetpress = [float(input("Enter the pressure in the jet in Torr: "))]
             jetrad = [float(input("Enter the radius of the jet in mm: "))]
             champress = [float(input("Enter the ambient pressure in the magnet in Torr: "))]
@@ -114,15 +122,27 @@ def BuildEvts():
                                     "(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
             # Convert jetrad into cm
             jetrad[0] = jetrad[0] / 10
+            jetradin = np.zeros(numevents) + jetrad[0]
+            # Reaction takes place
+            # in a guss position on the jet diameter, centered on the jet radius
+            # jetradin will be the gauss position, but we also must "fix" it to remove negative values and values
+            # greater than the jet diameter. Do it with masks.
+            jetradin = np.random.normal(jetradin, (jetrad[0] * 2) / 2.355)
+            # save the interaction position, because we'll need that in the text file. Currently in cm.
+            jetradin_2 = jetradin
+            ltomask = jetradin < 0
+            gtdmask = jetradin > jetrad[0] * 2
+            jetradin[ltomask] = 0.0001
+            jetradin[gtdmask] = jetrad[0] * 2
             gas = [True]
 
         targetparms = [zt, at, num, density, thickness, jetpress, jetrad, champress, gas]
         dfout = pd.DataFrame()
 
-        zbeam = np.array([zbeam])
-        abeam = np.array([abeam])
-        beame = np.array([beamenergy])
-        beamei = np.array([beamenergy])
+        zbeam = np.zeros(numevents) + zbeam
+        abeam = np.zeros(numevents) + abeam
+        beame = beamenp
+        beamei = beamenp
         angstrag = 0
         beamstrag = 0
         # If the absorber is a gas, we need the for loop to run twice. If it's a solid, we need it to run once.
@@ -136,20 +156,22 @@ def BuildEvts():
                 leng = chamdist[0]
             if i == 1:
                 prs = jetpress[0]
-                leng = jetrad[0]
+                leng = jetradin
 
-            dfout = desorb(zbeam, abeam, beame, zt, at, num, gas[0], density[0], thickness[0], prs, leng, beamei)
-            beame = dfout['Energy_i'] - dfout['DeltaE_tot']
+            dfout = desorb(zbeam, abeam, beame, zt, at, num, gas[0], density[0], thkin, prs, leng, beamei)
+            beame = dfout['Energy_i'].to_numpy() - dfout['DeltaE_tot'].to_numpy()
             # We have two layers, so get the total sum of the energy and angular straggling:
             beamstrag = dfout['E_strag_FWHM'][0]
             angstrag = dfout['AngleStrag'][0] + angstrag
 
         targetparms.append([beame[0]])
-
     else:
         print("\nThe energies and angles of the particles will be artificially smeared.")
 
-    numevents = int(input("\nInput the number of events you would like to generate: "))
+    if elossopt == 1:
+        beame2 = np.random.normal(beame, beamstrag)
+    else:
+        beame2 = beamenp
 
     # Take the reaction and replace all the parentheses with underscores so we can use it in the text file name
     reac = reac.replace("(", "_")
@@ -175,73 +197,71 @@ def BuildEvts():
     thmindeg = 0
     dead = 0
 
-    for i in range(numevents):
+    # The beam energy is now a numpy array, so no longer need the for loop here...
+    # But we have to assign some level numbers:
 
-        # if the energy loss is calculated, we want the beam energy to be smeared by the energy straggling:
-        if elossopt == 1:
-            beamenergy = random.gauss(beame[0], beamstrag)
+    if levnum > 0:
+        # Assigns a random level number to each of the events.
+        nplevnums = np.random.randint(levnum, size=numevents)
 
-        # randomly get a level nnumber if the levels were specified and then its excitation E
-        if levnum > 0:
-            randlevnum = random.randrange(0, levnum, 1)
-            excitation_energy = levels[randlevnum]
+        exenergy = np.zeros(len(nplevnums))
+        for i in range(levnum):
+            indmask = nplevnums == i
+            exenergy[indmask] = levels[i]
+    if levnum == 0:
+        # In this case, generate a number between 0 and 1, and multiply it by the energyend (highest desired Ex).
+        exenergy = np.random.rand(numevents)
+        exenergy = exenergy * energyend
+
+    qval = (masses[0] + masses[1] - masses[2] - masses[3]) - exenergy
+
+    # Here I'm trying to calculate the min theta that the particles can actually come out at from the math
+    if masses[2] > masses[0]:
+        thmin = np.acos(-1 * np.sqrt(-((masses[3] + masses[2]) *
+                                       (masses[3] * qval + (masses[3] - masses[1]) * beame2)) /
+                                     (masses[1] * masses[2] * beame2)))
+        thmindeg = thmin * 180 / np.pi
+    else:
+        thmindeg = np.zeros(numevents) + 90
+
+    # Normal kinematics, random angle between 0 and 90
+    if kinemat == 1:
+        theta = np.random.rand(numevents) * 90
+    # Inverse kinematics, random angle between 90 and 180
+    if kinemat == 2:
+        theta = np.random.rand(numevents) * (180-thmindeg) + thmindeg
+
+    trad = theta * np.pi / 180
+
+    # calculate the ejectile energy here based on the angle and q-value.
+    eejec2 = ((np.sqrt(masses[1] * masses[2] * beame2) * np.cos(trad) +
+               np.sqrt(masses[1] * masses[2] * beame2 * np.cos(trad) ** 2 +
+                         (masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
+                                                    beame2))) / (masses[3] + masses[2])) ** 2
+
+    # Smear the results a little to make it look like there is energy loss.
+    # or if the user has put elossopt = 0, we don't want the gaussian smearing.
+    if elossopt == 0:
+        eejec2 = np.random.normal(eejec2, .01)
+        theta = np.random.normal(theta, .1)
+    else:
+        # If the energyloss is calculated, we need to smear the theta of the final particles by the angular
+        # straggling.
+        theta = np.random.normal(theta, angstrag)
+
+    if elossopt == 0:
+        results = np.array([theta, eejec2])
+    else:
+        if gas[0]:
+            # jetradin_2 comes out in cm
+            results = np.array([theta, eejec2, jetradin_2])
         else:
-            # otherwise randomly choose an excitation energy within the specified range.
-            excitation_energy = random.randrange(0, energyend*100, 1)
-            excitation_energy = excitation_energy/100
+            # thkin comes out as mg/cm^2
+            results = np.array([theta, eejec2, thkin])
 
-        # calculate the Q-Ex
-        qval = (masses[0] + masses[1] - masses[2] - masses[3]) - excitation_energy
+    # Write the numpy results array into a text file.
+    np.savetxt(outfilename, results.T, delimiter='\t')
 
-        # Here I'm trying to calculate the min theta that the particles can actually come out at from the math
-        if masses[2] > masses[0]:
-            thmin = math.acos(-1*math.sqrt(-((masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
-                                                                        beamenergy))/(masses[1] * masses[2] * beamenergy)))
-            thmindeg = thmin * 180 / math.pi
-        else:
-            thmindeg = 90
-
-        #print(thmindeg)
-
-        # get a random angle in inverse or normal kinematics.
-        if kinemat == 1:
-            theta = random.random() * 90
-        elif kinemat == 2:
-            theta = random.random() * (180-thmindeg) + thmindeg
-
-        # Convert the random degree angle to radians
-        trad = theta * math.pi / 180
-
-        # This while actually doesn't need to be here and can be removed in the future. At one point it
-        # was used for debugging.
-        while True:
-            try:
-                # calculate the ejectile energy here based on the angle and q-value.
-                Eejec2 = ((math.sqrt(masses[1] * masses[2] * beamenergy) * math.cos(trad) +
-                           math.sqrt(masses[1] * masses[2] * beamenergy * math.cos(trad)**2 +
-                                    (masses[3] + masses[2]) * (masses[3] * qval + (masses[3] - masses[1]) *
-                                                               beamenergy))) / (masses[3] + masses[2]))**2
-                break
-            except ValueError:
-                Eejec2 = 0
-                Theta = 90
-                break
-
-        # Smear the results a little to make it look like there is energy loss.
-        # or if the user has put elossopt = 0, we don't want the gaussian smearing.
-        if elossopt == 0:
-            Eejec2 = random.gauss(Eejec2, .01)
-            theta = random.gauss(theta, .1)
-        else:
-            # If the energyloss is calculated, we need to smear the theta of the final particles by the angular
-            # straggling.
-            theta = random.gauss(theta, angstrag)
-
-        # Write the results to a text file so we can read it in later.
-        file.write(str(theta) + '\t' + str(Eejec2) + '\n')
-
-    # Close the file and return the file name
-    file.close()
     return outfilename
 
 
