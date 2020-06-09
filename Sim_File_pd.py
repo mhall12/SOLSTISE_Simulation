@@ -17,7 +17,7 @@ import pickle
 import warnings
 
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conepkl):
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conepkl, nozztxt):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -169,18 +169,34 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     phic = df['Phi']
 
     # ***************************************************************************************
+    # ***************************************************************************************
+    # ***************************************************************************************
+    # ***************************************************************************************
+
     # Parameters of the nozzle, cone, and pipe get entered here:
 
     # Have to open the cone pickle:
     with open(conepkl, 'rb') as f:
         coneparms = pickle.load(f)
 
+    nozzfile = open(nozztxt, "r")
+
+    # nozzparms in order will have the reaction distance (mm), nozzle diameter (in), nozzle angle (deg), cone length (m)
+    # cylinder radius (m), cylinder height (m), holder radius (m), and holder height (m).
+    nozzparms = nozzfile.readlines()
+
     nozzleconedistin = coneparms[0]  # dist between nozzle and cone in inches
-    reacdistbelownozzle = 0.09843  # dist below nozzle the reaction happens in inches
+    reacdistbelownozzle = float(nozzparms[0]) / 10 / 2.54  # dist below nozzle the reaction happens in inches
+    nozzconelen = float(nozzparms[3])  # nozzle cone length in m
+    nozzcylrad = float(nozzparms[4])  # nozzle cylinder radius in m
+    nozzcylh = float(nozzparms[5])  # nozzle cylinder height in m
+    nozzholdrad = float(nozzparms[6])  # nozzle holder radius in m
+    nozzholdh = float(nozzparms[7])  # nozzle holder height in m
+
     conedia = coneparms[1]  # cone outer diameter in inches
     coneheight = coneparms[2]  # cone height in inches as measured from the top of the ISO base.
 
-    # Height above the cone that the reaction occursfrom massreader import readmass
+    # Height above the cone that the reaction occurs
     reacheight = ((nozzleconedistin - reacdistbelownozzle) * 2.54) / 100
     rcone = ((conedia / 2) * 2.54) / 100
 
@@ -190,7 +206,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # distance from the reaction that the cone side equation starts (this equation starts at ~5.5, now 3.83).
     # sideheight = (5.5 - reacdistbelownozzle) * 2.54 / 100
-    sideheight = (3.83 - reacdistbelownozzle) * 2.54 / 100
+    sideheight = (nozzleconedistin - reacdistbelownozzle) * 2.54 / 100
 
     # Polynomial coefficients for the current best cone: Top of cone is 3.83 in away from nozzle
 
@@ -202,12 +218,11 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
                            poly3[2] * (y + reacdistbelownozzle - nozzleconedistin) + poly3[3]) * 2.54 / 100
 
     # parameters for nozzle shadowing here:
-    # cone tip dist is the extra vertical height added onto the nozzle "cone" shape if it extended out to a point
-    # it was determined using the 22 degree slope of the nozzle side and the nozzle opening radius 0.0455 inches
-    nozzletipdist = 0.112616
-    nozzleang = 22 * np.pi / 180  # the nozzle slope angle, which is 22 degrees (converted to rads)
+    nozzang = float(nozzparms[2]) * np.pi / 180  # the nozzle slope angle, which is 22 degrees (converted to rads)
+    nozzdia = float(nozzparms[1])
 
-    rnozzle = lambda y: ((y + np.abs(reacdistbelownozzle - nozzletipdist)) * np.tan(nozzleang)) * 2.54 / 100
+    # feed it inches, gives back meters. Calc the nozzle radius at a specified y position height.
+    rnozzle = lambda y: (nozzdia / 2 + (y - reacdistbelownozzle) * np.tan(nozzang)) * 2.54 / 100
 
     # function determines the r coordinates of the 2nd circle that makes up the gas pipe.
     # Need pipepm to multiply rpipe by a minus sign if we are using an ISO 160 Pipe:
@@ -218,9 +233,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     rpipe = lambda ph: cheight*np.sin(ph) + pipepm * np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
-    # *********************************************************************************************
+    # ***************************************************************************************
+    # ***************************************************************************************
+    # ***************************************************************************************
+    # ***************************************************************************************
 
-    dummy = df['Energy']
+    # dummy = df['Energy']
 
     # The last position of the particle, to determine how far the particle travelled in the last time step
     xlast = np.zeros_like(phic)
@@ -241,7 +259,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
             zoff = np.zeros_like(df['Energy'].to_numpy())
     else:
         zoff = np.zeros_like(df['Energy'].to_numpy())
-
 
     # For the ejectile energy loss, the energy loss will be split into two layers (if gas target).
     # The first layer will be the jetlength, defined below which is the approximate straight-line distance the
@@ -298,28 +315,35 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         masktest = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight))
         maskbase = (rxzplane < rISObase) & (ypos > baseheight)
 
-        #print(rconeside(ypos * 100 / 2.54),"\n")
-        #print(dummy[masksides])
-
-        #print(rconeside(ypos * 100 / 2.54), rxzplane)
-        #print(ypos[masktest])
-
         maskcone = masksides | maskbase
 
-        # we want only particles that come out at backward angles
+        # we want only particles that come out at backward angles for inverse, and forward angles for normal kin
         if invkin:
             maskz = zpos < 0
         else:
             maskz = zpos > 0
 
         # masknozzle determines if the the particle hits the nozzle.
-        masknozzle = masknozzle & ((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
-                                                                                 2.54 / 100))
+        # masknozzle = masknozzle & ((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
+        #                                                                         2.54 / 100))
+        # if the ypos is between the nozzle cone exaust and top of nozzle cone:
+        masknozzlecone = (rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & \
+                         (reacdistbelownozzle < (-1 * ypos * 100 / 2.54)) & \
+                         ((-1 * ypos * 100 / 2.54) < (reacdistbelownozzle + nozzconelen * 100 / 2.54))
 
-        #print(rxzplane[masksides] * 100 / 2.54)
-        #print(maskr.shape, phir.shape, zpos[np.invert(maskz)].shape)
+        masknozzlecyl = ((-1 * ypos * 100 / 2.54) > (reacdistbelownozzle + nozzconelen * 100 / 2.54)) & \
+                        (rxzplane < nozzcylrad) & \
+                        ((-1 * ypos) < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh))
 
-        #maskmaster = maskmaster*np.invert(maskrpipe & maskphipipe)#np.invert(maskcone)*np.invert(masky)#*np.invert(maskz)
+        masknozzleholder = ((-1 * ypos) > (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh)) & \
+                           (rxzplane < nozzholdrad) & \
+                           ((-1 * ypos) < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzholdh))
+
+
+        masknozzle = masknozzlecone | masknozzlecyl | masknozzleholder
+
+        # Combine all the different masks into maskmasters down here. Because of this section,
+        # doing maskcone = maskcone & ... is unnecessary above becaus it is done here.
         maskmaster = maskmaster & np.invert(maskcone) & np.invert(maskrpipe & maskphipipe) & np.invert(masknozzle)
         maskmaster_cone = maskmaster_cone & np.invert(maskcone)
         maskmaster_pipe = maskmaster_pipe & np.invert((maskrpipe & maskphipipe)
@@ -498,16 +522,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     writefile = writefilebase + str(1)
     lnum = 1
 
-    if elossbool:
-        if gas:
-            pklstring = writefilebase + '*_g*.pkl'
-        else:
-            pklstring = writefilebase + '*_s*.pkl'
-    else:
-        if fnmatch.fnmatch(filein, "*artsm*"):
-            pklstring = writefilebase + '*artsm*.pkl'
-        elif fnmatch.fnmatch(filein, "*allE*"):
-            pklstring = writefilebase + '*allE*.pkl'
+    pklstring = writefilebase + '*.pkl'
 
     list_pkls = glob.glob(pklstring)
 

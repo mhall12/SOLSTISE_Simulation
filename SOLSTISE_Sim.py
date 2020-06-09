@@ -3,6 +3,7 @@ from Sim_File_pd import sim_pd
 from Event_Builder import BuildEvts
 from PipeMaker import makepipe
 from ConeMaker import makecone
+from NozzleMaker import makenozz
 import numpy as np
 import glob
 import os
@@ -124,7 +125,7 @@ else:
                 else:
                     list_file_check = []
                     while len(list_file_check) == 0:
-                        conepkl = input("Enter the name of the pipe input file: ")
+                        conepkl = input("Enter the name of the cone input file: ")
                         list_file_check = glob.glob(conepkl)
                         if len(list_file_check) == 0:
                             print("ERROR: The file does not exist...")
@@ -132,6 +133,48 @@ else:
             conepkl = makecone()
     else:
         conepkl = latest_cone
+
+try:
+    nozzopt = int(input("\nWould you like to use the default SOLSTISE nozzle (0) or a custom-shaped nozzle (1)?: "))
+except ValueError:
+    nozzopt = 0
+
+# We'll put the nozzle questions here, since there are only ~3 and it isn't worth a new function or code.
+if nozzopt == 0:
+    nozztxt = 'SOLSTISE_nozz_default.txt'
+else:
+    list_nozz = glob.glob('*nozz*.txt')
+    latest_nozz = max(list_nozz, key=os.path.getctime)
+    print("\nThe most recently created nozzle input file is: " + latest_nozz)
+    yn = input("\nWould you like to use this file? [Y/N] ")
+
+    if yn == 'n' or yn == 'N':
+        newnozzyn = input("Would you like to create a new nozzle input file? [Y/N] ")
+
+        if newnozzyn == 'n' or newnozzyn == 'N':
+            print("\n")
+            for i in range(len(list_nozz)):
+                print(str(i + 1) + ") " + list_nozz[i])
+
+            filenum = 1000000
+            while filenum > len(list_nozz):
+                filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
+
+                if len(list_nozz) >= filenum > 0:
+                    nozztxt = list_nozz[filenum - 1]
+                elif filenum > len(list_nozz):
+                    print("ERROR: Number entered is greater than the number of nozzle input files...")
+                else:
+                    list_file_check = []
+                    while len(list_file_check) == 0:
+                        nozztxt = input("Enter the name of the nozzle input file: ")
+                        list_file_check = glob.glob(nozztxt)
+                        if len(list_file_check) == 0:
+                            print("ERROR: The file does not exist...")
+        else:
+            nozztxt = makenozz()
+    else:
+        nozztxt = latest_nozz
 
 # Remove this question if the user is using a solid target:
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
@@ -177,7 +220,7 @@ if pipeyn == "N" or pipeyn == "n":
         phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
         phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conepkl)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conepkl, nozztxt)
 
 else:
     list_pipe_files = glob.glob('PipeOut*.txt')
@@ -222,4 +265,4 @@ else:
     lines = file.readlines()
 
     sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]),
-           ebeam, filein, reac, conepkl)
+           ebeam, filein, reac, conepkl, nozztxt)

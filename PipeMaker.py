@@ -122,8 +122,6 @@ def makepipe():
 
     fname = "PipeOut_" + str(int(r2)) + "_" + str(int(angin)) + ".txt"
 
-    print(fname)
-
     params = [r1, r2, c2height, anginrad, angin2rad]
 
     # input("\nPress ENTER to continue.")
