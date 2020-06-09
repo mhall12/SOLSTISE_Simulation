@@ -14,8 +14,11 @@ def BuildEvts():
 
     # Let the user say whether or not the reaction is to be measured in inverse of normal kin.
     kinemat = 3
-    while kinemat > 2 or kinemat ==0:
-        kinemat = int(input("Will the reaction be measured in normal (1) or inverse kinematics (2)? "))
+    while kinemat > 2 or kinemat == 0:
+        try:
+            kinemat = int(input("Will the reaction be measured in inverse (1) or normal kinematics (2)? "))
+        except ValueError:
+            kinemat = 1
         if kinemat > 2 or kinemat == 0:
             print("ERROR: Please choose 1 for normal kinematics or 2 for inverse kinematics...")
 
@@ -62,8 +65,11 @@ def BuildEvts():
     # Elossopt also initialized for the allE option.
     elossopt = 0
     if levnum > 0:
-        elossopt = int(input("If you want to calculate energy loss in the code, "
-                             "enter (1), otherwise enter (0): "))
+        try:
+            elossopt = int(input("If you want to calculate energy loss in the code, "
+                                 "enter (1), otherwise enter (0): "))
+        except ValueError:
+            elossopt = 1
 
     # Here we need to calculate the energy loss of the beam in the magnet and target. Moving that section of code
     # from SOLSTISE_Sim.py:
@@ -91,7 +97,7 @@ def BuildEvts():
                     num = [1, 2]
                 density = [0.94]
                 thickness = [float(input("Enter the thickness in mg/cm^2: "))]
-                # Assume the beam interacts at the center of the target, divide target thickness by 2:
+                # Not assuming center of target anymore, so multiply the thickness by the depth.
                 thkin = thickness[0] * depth
                 jetpress = [0]
                 champress = [0]
@@ -164,12 +170,16 @@ def BuildEvts():
             beamstrag = dfout['E_strag_FWHM'][0]
             angstrag = dfout['AngleStrag'][0] + angstrag
 
-        targetparms.append([beame[0]])
+            print(beame)
+            print(np.average(beame))
+
     else:
-        print("\nThe energies and angles of the particles will be artificially smeared.")
+        if levnum > 0:
+            print("\nThe energies and angles of the particles will be artificially smeared.")
 
     if elossopt == 1:
         beame2 = np.random.normal(beame, beamstrag)
+        targetparms.append([np.average(beame)])
     else:
         beame2 = beamenp
 
@@ -179,7 +189,7 @@ def BuildEvts():
     reac = reac.replace(")", "_")
 
     if levnum > 0 and elossopt == 0:
-        outfilename = reac + str(int(beamenergy)) + "_evts.txt"
+        outfilename = reac + str(int(beamenergy)) + "_evts_artsm.txt"
     elif levnum > 0 and elossopt == 1:
         outfilename = reac + str(int(beamenergy)) + "_evts_eloss_" + gasorsolid + ".txt"
     else:
@@ -225,10 +235,10 @@ def BuildEvts():
         thmindeg = np.zeros(numevents) + 90
 
     # Normal kinematics, random angle between 0 and 90
-    if kinemat == 1:
+    if kinemat == 2:
         theta = np.random.rand(numevents) * 90
     # Inverse kinematics, random angle between 90 and 180
-    if kinemat == 2:
+    if kinemat == 1:
         theta = np.random.rand(numevents) * (180-thmindeg) + thmindeg
 
     trad = theta * np.pi / 180

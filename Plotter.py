@@ -144,12 +144,12 @@ def plot(pklin):
               "30) Fraction of particles blocked vs energy. \n"
               "31) Fraction of particles blocked vs z position. \n")
     if fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("32) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
-              "33) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
-              "34) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D) \n"
-              "35) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
+        print("33) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
+              "34) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
+              "35) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D) \n"
+              "36) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
               "detectors (1D)\n"
-              "36) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
+              "37) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
     print("0) End\n\n")
 
     while switch == 0:
@@ -193,16 +193,17 @@ def plot(pklin):
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
                                    df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
-                        plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
-                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                        if df["Pipe Radius"][0] > 0.01:
+                            plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                       df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
+                                       range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
                                    df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
                         plt.xlabel('z(m)')
                         plt.ylabel('Energy (MeV)')
                     except KeyError:
-                        print("")
+                        print("ERROR")
 
                 # This hist is just a 1D number of blocked counts vs theta. A better percentage version broken up by
                 # detector is made in hist 28, this was just a first pass.
@@ -289,7 +290,7 @@ def plot(pklin):
 
                 # 14-29 are contour plots of blocked particles. These should only be used with "allE" simulated files
                 # because they don't really make sense with specific excited states populated.
-                if 12 < plotnum < 33:
+                if 12 < plotnum < 32:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
                     # degree.
@@ -318,104 +319,439 @@ def plot(pklin):
                     # the mask that detemines whether or not the particle hit the magnet bore. So, with detarr[0] you
                     # technically have AllPossible & AllPossible but it's fine because it's always true.
 
-                    # The following lines bin the particles into either energy vs theta or energy vs z 2d histograms.
-                    # Ex: unbloxkedevt is an array that has given each particle a theta and E bin, and tbins and
-                    # ebins are the corresponding bin edges.
-
-                    # a note, unblocked is actually "AllPossible" NOT "Unblocked" like the mask...
-
                     unblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][detarr[i] & df["AllPossible"]],
                                                                 df['Energy'][detarr[i] & df["AllPossible"]],
                                                                 bins=(binstheta, binse))
-
                     unblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][detarr[i] & df["AllPossible"]],
                                                                 df['Energy'][detarr[i] & df["AllPossible"]],
                                                                 bins=(binsz, binse))
+                    if plotnum < 29:
+                        # The following lines bin the particles into either energy vs theta or energy vs z 2d histograms
+                        # Ex: unbloxkedevt is an array that has given each particle a theta and E bin, and tbins and
+                        # ebins are the corresponding bin edges.
 
-                    blockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][(df['Blocked_Cone'] |
-                                                                              df['Blocked_Pipe'] |
-                                                                              df['Blocked_Nozzle']) &
-                                                                              detarr[i]],
-                                                              df['Energy'][(df['Blocked_Cone'] |
-                                                                           df['Blocked_Pipe'] |
-                                                                           df['Blocked_Nozzle']) &
-                                                                           detarr[i]],
-                                                              bins=(binstheta, binse))
+                        # a note, unblocked is actually "AllPossible" NOT "Unblocked" like the mask...
 
-                    blockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
-                                                                              df['Blocked_Pipe'] |
-                                                                              df['Blocked_Nozzle']) &
-                                                                              detarr[i]],
-                                                              df['Energy'][(df['Blocked_Cone'] |
-                                                                           df['Blocked_Pipe'] |
-                                                                           df['Blocked_Nozzle']) &
-                                                                           detarr[i]],
-                                                              bins=(binsz, binse))
-
-                    coneblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
-                                                                  df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                        blockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][(df['Blocked_Cone'] |
+                                                                                  df['Blocked_Pipe'] |
+                                                                                  df['Blocked_Nozzle']) &
+                                                                                  detarr[i]],
+                                                                  df['Energy'][(df['Blocked_Cone'] |
+                                                                               df['Blocked_Pipe'] |
+                                                                               df['Blocked_Nozzle']) &
+                                                                               detarr[i]],
                                                                   bins=(binstheta, binse))
-                    pipeblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
-                                                                  df['Energy'][df['Blocked_Pipe'] & detarr[i]],
-                                                                  bins=(binstheta, binse))
-                    nozzleblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]],
-                                                                    df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
-                                                                    bins=(binstheta, binse))
 
-                    coneblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
-                                                                  df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                        blockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
+                                                                                  df['Blocked_Pipe'] |
+                                                                                  df['Blocked_Nozzle']) &
+                                                                                  detarr[i]],
+                                                                  df['Energy'][(df['Blocked_Cone'] |
+                                                                               df['Blocked_Pipe'] |
+                                                                               df['Blocked_Nozzle']) &
+                                                                               detarr[i]],
                                                                   bins=(binsz, binse))
-                    pipeblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
-                                                                  df['Energy'][df['Blocked_Pipe'] & detarr[i]],
-                                                                  bins=(binsz, binse))
-                    nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]],
-                                                                    df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
-                                                                    bins=(binsz, binse))
 
-                    # Here we get the ratios that we want to use to make the contour plots. Instead of unblocked minus
-                    # blocked over unblocked we could have used the unblocked mask and just done "detected/unblocked"
-                    # where "detected" comes from the unblocked mask.
+                        coneblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
+                                                                      df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                                                                      bins=(binstheta, binse))
+                        pipeblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
+                                                                      df['Energy'][df['Blocked_Pipe'] & detarr[i]],
+                                                                      bins=(binstheta, binse))
+                        nozzleblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]],
+                                                                        df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
+                                                                        bins=(binstheta, binse))
 
-                    # The ratios are also split up into separate ratios for the particles only blocked by the cone, etc.
+                        coneblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
+                                                                      df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                                                                      bins=(binsz, binse))
+                        pipeblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
+                                                                      df['Energy'][df['Blocked_Pipe'] & detarr[i]],
+                                                                      bins=(binsz, binse))
+                        nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]],
+                                                                        df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
+                                                                        bins=(binsz, binse))
 
-                    #ratio = np.divide(blockedevt, unblockedevt, out=np.zeros_like(blockedevt), where=blockedevt != 0)
-                    ratioevt = np.divide((unblockedevt - blockedevt), unblockedevt, out=np.zeros_like(blockedevt),
-                                         where=unblockedevt != 0)
+                        # Here we get the ratios that we want to use to make the contour plots. Instead of unblocked minus
+                        # blocked over unblocked we could have used the unblocked mask and just done "detected/unblocked"
+                        # where "detected" comes from the unblocked mask.
 
-                    ratioevz = np.divide((unblockedevz - blockedevz), unblockedevz, out=np.zeros_like(blockedevz),
-                                         where=unblockedevz != 0)
+                        # The ratios are also split up into separate ratios for the particles only blocked by the cone, etc.
 
-                    ratioconeevt = np.divide((unblockedevt - coneblockedevt), unblockedevt,
-                                             out=np.zeros_like(coneblockedevt), where=unblockedevt != 0)
+                        #ratio = np.divide(blockedevt, unblockedevt, out=np.zeros_like(blockedevt), where=blockedevt != 0)
+                        ratioevt = np.divide((unblockedevt - blockedevt), unblockedevt, out=np.zeros_like(blockedevt),
+                                             where=unblockedevt != 0)
 
-                    ratiopipeevt = np.divide((unblockedevt - pipeblockedevt), unblockedevt,
-                                             out=np.zeros_like(pipeblockedevt), where=unblockedevt != 0)
+                        ratioevz = np.divide((unblockedevz - blockedevz), unblockedevz, out=np.zeros_like(blockedevz),
+                                             where=unblockedevz != 0)
 
-                    rationozzleevt = np.divide((unblockedevt - nozzleblockedevt), unblockedevt,
-                                               out=np.zeros_like(nozzleblockedevt), where=unblockedevt != 0)
+                        ratioconeevt = np.divide((unblockedevt - coneblockedevt), unblockedevt,
+                                                 out=np.zeros_like(coneblockedevt), where=unblockedevt != 0)
 
-                    ratioconeevz = np.divide((unblockedevz - coneblockedevz), unblockedevz,
-                                             out=np.zeros_like(coneblockedevz), where=unblockedevz != 0)
+                        ratiopipeevt = np.divide((unblockedevt - pipeblockedevt), unblockedevt,
+                                                 out=np.zeros_like(pipeblockedevt), where=unblockedevt != 0)
 
-                    ratiopipeevz = np.divide((unblockedevz - pipeblockedevz), unblockedevz,
-                                             out=np.zeros_like(pipeblockedevz), where=unblockedevz != 0)
+                        rationozzleevt = np.divide((unblockedevt - nozzleblockedevt), unblockedevt,
+                                                   out=np.zeros_like(nozzleblockedevt), where=unblockedevt != 0)
 
-                    rationozzleevz = np.divide((unblockedevz - nozzleblockedevz), unblockedevz,
-                                               out=np.zeros_like(nozzleblockedevz), where=unblockedevz != 0)
+                        ratioconeevz = np.divide((unblockedevz - coneblockedevz), unblockedevz,
+                                                 out=np.zeros_like(coneblockedevz), where=unblockedevz != 0)
 
-                    # To actually plot the ratios into histograms we have to transpose the binned arrays:
+                        ratiopipeevz = np.divide((unblockedevz - pipeblockedevz), unblockedevz,
+                                                 out=np.zeros_like(pipeblockedevz), where=unblockedevz != 0)
 
-                    ratioevt = ratioevt.T
-                    ratioevz = ratioevz.T
+                        rationozzleevz = np.divide((unblockedevz - nozzleblockedevz), unblockedevz,
+                                                   out=np.zeros_like(nozzleblockedevz), where=unblockedevz != 0)
 
-                    ratioconeevt = ratioconeevt.T
-                    ratiopipeevt = ratiopipeevt.T
-                    rationozzleevt = rationozzleevt.T
+                        # To actually plot the ratios into histograms we have to transpose the binned arrays:
 
-                    ratioconeevz = ratioconeevz.T
-                    ratiopipeevz = ratiopipeevz.T
-                    rationozzleevz = rationozzleevz.T
+                        ratioevt = ratioevt.T
+                        ratioevz = ratioevz.T
 
+                        ratioconeevt = ratioconeevt.T
+                        ratiopipeevt = ratiopipeevt.T
+                        rationozzleevt = rationozzleevt.T
+
+                        ratioconeevz = ratioconeevz.T
+                        ratiopipeevz = ratiopipeevz.T
+                        rationozzleevz = rationozzleevz.T
+
+                        # As mentioned, tbins, ebins, and zbins are the bin edges. Here initialize a new array:
+
+                        tbins2 = np.zeros(90)
+                        ebins2 = np.zeros(150)
+                        zbins2 = np.zeros(100)
+
+                        # And here get the bin centers by taking the averages of three bin edges.
+
+                        for k in range(150):
+                            if k < 90:
+                                tbins2[k] = (tbins[k] + tbins[k + 1]) / 2
+                            if k < 100:
+                                zbins2[k] = (zbins[k] + zbins[k + 1]) / 2
+                            ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
+
+                        # To plot them we need to make a mesh grid of the bins:
+
+                        xevt, yevt = np.meshgrid(tbins2, ebins2)
+                        xevz, yevz = np.meshgrid(zbins2, ebins2)
+
+                        # Now, since we have so many bins, the contour plots won't look nice. If we put too few bins the
+                        # contours also don't look great. So, the solution is to use a lot of bins and use these gaussian
+                        # filters on the ratios to smooth them out.
+
+                        ratioevt_blurr = ndimage.gaussian_filter(ratioevt, sigma=1.5, order=0)
+                        ratioevz_blurr = ndimage.gaussian_filter(ratioevz, sigma=1.5, order=0)
+
+                        ratioconeevt_blurr = ndimage.gaussian_filter(ratioconeevt, sigma=1.5, order=0)
+                        ratiopipeevt_blurr = ndimage.gaussian_filter(ratiopipeevt, sigma=1.5, order=0)
+                        rationozzleevt_blurr = ndimage.gaussian_filter(rationozzleevt, sigma=1.5, order=0)
+
+                        ratioconeevz_blurr = ndimage.gaussian_filter(ratioconeevz, sigma=1.6, order=0)
+                        ratiopipeevz_blurr = ndimage.gaussian_filter(ratiopipeevz, sigma=1.6, order=0)
+                        rationozzleevz_blurr = ndimage.gaussian_filter(rationozzleevz, sigma=1.6, order=0)
+
+                        # 13 is the contour plot of percentage of detected particles.
+                        if plotnum == 13 and i == 0:
+
+                            cf = plt.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                           .85, .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevt, yevt, ratioevt_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
+                            manual_locations = [(92, 5), (94, 5), (97, 5), (104, 5), (110, 5)]
+                            labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-90)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
+
+                        # 14 is a contour plot of percetage of particles not blocked by the cone.
+                        if plotnum == 14 and i == 0:
+
+                            cf = plt.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                               .8, .85, .9, .95, 1], cmapbb='Greens')
+                            cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.5, .6, .7, .8, .9],
+                                             colors='k', linewidths=1.2)
+                            manual_locations = [(94, 5), (96, 5), (100, 5), (106, 5)]
+                            labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-90)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Not Blocked by the Cone",
+                                      fontdict={'fontsize': 16})
+
+                        # 15 is the percentage of particles not blocked by the pipe
+                        if plotnum == 15 and i == 0:
+
+                            cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
+                                              [.65, .7, .75, .8, .85, .9, .95, 1], cmap='Reds')
+                            cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.7, .8, .9], colors='k', linewidths=1.2)
+                            manual_locations = [(112, 5), (109, 6.2), (92, 9)]
+                            labels = plt.clabel(cs, inline=1, inline_spacing=-20, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-90)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Not Blocked by the Pipe",
+                                      fontdict={'fontsize': 16})
+
+                        # 16 is the percentage of particles not blocked by the nozzle
+                        if plotnum == 16 and i == 0:
+
+                            cf = plt.contourf(xevt, yevt, rationozzleevt_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
+                                                                                 .96, .98, 1], cmap='Blues')
+                            cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.88, .92, .96], colors='k', linewidths=1.2)
+                            manual_locations = [(100, 7.5), (110, 6), (115, 4)]
+                            labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-90)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Detected (Not Blocked by the Nozzle)",
+                                      fontdict={'fontsize': 16})
+
+                        # 17 is the Energy vs angle split into the four detector quadrants, same as 12
+                        if plotnum == 17 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevt, yevt, ratioevt_blurr,
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevt, yevt, ratioevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55,
+                                                                          .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.suptitle('Percentage of Particles Detected', fontsize=18)
+
+                        # 18 is the Energy vs angle not blocked by the cone split into the four detector quadrants,
+                        # same as 13
+                        if plotnum == 18 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevt, yevt, ratioconeevt_blurr,
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], cmap='Greens')
+                            cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
+                                                                              .55, .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], colors='k', linewidths=.3)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.suptitle('Percentage of Particles Not Blocked by the Cone',
+                                         fontsize=18)
+
+                        # 19 is the Energy vs angle not blocked by the pipe split into the four detector quadrants,
+                        # same as 14
+                        if plotnum == 19 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], cmap='Reds')
+                            cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
+                                                                              .55, .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            title18 = "Percentage of Particles Not Blocked by the Pipe B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title18, fontsize=18)
+
+                        # 20 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
+                        # same as 16
+                        if plotnum == 20 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevt, yevt, rationozzleevt_blurr,
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
+                                               .9, .95, 1], cmap='Blues')
+                            cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                                .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                                .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('Lab Angle (Deg)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.suptitle('Percentage of Particles That Could Be Detected (Not Blocked by the Nozzle)',
+                                         fontsize=18)
+
+                        # The contour plot cycle repeats here but is instead made with Energy vs z position.
+
+                        if plotnum == 21 and i == 0:
+
+                            cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                           .85, .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevz, yevz, ratioevz_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
+                            manual_locations = [(-.35, 5), (-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
+                            labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-70)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
+
+                        if plotnum == 22 and i == 0:
+
+                            cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                               .8, .85, .9, .95, 1], cmap='Greens')
+                            cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.5, .6, .7, .8, .9], colors='k',
+                                             linewidths=1.2)
+                            manual_locations = [(-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
+                            labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=16, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-70)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            title21 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title21, fontsize=18)
+
+                        if plotnum == 23 and i == 0:
+
+                            cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.74, .78, .82, .86, .90, .94, .98, 1],
+                                              cmap='Reds')
+                            cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.78, .86, .94], colors='k',
+                                             linewidths=1.2)
+                            manual_locations = [(-.35, 6.2), (-.22, 7.3), (-.1, 8.3)]
+                            labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(0)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
+
+                        if plotnum == 24 and i == 0:
+
+                            cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
+                                                                                 .96, .98, 1], cmap='Blues')
+                            cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.88, .92, .96],
+                                             colors='k', linewidths=1.2)
+                            manual_locations = [(-.4, 4.5), (-.35, 5), (-.2, 5)]
+                            labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
+                            for l in labels:
+                                l.set_rotation(-65)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
+
+                        if plotnum == 25 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                           .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                          .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            plt.suptitle('Percentage of Particles Detected', fontsize=18)
+
+                        if plotnum == 26 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                               .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                               .9, .95, 1], cmap='Greens')
+                            cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                              .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                              .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            title25 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title25, fontsize=18)
+
+                        if plotnum == 27 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                               .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                               .9, .95, 1], cmap='Reds')
+                            cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                              .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                              .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title26, fontsize=18)
+
+                        if plotnum == 28 and i > 0:
+                            plt.subplot(2, 2, i)
+                            cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                                 .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                                 .9, .95, 1], cmap='Blues')
+                            cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                                .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                                .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf)
+                            plt.xlabel('z (m)')
+                            plt.ylabel('Energy (MeV)')
+                            title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title27, fontsize=18)
+
+                        # Here we do something a little different, and instead of contour plots we do ratio plots,
+                        # still using the bins that were defined above.
+
+                if plotnum > 28 and plotnum < 32:
+                    # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
+                    # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
+                    # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
+                    # etc.
+
+                    print("Working1")
+                    # Make a new dataframe to contain the angle information for cuts
+                    ratiot = pd.DataFrame()
+                    ratiot['thap'] = df['Theta_Deg'][detarr[ho[i]] & df["AllPossible"]]
+                    ratiot['thunb'] = df['Theta_Deg'][detarr[ho[i]] & df["Unblocked"]]
+                    # Make a new dataframe to contain the E information for cuts
+                    ratioe = pd.DataFrame()
+                    ratioe['eap'] = df['Energy'][detarr[ho[i]] & df["AllPossible"]]
+                    ratioe['eunb'] = df['Energy'][detarr[ho[i]] & df["Unblocked"]]
+                    # Make a new dataframe to contain the z information for cuts
+                    ratioz = pd.DataFrame()
+                    ratioz['zap'] = df['zpos_final'][detarr[ho[i]] & df["AllPossible"]]
+                    ratioz['zunb'] = df['zpos_final'][detarr[ho[i]] & df["Unblocked"]]
+
+                    print("Working2")
+
+                    # Now we can cut the data based on the bins that we defined before. This effectively makes
+                    # a pandas series that shows the bin each particle falls into
+                    cuttheta = pd.cut(ratiot['thap'], binstheta)
+                    cuttheta_unblocked = pd.cut(ratiot['thunb'], binstheta)
+
+                    cute = pd.cut(ratioe['eap'], binse)
+                    cute_unblocked = pd.cut(ratioe['eunb'], binse)
+
+                    cutz = pd.cut(ratioz['zap'], binsz)
+                    cutz_unblocked = pd.cut(ratioz['zunb'], binsz)
+
+                    print("Working3")
+
+                    # Now we can make the ratios here. We have to group the cuts by the bins and aggregate the data
+                    # End up making a pandas series of bin, counts.
+                    divt = ratiot.groupby(cuttheta_unblocked)['thunb'].agg('count') / \
+                           ratiot.groupby(cuttheta)['thap'].agg('count')
+                    divt = divt.tolist()
+
+                    dive = ratioe.groupby(cute_unblocked)['eunb'].agg('count') / \
+                           ratioe.groupby(cute)['eap'].agg('count')
+                    dive = dive.tolist()
+
+                    divz = ratioz.groupby(cutz_unblocked)['zunb'].agg('count') / \
+                           ratioz.groupby(cutz)['zap'].agg('count')
+                    divz = divz.tolist()
+
+                    print("Working4")
                     # As mentioned, tbins, ebins, and zbins are the bin edges. Here initialize a new array:
 
                     tbins2 = np.zeros(90)
@@ -431,346 +767,31 @@ def plot(pklin):
                             zbins2[k] = (zbins[k] + zbins[k + 1]) / 2
                         ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
 
-                    # To plot them we need to make a mesh grid of the bins:
-
-                    xevt, yevt = np.meshgrid(tbins2, ebins2)
-                    xevz, yevz = np.meshgrid(zbins2, ebins2)
-
-                    # Now, since we have so many bins, the contour plots won't look nice. If we put too few bins the
-                    # contours also don't look great. So, the solution is to use a lot of bins and use these gaussian
-                    # filters on the ratios to smooth them out.
-
-                    ratioevt_blurr = ndimage.gaussian_filter(ratioevt, sigma=1.5, order=0)
-                    ratioevz_blurr = ndimage.gaussian_filter(ratioevz, sigma=1.5, order=0)
-
-                    ratioconeevt_blurr = ndimage.gaussian_filter(ratioconeevt, sigma=1.5, order=0)
-                    ratiopipeevt_blurr = ndimage.gaussian_filter(ratiopipeevt, sigma=1.5, order=0)
-                    rationozzleevt_blurr = ndimage.gaussian_filter(rationozzleevt, sigma=1.5, order=0)
-
-                    ratioconeevz_blurr = ndimage.gaussian_filter(ratioconeevz, sigma=1.6, order=0)
-                    ratiopipeevz_blurr = ndimage.gaussian_filter(ratiopipeevz, sigma=1.6, order=0)
-                    rationozzleevz_blurr = ndimage.gaussian_filter(rationozzleevz, sigma=1.6, order=0)
-
-                    # 13 is the contour plot of percentage of detected particles.
-                    if plotnum == 13 and i == 0:
-
-                        cf = plt.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                       .85, .9, .95, 1], cmap='YlGnBu')
-                        cs = plt.contour(xevt, yevt, ratioevt_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
-                        manual_locations = [(92, 5), (94, 5), (97, 5), (104, 5), (110, 5)]
-                        labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-90)
-                        cbar = fig.colorbar(cf)
+                    # The next 3 hists are the ratio plots broken up by detector on the same plot:
+                    if plotnum == 29:
+                        plt.plot(tbins2, divt, marker='o')
+                        plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
+                                   loc='lower right', fontsize=16)
                         plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
+                        plt.ylabel('Fraction of Particles Detected')
 
-                    # 14 is a contour plot of percetage of particles not blocked by the cone.
-                    if plotnum == 14 and i == 0:
+                    if plotnum == 30:
+                        plt.plot(ebins2, dive, marker='o')
+                        plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
+                                   loc='lower left', fontsize=16)
+                        plt.xlabel('Energy (MeV)')
+                        plt.ylabel('Fraction of Particles Detected')
 
-                        cf = plt.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                           .8, .85, .9, .95, 1], cmapbb='Greens')
-                        cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.5, .6, .7, .8, .9],
-                                         colors='k', linewidths=1.2)
-                        manual_locations = [(94, 5), (96, 5), (100, 5), (106, 5)]
-                        labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-90)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Not Blocked by the Cone",
-                                  fontdict={'fontsize': 16})
-
-                    # 15 is the percentage of particles not blocked by the pipe
-                    if plotnum == 15 and i == 0:
-
-                        cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
-                                          [.65, .7, .75, .8, .85, .9, .95, 1], cmap='Reds')
-                        cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.7, .8, .9], colors='k', linewidths=1.2)
-                        manual_locations = [(112, 5), (109, 6.2), (92, 9)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-20, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-90)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Not Blocked by the Pipe",
-                                  fontdict={'fontsize': 16})
-
-                    # 16 is the percentage of particles not blocked by the nozzle
-                    if plotnum == 16 and i == 0:
-
-                        cf = plt.contourf(xevt, yevt, rationozzleevt_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
-                                                                             .96, .98, 1], cmap='Blues')
-                        cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.88, .92, .96], colors='k', linewidths=1.2)
-                        manual_locations = [(100, 7.5), (110, 6), (115, 4)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-90)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Detected (Not Blocked by the Nozzle)",
-                                  fontdict={'fontsize': 16})
-
-                    # 17 is the Energy vs angle split into the four detector quadrants, same as 12
-                    if plotnum == 17 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevt, yevt, ratioevt_blurr,
-                                          [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], cmap='YlGnBu')
-                        cs = plt.contour(xevt, yevt, ratioevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55,
-                                                                      .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles Detected', fontsize=18)
-
-                    # 18 is the Energy vs angle not blocked by the cone split into the four detector quadrants,
-                    # same as 13
-                    if plotnum == 18 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevt, yevt, ratioconeevt_blurr,
-                                          [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], cmap='Greens')
-                        cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
-                                                                          .55, .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], colors='k', linewidths=.3)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles Not Blocked by the Cone',
-                                     fontsize=18)
-
-                    # 19 is the Energy vs angle not blocked by the pipe split into the four detector quadrants,
-                    # same as 14
-                    if plotnum == 19 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
-                                          [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], cmap='Reds')
-                        cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
-                                                                          .55, .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        title18 = "Percentage of Particles Not Blocked by the Pipe B = " + \
-                                  str(df['Magnetic Field'][0]) + " T"
-                        plt.suptitle(title18, fontsize=18)
-
-                    # 20 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
-                    # same as 16
-                    if plotnum == 20 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevt, yevt, rationozzleevt_blurr,
-                                          [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                           .9, .95, 1], cmap='Blues')
-                        cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                            .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                            .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('Lab Angle (Deg)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles That Could Be Detected (Not Blocked by the Nozzle)',
-                                     fontsize=18)
-
-                    # The contour plot cycle repeats here but is instead made with Energy vs z position.
-
-                    if plotnum == 21 and i == 0:
-
-                        cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                       .85, .9, .95, 1], cmap='YlGnBu')
-                        cs = plt.contour(xevz, yevz, ratioevz_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
-                        manual_locations = [(-.35, 5), (-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-70)
-                        cbar = fig.colorbar(cf)
+                    if plotnum == 31:
+                        plt.plot(zbins2, divz, marker='o')
+                        plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
+                                   loc='lower left', fontsize=16)
                         plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
-
-                    if plotnum == 22 and i == 0:
-
-                        cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                           .8, .85, .9, .95, 1], cmap='Greens')
-                        cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.5, .6, .7, .8, .9], colors='k',
-                                         linewidths=1.2)
-                        manual_locations = [(-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=16, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-70)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        title21 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
-                                  str(df['Magnetic Field'][0]) + " T"
-                        plt.suptitle(title21, fontsize=18)
-
-                    if plotnum == 23 and i == 0:
-
-                        cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.74, .78, .82, .86, .90, .94, .98, 1],
-                                          cmap='Reds')
-                        cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.78, .86, .94], colors='k',
-                                         linewidths=1.2)
-                        manual_locations = [(-.35, 6.2), (-.22, 7.3), (-.1, 8.3)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(0)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
-
-                    if plotnum == 24 and i == 0:
-
-                        cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
-                                                                             .96, .98, 1], cmap='Blues')
-                        cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.88, .92, .96],
-                                         colors='k', linewidths=1.2)
-                        manual_locations = [(-.4, 4.5), (-.35, 5), (-.2, 5)]
-                        labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
-                        for l in labels:
-                            l.set_rotation(-65)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.title("Percentage of Particles Detected", fontdict={'fontsize': 16})
-
-                    if plotnum == 25 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                       .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                       .9, .95, 1], cmap='YlGnBu')
-                        cs = plt.contour(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                      .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                      .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        plt.suptitle('Percentage of Particles Detected', fontsize=18)
-
-                    if plotnum == 26 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                           .9, .95, 1], cmap='Greens')
-                        cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                          .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        title25 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
-                                  str(df['Magnetic Field'][0]) + " T"
-                        plt.suptitle(title25, fontsize=18)
-
-                    if plotnum == 27 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                           .9, .95, 1], cmap='Reds')
-                        cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                          .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe B = " + \
-                                  str(df['Magnetic Field'][0]) + " T"
-                        plt.suptitle(title26, fontsize=18)
-
-                    if plotnum == 28 and i > 0:
-                        plt.subplot(2, 2, i)
-                        cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                             .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                             .9, .95, 1], cmap='Blues')
-                        cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                            .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                            .9, .95, 1], colors='k', linewidths=.2)
-                        cbar = fig.colorbar(cf)
-                        plt.xlabel('z (m)')
-                        plt.ylabel('Energy (MeV)')
-                        title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle B = " + \
-                                  str(df['Magnetic Field'][0]) + " T"
-                        plt.suptitle(title27, fontsize=18)
-
-                    # Here we do something a little different, and instead of contour plots we do ratio plots,
-                    # still using the bins that were defined above.
-
-                    if plotnum > 28:
-                        # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
-                        # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
-                        # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
-                        # etc.
-
-                        # Make a new dataframe to contain the angle information for cuts
-                        ratiot = pd.DataFrame()
-                        ratiot['thap'] = df['Theta_Deg'][detarr[ho[i]] & df["AllPossible"]]
-                        ratiot['thunb'] = df['Theta_Deg'][detarr[ho[i]] & df["Unblocked"]]
-                        # Make a new dataframe to contain the E information for cuts
-                        ratioe = pd.DataFrame()
-                        ratioe['eap'] = df['Energy'][detarr[ho[i]] & df["AllPossible"]]
-                        ratioe['eunb'] = df['Energy'][detarr[ho[i]] & df["Unblocked"]]
-                        # Make a new dataframe to contain the z information for cuts
-                        ratioz = pd.DataFrame()
-                        ratioz['zap'] = df['zpos_final'][detarr[ho[i]] & df["AllPossible"]]
-                        ratioz['zunb'] = df['zpos_final'][detarr[ho[i]] & df["Unblocked"]]
-
-                        # Now we can cut the data based on the bins that we defined before. This effectively makes
-                        # a pandas series that shows the bin each particle falls into
-                        cuttheta = pd.cut(ratiot['thap'], binstheta)
-                        cuttheta_unblocked = pd.cut(ratiot['thunb'], binstheta)
-
-                        cute = pd.cut(ratioe['eap'], binse)
-                        cute_unblocked = pd.cut(ratioe['eunb'], binse)
-
-                        cutz = pd.cut(ratioz['zap'], binsz)
-                        cutz_unblocked = pd.cut(ratioz['zunb'], binsz)
-
-                        # Now we can make the ratios here. We have to group the cuts by the bins and aggregate the data
-                        # End up making a pandas series of bin, counts.
-                        divt = ratiot.groupby(cuttheta_unblocked)['thunb'].agg('count') / \
-                               ratiot.groupby(cuttheta)['thap'].agg('count')
-                        divt = divt.tolist()
-
-                        dive = ratioe.groupby(cute_unblocked)['eunb'].agg('count') / \
-                               ratioe.groupby(cute)['eap'].agg('count')
-                        dive = dive.tolist()
-
-                        divz = ratioz.groupby(cutz_unblocked)['zunb'].agg('count') / \
-                               ratioz.groupby(cutz)['zap'].agg('count')
-                        divz = divz.tolist()
-
-                        # The next 3 hists are the ratio plots broken up by detector on the same plot:
-                        if plotnum == 29:
-                            plt.plot(tbins2, divt, marker='o')
-                            plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
-                                       loc='lower right', fontsize=16)
-                            plt.xlabel('Lab Angle (Deg)')
-                            plt.ylabel('Fraction of Particles Blocked')
-
-                        if plotnum == 30:
-                            plt.plot(ebins2, dive, marker='o')
-                            plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
-                                       loc='lower left', fontsize=16)
-                            plt.xlabel('Energy (MeV)')
-                            plt.ylabel('Fraction of Particles Blocked')
-
-                        if plotnum == 31:
-                            plt.plot(zbins2, divz, marker='o')
-                            plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
-                                       loc='lower left', fontsize=16)
-                            plt.xlabel('z (m)')
-                            plt.ylabel('Fraction of Particles Blocked')
+                        plt.ylabel('Fraction of Particles Detected')
 
                 # This next section is for solid targets only:
                 if plotnum > 31:
-                    if (plotnum == 32) and i > 0:
+                    if (plotnum == 33 or plotnum == 34) and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
                                     df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
@@ -778,7 +799,14 @@ def plot(pklin):
                         plt.xlabel('z(m)')
                         plt.ylabel('Energy (MeV)')
 
-                    if (plotnum == 33) and i > 0:
+                        if plotnum == 34:
+                            plt.hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
+                                       df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
+                                       range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                            plt.xlabel('z(m)')
+                            plt.ylabel('Energy (MeV)')
+
+                    if (plotnum == 35) and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
                                     df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
@@ -786,13 +814,13 @@ def plot(pklin):
                         plt.xlabel('z(m)')
                         plt.ylabel('Energy (MeV)')
 
-                    if plotnum == 34 and i == 0:
+                    if plotnum == 36 and i == 0:
                         plt.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"]], bins=750, range=[-0.2, exmax])
                         plt.xlabel('Excitation Energy (MeV)')
                         plt.ylabel('Counts')
 
                         # 35 is the same as 11 but also showing blocked particles.
-                    if plotnum == 35 and i > 0:
+                    if plotnum == 37 and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist((df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]],
                                   df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]),
@@ -800,7 +828,7 @@ def plot(pklin):
                         plt.xlabel('Excitation Energy (MeV)')
                         plt.ylabel('Counts')
 
-                    if plotnum == 36 and i > 0:
+                    if plotnum == 38 and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
                                  range=[-0.2, exmax])

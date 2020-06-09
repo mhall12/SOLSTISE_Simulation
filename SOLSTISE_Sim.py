@@ -153,8 +153,10 @@ if pipeyn == "N" or pipeyn == "n":
     hors = 0
 
     while hors != 1 and hors != 2:
-
-        hors = int(input("\nWill the reaction be occurring in HELIOS (Enter 1) or SOLARIS (Enter 2)? "))
+        try:
+            hors = int(input("\nWill the reaction be occurring in HELIOS (Enter 1) or SOLARIS (Enter 2)? "))
+        except ValueError:
+            hors = 1
 
         if hors != 1 and hors != 2:
             print("\nERROR: Unknown entry...")

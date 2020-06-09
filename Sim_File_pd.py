@@ -91,7 +91,15 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # Generates a pandas data frame of shape (xxx,2) whose columns are theta angle and energy.
     df = pd.read_csv(filein, sep="\t", header=None, low_memory=False)
-    df.columns = ["Theta_Deg", "Energy"]
+    if not fnmatch.fnmatch(filein, '*eloss*'):
+        df.columns = ["Theta_Deg", "Energy"]
+    else:
+        if fnmatch.fnmatch(filein, '*_g*'):
+            # If it's an eloss text file, we have an additional column,
+            # which is thickness for a solid or z offset for a jet.
+            df.columns = ["Theta_Deg", "Energy", "z_Offset"]
+        elif fnmatch.fnmatch(filein, '*_s*'):
+            df.columns = ["Theta_Deg", "Energy", "Tgt_Thick"]
 
     # Determine whether or not the particles are coming out at backward or forward angles:
     if df["Theta_Deg"].mean() > 90:
@@ -219,6 +227,22 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     ylast = np.zeros_like(phic)
     zlast = np.zeros_like(phic)
 
+    if elossbool:
+        if gas:
+            # Set the jet radius here, gets set from targetparms. Redefinition could be removed:
+            jetr = jetrad / 1000
+
+            # zoff is now the z offset in m.
+            zoff = df['z_Offset'].to_numpy() / 100.0 - jetr
+            jetroff = zoff
+            jetroff = np.where(zoff < -jetr, -jetr, jetroff)
+            jetroff = np.where(zoff > jetr, jetr, jetroff)
+        else:
+            zoff = np.zeros_like(df['Energy'].to_numpy())
+    else:
+        zoff = np.zeros_like(df['Energy'].to_numpy())
+
+
     # For the ejectile energy loss, the energy loss will be split into two layers (if gas target).
     # The first layer will be the jetlength, defined below which is the approximate straight-line distance the
     # ejectile will traverse the jet, and the total distance (disttravl) that the particle will traverse in its orbit.
@@ -242,7 +266,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
         xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
         ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
-        zpos = df['vel_par']*t
+        zpos = df['vel_par']*t + zoff
 
         if (i+1) % 10 == 0 and elossbool:
             disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (zlast - zpos) ** 2) + disttravl
@@ -324,13 +348,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         proj_ein = proj_e
 
         if gas:
-            # Set the jet radius here, gets set from targetparms. Redefinition could be removed:
-            jetr = jetrad / 1000
-
             # The distance that the particle must traverse to get out of the jet is set here.
             jetlength = np.abs(
                 jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy()) ** 2 * np.cos(df['Phi'].to_numpy()) ** 2 +
-                               np.cos(df['Theta_Rad'].to_numpy()) ** 2))
+                               np.cos(df['Theta_Rad'].to_numpy()) ** 2) + jetroff /
+                np.sqrt(np.sin(df['Theta_Rad'].to_numpy()) ** 2 * np.cos(df['Phi'].to_numpy()) ** 2 +
+                        np.cos(df['Theta_Rad'].to_numpy()) ** 2))
+
             # convert jetlength to cm:
             jetlength = jetlength * 100.0
 
@@ -351,10 +375,16 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
                     estragtot = df_elossout['E_strag_FWHM'].to_numpy()
         if not gas:
             print("\nYou're using a solid target, so the energy loss calculation is going to take a minute or two...")
+
             if invkin:
-                indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
+                # If in inverse kinematics, we want the target thickness to be the thickness traversed by the beam,
+                # which is what we get from event builder.
+                indthickness = df['Tgt_Thick'].to_numpy() / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
             else:
-                indthickness = thickness / np.sin(df['Theta_Rad'].to_numpy())
+                # If in normal kinematics, we want to subtract the thickness seen by the beam from the target thickness
+                # So, if the beam sees 0.95 mg/cm^2 of a 1 mg/cm^2 target, the light ejectile will see 0.05 mg/cm^2
+                indthickness = (thickness - df['Tgt_Thick'].to_numpy()) / np.sin(df['Theta_Rad'].to_numpy())
+
             # We don't need a for loop here because there's only one layer for the protons to lose energy
             df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, density, indthickness, 0, 0, proj_e)
             proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
@@ -363,13 +393,10 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         emask = emaxinit > proj_e
         df['Energy'] = np.random.normal(proj_e, estragtot)
 
-        # Detector energy resolution assumed to be 25 keV
-        df['Energy'] = np.random.normal(df['Energy'], 0.025)
-        if gas:
-            zpos = np.random.normal(zpos, jetr * 2)
-        if not gas:
-            tgtlength = (((thickness * 2) / 1000) / density) / 100
-            zpos = np.random.normal(zpos, tgtlength)
+        # Detector energy resolution assumed to be 25 keV, divide by 2.355 to get sigma
+        df['Energy'] = np.random.normal(df['Energy'], 0.025 / 2.355)
+
+        # If we have a solid target, the thickness in mm is way too small to make a difference, so we ignore it.
 
         # Detector position resolution depends on particle energy, so it'll be more difficult to put in
         e0to2 = df['Energy'] < 2
@@ -378,10 +405,10 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         egt6 = df['Energy'] > 6
 
         # Mask the energies to include the detector position resolution:
-        zpos = np.where(e0to2, np.random.normal(zpos, 0.00117), zpos)
-        zpos = np.where(e2to4, np.random.normal(zpos, 0.00085), zpos)
-        zpos = np.where(e4to6, np.random.normal(zpos, 0.000532), zpos)
-        zpos = np.where(egt6, np.random.normal(zpos, 0.0004), zpos)
+        zpos = np.where(e0to2, np.random.normal(zpos, 0.00117 / 2.355), zpos)
+        zpos = np.where(e2to4, np.random.normal(zpos, 0.00085 / 2.355), zpos)
+        zpos = np.where(e4to6, np.random.normal(zpos, 0.000532 / 2.355), zpos)
+        zpos = np.where(egt6, np.random.normal(zpos, 0.0004 / 2.355), zpos)
 
 
     # Adds the final phi position to the dataframe
@@ -429,22 +456,38 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     else:
         custpipe = True
 
-    dictparams = {
-        "Reaction": reac,
-        "Beam Energy": ebeam,
-        "Magnetic Field": B,
-        "Reaction Distance from Nozzle": reacdistbelownozzle,
-        "Nozzle-Cone Distance": nozzleconedistin,
-        "Bore Radius": rbore,
-        "Custom Pipe?": custpipe,
-        "Pipe Radius": rblock,
-        "Pipe Left Edge Angle": int(phi1block*180/np.pi),
-        "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
-        "Cone Opening Diameter": conedia,
-        "Cone Height": coneheight,
-        "Calculated Energy Loss?": elossbool,
-        "Gas?": gas
-    }
+    if elossbool:
+        dictparams = {
+            "Reaction": reac,
+            "Beam Energy": ebeam,
+            "Magnetic Field": B,
+            "Reaction Distance from Nozzle": reacdistbelownozzle,
+            "Nozzle-Cone Distance": nozzleconedistin,
+            "Bore Radius": rbore,
+            "Custom Pipe?": custpipe,
+            "Pipe Radius": rblock,
+            "Pipe Left Edge Angle": int(phi1block*180/np.pi),
+            "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
+            "Cone Opening Diameter": conedia,
+            "Cone Height": coneheight,
+            "Calculated Energy Loss?": elossbool,
+            "Gas?": gas
+        }
+    else:
+        dictparams = {
+            "Reaction": reac,
+            "Beam Energy": ebeam,
+            "Magnetic Field": B,
+            "Reaction Distance from Nozzle": reacdistbelownozzle,
+            "Nozzle-Cone Distance": nozzleconedistin,
+            "Bore Radius": rbore,
+            "Custom Pipe?": custpipe,
+            "Pipe Radius": rblock,
+            "Pipe Left Edge Angle": int(phi1block*180/np.pi),
+            "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
+            "Cone Opening Diameter": conedia,
+            "Cone Height": coneheight
+        }
 
     dfparams = pd.DataFrame([dictparams])
 
@@ -455,7 +498,16 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     writefile = writefilebase + str(1)
     lnum = 1
 
-    pklstring = writefilebase + '*.pkl'
+    if elossbool:
+        if gas:
+            pklstring = writefilebase + '*_g*.pkl'
+        else:
+            pklstring = writefilebase + '*_s*.pkl'
+    else:
+        if fnmatch.fnmatch(filein, "*artsm*"):
+            pklstring = writefilebase + '*artsm*.pkl'
+        elif fnmatch.fnmatch(filein, "*allE*"):
+            pklstring = writefilebase + '*allE*.pkl'
 
     list_pkls = glob.glob(pklstring)
 
