@@ -51,7 +51,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
         phi2block = 3/2*np.pi + np.arctan(rblock/(-1*cheight))
 
-    # The z axis points in beam direction, the x-axis points to the left, and the y-axis points down
+    # The z axis points in beam direction, the x-axis points to beam right, and the y-axis points up
 
     # Get the various parameters from readmass. In this case, we don't actually want z/atarg to be defined here
     # because they'll be wrong if it's a solid target
@@ -202,7 +202,11 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # ISO base is 5.12 inches outer diameter, below is converted to meters.
     baseheight = reacheight + coneheight * 2.54 / 100
-    rISObase = (5.12 / 2) * 2.54 / 100
+
+    # In the new SOLSTISE designs, the ISO base isn't really present, so we'll make this the size of the bottom
+    # of the cone instead.
+    basedia = 4.2  # inches
+    risobase = (basedia / 2) * 2.54 / 100
 
     # distance from the reaction that the cone side equation starts (this equation starts at ~5.5, now 3.83).
     # sideheight = (5.5 - reacdistbelownozzle) * 2.54 / 100
@@ -281,8 +285,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
         # If we aren't doing the energy loss I want the code to function like normal.
 
-        xpos = (-(df['vel_perp']/omega)*np.cos((omega*t)+df['Phi']))+((df['vel_perp']/omega)*np.cos(df['Phi']))
-        ypos = ((df['vel_perp']/omega)*np.sin(omega*t+df['Phi']))-df['vel_perp']/omega*np.sin(df['Phi'])
+        xpos = ((df['vel_perp']/omega)*np.sin((omega*t)-df['Phi']))-((df['vel_perp']/omega)*np.sin(-df['Phi']))
+        ypos = ((df['vel_perp']/omega)*np.cos(omega*t-df['Phi']))-df['vel_perp']/omega*np.cos(-df['Phi'])
         zpos = df['vel_par']*t + zoff
 
         if (i+1) % 10 == 0 and elossbool:
@@ -291,8 +295,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         # r is the radial position of the particle
         r = np.sqrt(xpos**2 + ypos**2)
 
-        # phic is the phi current position of the particle.
-        phic = np.arctan2(ypos, xpos) + np.pi
+        # phic is the phi current position of the particle. Before I had phic = np.arctan2(ypos, xpos) + np.pi which is
+        # wrong. We actually need to add 360 deg if y<0 and add 0 if y > 0
+        phic = np.where(ypos < 0, np.arctan2(ypos, xpos) + 2 * np.pi, np.arctan2(ypos, xpos))
 
         # rxzplane determines the radial position in the xz-plane
         rxzplane = np.sqrt(xpos**2 + zpos**2)
@@ -311,9 +316,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         # masktop = (rxzplane < rcone) & (ypos > reacheight) & (ypos < sideheight)
         # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
         # the cone has been removed.
-        masksides = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight)) & (ypos < baseheight)
-        masktest = (rxzplane < rconeside(ypos * 100 / 2.54)) & (ypos > (sideheight))
-        maskbase = (rxzplane < rISObase) & (ypos > baseheight)
+        masksides = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight) & ((-1 * ypos) < baseheight)
+        # masktest = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight)
+        maskbase = (rxzplane < risobase) & ((-1 * ypos) > baseheight)
 
         maskcone = masksides | maskbase
 
@@ -327,20 +332,21 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         # masknozzle = masknozzle & ((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
         #                                                                         2.54 / 100))
         # if the ypos is between the nozzle cone exaust and top of nozzle cone:
-        masknozzlecone = (rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & \
-                         (reacdistbelownozzle < (-1 * ypos * 100 / 2.54)) & \
-                         ((-1 * ypos * 100 / 2.54) < (reacdistbelownozzle + nozzconelen * 100 / 2.54))
+        masknozzlecone = (rxzplane < rnozzle(ypos * 100 / 2.54)) & \
+                         (reacdistbelownozzle < (ypos * 100 / 2.54)) & \
+                         ((ypos * 100 / 2.54) < (reacdistbelownozzle + nozzconelen * 100 / 2.54))
 
-        masknozzlecyl = ((-1 * ypos * 100 / 2.54) > (reacdistbelownozzle + nozzconelen * 100 / 2.54)) & \
+        masknozzlecyl = ((ypos * 100 / 2.54) > (reacdistbelownozzle + nozzconelen * 100 / 2.54)) & \
                         (rxzplane < nozzcylrad) & \
-                        ((-1 * ypos) < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh))
+                        (ypos < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh))
 
-        masknozzleholder = ((-1 * ypos) > (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh)) & \
+        masknozzleholder = (ypos > (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh)) & \
                            (rxzplane < nozzholdrad) & \
-                           ((-1 * ypos) < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzholdh))
-
+                           (ypos < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzholdh))
 
         masknozzle = masknozzlecone | masknozzlecyl | masknozzleholder
+
+        #print(np.where((ypos > 0.0025) & (ypos < 0.0127), rnozzle(ypos*100/2.54), np.zeros_like(ypos)))
 
         # Combine all the different masks into maskmasters down here. Because of this section,
         # doing maskcone = maskcone & ... is unnecessary above becaus it is done here.

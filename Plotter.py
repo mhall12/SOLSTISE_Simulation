@@ -185,6 +185,8 @@ def plot(pklin):
                     plt.xlabel('z(m)')
                     plt.ylabel('Energy (MeV)')
 
+                    print(df['Phi'][detarr[i]] * 180 / np.pi)
+
                 if (plotnum == 2 or plotnum == 3) and i > 0:
 
                     # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
@@ -290,7 +292,7 @@ def plot(pklin):
 
                 # 14-29 are contour plots of blocked particles. These should only be used with "allE" simulated files
                 # because they don't really make sense with specific excited states populated.
-                if 12 < plotnum < 32:
+                if 12 < plotnum < 33:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
                     # degree.
@@ -315,6 +317,11 @@ def plot(pklin):
                         else:
                             binsz[j] = j * zmax / numzbins
 
+                    numphibins = 45
+                    binsphi = np.zeros(numphibins + 1)
+                    for j in range(numphibins + 1):
+                        binsphi[j] = j * (360 / numphibins)
+
                     # Can't have detarr[i] alone. It has to include AllPossible because the Det masks do not contain
                     # the mask that detemines whether or not the particle hit the magnet bore. So, with detarr[0] you
                     # technically have AllPossible & AllPossible but it's fine because it's always true.
@@ -325,6 +332,12 @@ def plot(pklin):
                     unblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][detarr[i] & df["AllPossible"]],
                                                                 df['Energy'][detarr[i] & df["AllPossible"]],
                                                                 bins=(binsz, binse))
+                    df['Phi_Deg'] = df['Phi'] * 180 / np.pi
+
+                    unblockedevphi, pbins, ebins = np.histogram2d(df['Phi_Deg'][detarr[i] & df["AllPossible"]],
+                                                                  df['Energy'][detarr[i] & df["AllPossible"]],
+                                                                  bins=(binsphi, binse))
+
                     if plotnum < 29:
                         # The following lines bin the particles into either energy vs theta or energy vs z 2d histograms
                         # Ex: unbloxkedevt is an array that has given each particle a theta and E bin, and tbins and
@@ -702,13 +715,12 @@ def plot(pklin):
                         # Here we do something a little different, and instead of contour plots we do ratio plots,
                         # still using the bins that were defined above.
 
-                if plotnum > 28 and plotnum < 32:
+                if plotnum > 28 and plotnum < 33:
                     # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
                     # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
                     # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
                     # etc.
 
-                    print("Working1")
                     # Make a new dataframe to contain the angle information for cuts
                     ratiot = pd.DataFrame()
                     ratiot['thap'] = df['Theta_Deg'][detarr[ho[i]] & df["AllPossible"]]
@@ -721,8 +733,10 @@ def plot(pklin):
                     ratioz = pd.DataFrame()
                     ratioz['zap'] = df['zpos_final'][detarr[ho[i]] & df["AllPossible"]]
                     ratioz['zunb'] = df['zpos_final'][detarr[ho[i]] & df["Unblocked"]]
-
-                    print("Working2")
+                    # Make a new dataframe to contain the phi information for cuts
+                    ratiop = pd.DataFrame()
+                    ratiop['pap'] = df['Phi_Deg'][detarr[ho[i]] & df["AllPossible"]]
+                    ratiop['punb'] = df['Phi_Deg'][detarr[ho[i]] & df["Unblocked"]]
 
                     # Now we can cut the data based on the bins that we defined before. This effectively makes
                     # a pandas series that shows the bin each particle falls into
@@ -735,7 +749,8 @@ def plot(pklin):
                     cutz = pd.cut(ratioz['zap'], binsz)
                     cutz_unblocked = pd.cut(ratioz['zunb'], binsz)
 
-                    print("Working3")
+                    cutp = pd.cut(ratiop['pap'], binsphi)
+                    cutp_unblocked = pd.cut(ratiop['punb'], binsphi)
 
                     # Now we can make the ratios here. We have to group the cuts by the bins and aggregate the data
                     # End up making a pandas series of bin, counts.
@@ -751,21 +766,37 @@ def plot(pklin):
                            ratioz.groupby(cutz)['zap'].agg('count')
                     divz = divz.tolist()
 
-                    print("Working4")
+                    unbcount = ratiop.groupby(cutp_unblocked)['punb'].agg('count')
+
+                    totcount = ratiop.groupby(cutp)['pap'].agg('count')
+
+                    zeromask = totcount > (np.amax(unbcount) / 25)
+
+                    unbcount = unbcount[zeromask]
+                    totcount = totcount[zeromask]
+
+                    divp = unbcount / totcount
+
                     # As mentioned, tbins, ebins, and zbins are the bin edges. Here initialize a new array:
 
                     tbins2 = np.zeros(90)
                     ebins2 = np.zeros(150)
                     zbins2 = np.zeros(100)
+                    pbins2 = np.zeros(numphibins)
 
-                    # And here get the bin centers by taking the averages of three bin edges.
+                    # And here get the bin centers by taking the averages of the bin edges.
 
                     for k in range(150):
                         if k < 90:
                             tbins2[k] = (tbins[k] + tbins[k + 1]) / 2
+                        if k < numphibins:
+                            pbins2[k] = (pbins[k] + pbins[k + 1]) / 2
                         if k < 100:
                             zbins2[k] = (zbins[k] + zbins[k + 1]) / 2
                         ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
+
+                    pbins2 = np.array(pbins2)
+                    pbins2 = pbins2[zeromask]
 
                     # The next 3 hists are the ratio plots broken up by detector on the same plot:
                     if plotnum == 29:
@@ -789,8 +820,40 @@ def plot(pklin):
                         plt.xlabel('z (m)')
                         plt.ylabel('Fraction of Particles Detected')
 
+                    if plotnum == 32:
+
+                        stdcolors = ['Blue', 'Orange', 'limegreen', 'Red', 'Purple']
+                        labels32 = ['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4']
+                        if i == 0:
+                            plt.rc('axes', labelsize=16)
+                            plt.rc('xtick', labelsize=16)
+                            plt.rc('ytick', labelsize=16)
+                            ax32 = plt.subplot(111, projection='polar')
+                        pbins2 = pbins2 * np.pi / 180
+                        if i != 3:
+                            if i > 0:
+                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
+                            if i == 0:
+                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=14, MarkerEdgeColor='Black', alpha=0.7)
+                        if i == 3:
+                            pbins2gt0 = pbins2[pbins2 < np.pi]
+                            divpgt0 = divp[pbins2 < np.pi]
+
+                            pbins2lt0 = pbins2[pbins2 > np.pi]
+                            divplt0 = divp[pbins2 > np.pi]
+
+                            ax32.plot(pbins2gt0, divpgt0, marker='o', color=stdcolors[i], label=labels32[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
+                            ax32.plot(pbins2lt0, divplt0, marker='o', color=stdcolors[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
+
+                        #ax32.set_rorigin(.2)
+                        ax32.grid(True)
+                        plt.legend(fontsize=16, bbox_to_anchor=(1.0, .9))
+                        plt.xlabel('Initial Phi Angle (Deg)')
+                        plt.ylabel('Fraction of Particles Detected', rotation=0, size=14, labelpad=-370)
+
                 # This next section is for solid targets only:
-                if plotnum > 31:
+                if plotnum > 32:
+
                     if (plotnum == 33 or plotnum == 34) and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
