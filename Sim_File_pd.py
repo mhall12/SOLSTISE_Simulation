@@ -185,8 +185,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # cylinder radius (m), cylinder height (m), holder radius (m), and holder height (m).
     nozzparms = nozzfile.readlines()
 
+    reacdistbelownozzle = 0
     nozzleconedistin = coneparms[0]  # dist between nozzle and cone in inches
-    reacdistbelownozzle = float(nozzparms[0]) / 10 / 2.54  # dist below nozzle the reaction happens in inches
+    #reacdistbelownozzle = float(nozzparms[0]) / 10 / 2.54  # dist below nozzle the reaction happens in inches
     nozzconelen = float(nozzparms[3])  # nozzle cone length in m
     nozzcylrad = float(nozzparms[4])  # nozzle cylinder radius in m
     nozzcylh = float(nozzparms[5])  # nozzle cylinder height in m
@@ -274,6 +275,11 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     print("Simulating Events...")
     statbar = "[                              ]"
 
+    vperp = df['vel_perp'].to_numpy()
+    phii = df['Phi'].to_numpy()
+    vpar = df['vel_par'].to_numpy()
+    tred = df['t_reduced'].to_numpy()
+
     # Splits the flight time into 300 segments for tracking purposes to see whether or not the particle is blocked.
     for i in range(300):
 
@@ -281,13 +287,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
             statbar = statbar.replace(" ", "=", 1)
             print(statbar, end='\r', flush=True)
 
-        t = df['t_reduced']/300 * (i+1)
+        t = tred/300 * (i+1)
 
         # If we aren't doing the energy loss I want the code to function like normal.
 
-        xpos = ((df['vel_perp']/omega)*np.sin((omega*t)-df['Phi']))-((df['vel_perp']/omega)*np.sin(-df['Phi']))
-        ypos = ((df['vel_perp']/omega)*np.cos(omega*t-df['Phi']))-df['vel_perp']/omega*np.cos(-df['Phi'])
-        zpos = df['vel_par']*t + zoff
+        xpos = ((vperp/omega)*np.sin((omega*t)-phii))-((vperp/omega)*np.sin(-phii))
+        ypos = ((vperp/omega)*np.cos(omega*t-phii))-vperp/omega*np.cos(-phii)
+        zpos = vpar*t + zoff
 
         if (i+1) % 10 == 0 and elossbool:
             disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (zlast - zpos) ** 2) + disttravl

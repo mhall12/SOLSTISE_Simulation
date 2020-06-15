@@ -92,9 +92,12 @@ if datas[:, 0].mean() > 90:
 else:
     invkin = 0
 
-try:
-    coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)?: "))
-except ValueError:
+if not fnmatch.fnmatch(filein, '*eloss_s*'):
+    try:
+        coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)?: "))
+    except ValueError:
+        coneopt = 0
+else:
     coneopt = 0
 
 if coneopt == 0:
@@ -134,9 +137,12 @@ else:
     else:
         conepkl = latest_cone
 
-try:
-    nozzopt = int(input("\nWould you like to use the default SOLSTISE nozzle (0) or a custom-shaped nozzle (1)?: "))
-except ValueError:
+if not fnmatch.fnmatch(filein, '*eloss_s*'):
+    try:
+        nozzopt = int(input("\nWould you like to use the default SOLSTISE nozzle (0) or a custom-shaped nozzle (1)?: "))
+    except ValueError:
+        nozzopt = 0
+else:
     nozzopt = 0
 
 # We'll put the nozzle questions here, since there are only ~3 and it isn't worth a new function or code.

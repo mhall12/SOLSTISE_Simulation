@@ -142,7 +142,9 @@ def plot(pklin):
     if not fnmatch.fnmatch(pklin, '*eloss_s*'):
         print("29) Fraction of particles blocked vs lab angle. \n"
               "30) Fraction of particles blocked vs energy. \n"
-              "31) Fraction of particles blocked vs z position. \n")
+              "31) Fraction of particles blocked vs z position. \n"
+              "32) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")
+
     if fnmatch.fnmatch(pklin, '*eloss_s*'):
         print("33) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
               "34) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
@@ -184,8 +186,6 @@ def plot(pklin):
                                range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
                     plt.xlabel('z(m)')
                     plt.ylabel('Energy (MeV)')
-
-                    print(df['Phi'][detarr[i]] * 180 / np.pi)
 
                 if (plotnum == 2 or plotnum == 3) and i > 0:
 
