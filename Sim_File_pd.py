@@ -155,8 +155,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     df['Phi'] = phi * 2 * np.pi
 
     # creates a mask the same shape as the energy array
-    # maskmaster is the mask that keeps track of the overall mask in the loop
-    maskmaster = df['Energy'] > 0
+
     # maskmasters for the pipe and cone defined here.
     maskmaster_pipe = df['Energy'] > 0
     maskmaster_cone = df['Energy'] > 0
@@ -185,14 +184,26 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # cylinder radius (m), cylinder height (m), holder radius (m), and holder height (m).
     nozzparms = nozzfile.readlines()
 
-    reacdistbelownozzle = 0
     nozzleconedistin = coneparms[0]  # dist between nozzle and cone in inches
-    #reacdistbelownozzle = float(nozzparms[0]) / 10 / 2.54  # dist below nozzle the reaction happens in inches
+    reacdistbelownozzle = float(nozzparms[0]) / 10 / 2.54  # dist below nozzle the reaction happens in inches
     nozzconelen = float(nozzparms[3])  # nozzle cone length in m
     nozzcylrad = float(nozzparms[4])  # nozzle cylinder radius in m
     nozzcylh = float(nozzparms[5])  # nozzle cylinder height in m
     nozzholdrad = float(nozzparms[6])  # nozzle holder radius in m
     nozzholdh = float(nozzparms[7])  # nozzle holder height in m
+
+    # Distance from the bottom of the nozzle holder to the bottom of the box
+    # Distance from the bottom of the box to the top of the box
+    nozzboxstart = float(nozzparms[8])
+    nozzboxh = float(nozzparms[9])
+
+    nozzholdcylstart = reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh
+    nozzholdcylend = reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzholdh
+    nozzholdboxstart = reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzboxstart
+    nozzholdboxend = reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzboxstart + nozzboxh
+
+    nozzboxhalfl = float(nozzparms[10]) / 2
+    nozzboxhalfw = float(nozzparms[11]) / 2
 
     conedia = coneparms[1]  # cone outer diameter in inches
     coneheight = coneparms[2]  # cone height in inches as measured from the top of the ISO base.
@@ -237,6 +248,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         pipepm = 1
 
     rpipe = lambda ph: cheight*np.sin(ph) + pipepm * np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
+
+    # Distance from the top of the cone to the top of the vertical ISO160 Pipe in m
+    isopipeheight = 0.1651
 
     # ***************************************************************************************
     # ***************************************************************************************
@@ -312,9 +326,14 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         # so if the particle radius is greater than that, it gets blocked
         maskrpipe = (r > rpipe(phic))
 
+        # Shadowing from the vertical portion of the ISO160 pipe. Radius is 3.25 inches.
+        masktoppipe = (rxzplane < 0.08255) & (-1*ypos > (isopipeheight + reacheight))
+
         # maskphipipe is the mask that determines whether or not the particle is within the phi boundaries of the pipe
         # if maskphipipe and maskrpipe are true, then the particle is blocked by the pipe
         maskphipipe = (phic > phi1block) & (phic < phi2block)
+
+        maskpipe = (maskrpipe & maskphipipe) | masktoppipe
 
         # maskcone determines if the particle is within the opening of the cone
         # Since if statements on the arrays are so slow, we'll break up the cone mask into three: tube (top), sides,
@@ -322,9 +341,10 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         # masktop = (rxzplane < rcone) & (ypos > reacheight) & (ypos < sideheight)
         # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
         # the cone has been removed.
-        masksides = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight) & ((-1 * ypos) < baseheight)
+        masksides = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight) & \
+                    ((-1 * ypos) < baseheight)
         # masktest = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight)
-        maskbase = (rxzplane < risobase) & ((-1 * ypos) > baseheight)
+        maskbase = (rxzplane < risobase) & ((-1 * ypos) > baseheight) & ((-1 * ypos) < (isopipeheight + reacheight))
 
         maskcone = masksides | maskbase
 
@@ -346,21 +366,29 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
                         (rxzplane < nozzcylrad) & \
                         (ypos < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh))
 
-        masknozzleholder = (ypos > (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh)) & \
-                           (rxzplane < nozzholdrad) & \
-                           (ypos < (reacdistbelownozzle * 2.54 / 100 + nozzconelen + nozzcylh + nozzholdh))
+        masknozzleholdercyl = (ypos > nozzholdcylstart) & (rxzplane < nozzholdrad) & (ypos < nozzholdcylend)
 
-        masknozzle = masknozzlecone | masknozzlecyl | masknozzleholder
+        masknozzleholderbox = (ypos > nozzholdboxstart) & (ypos < nozzholdboxend) & (np.abs(xpos) < nozzboxhalfl) & \
+                              (np.abs(zpos) < nozzboxhalfw)
+
+        masknozzle = masknozzlecone | masknozzlecyl | masknozzleholdercyl | masknozzleholderbox
 
         #print(np.where((ypos > 0.0025) & (ypos < 0.0127), rnozzle(ypos*100/2.54), np.zeros_like(ypos)))
 
         # Combine all the different masks into maskmasters down here. Because of this section,
-        # doing maskcone = maskcone & ... is unnecessary above becaus it is done here.
-        maskmaster = maskmaster & np.invert(maskcone) & np.invert(maskrpipe & maskphipipe) & np.invert(masknozzle)
+        # doing maskcone = maskcone & ... is unnecessary above because it is done here.
+        # Here they get inverted so particles that hit are False, and particles that don't are True
         maskmaster_cone = maskmaster_cone & np.invert(maskcone)
-        maskmaster_pipe = maskmaster_pipe & np.invert((maskrpipe & maskphipipe)
-                                                      & np.invert(maskcone) & np.invert(masknozzle))
+        maskmaster_pipe = maskmaster_pipe & np.invert(maskpipe)
         maskmaster_nozzle = maskmaster_nozzle & np.invert(masknozzle)
+
+        # Here, I'll attempt to remove similar events from the masks (i.e. ones that would hit the cone and pipe, etc)
+        # Basically, if it already hit one of the other two blocking elements, we want to update the maskmaster to
+        # prevent overlap.
+        maskmaster_cone = np.where(np.invert(maskmaster_nozzle) | np.invert(maskmaster_pipe), True, maskmaster_cone)
+        maskmaster_nozzle = np.where(np.invert(maskmaster_cone) | np.invert(maskmaster_pipe), True, maskmaster_nozzle)
+        maskmaster_pipe = np.where(np.invert(maskmaster_nozzle) | np.invert(maskmaster_cone), True, maskmaster_pipe)
+
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
@@ -368,6 +396,10 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
             xlast = xpos
             ylast = ypos
             zlast = zpos
+
+    # Move maskmaster from line 367
+
+    maskmaster = maskmaster_cone & maskmaster_pipe & maskmaster_nozzle
 
     print("\n")
 

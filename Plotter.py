@@ -195,10 +195,9 @@ def plot(pklin):
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
                                    df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
-                        if df["Pipe Radius"][0] > 0.01:
-                            plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                       df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
-                                       range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                        plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
+                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
                                    df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)

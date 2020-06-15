@@ -47,8 +47,10 @@ def makenozz():
     elif nozzcylh > 0:
         nozzcylh = nozzcylh / 1000
 
+    print("Now, we'll define the nozzle holder. The holder is made of a cylinder and a box portion.")
+
     # Radius of the nozzle holder is also in m
-    nozzholderrad = float(input("Enter the radius of the nozzle holder in mm (default is 9.525 mm) "
+    nozzholderrad = float(input("Enter the radius of the nozzle holder cylinder in mm (default is 9.525 mm) "
                                 "or enter 0 for inches: "))
     if nozzholderrad > 0:
         nozzholderrad = nozzholderrad / 1000
@@ -58,7 +60,7 @@ def makenozz():
 
     # default holder height is 1.15 in, should be in m
 
-    nozzholderheight = float(input("Enter the height of the nozzle holder in mm (default is 38.1 mm) or "
+    nozzholderheight = float(input("Enter the height of the nozzle holder cylinder in mm (default is 38.1 mm) or "
                                    "enter 0 for inches: "))
     if nozzholderheight == 0:
         nozzholderheight = float(input("Enter the height in inches (default is 1.5 in): "))
@@ -66,7 +68,39 @@ def makenozz():
     elif nozzholderheight > 0:
         nozzholderheight = nozzholderheight / 1000
 
-    params = [reacdist, nozzdia, nozzang, nozzconelen, nozzcylrad, nozzcylh, nozzholderrad, nozzholderheight]
+    nozzboxstart = float(input("Enter the distance between the bottom of the holder cylinder \n"
+                               "and the bottom of the holder box in mm (default is 14.397 mm) or enter 0 for inches: "))
+    if nozzboxstart == 0:
+        nozzboxstart = float(input("Enter the distance in inches: "))
+        nozzboxstart = nozzboxstart * 2.54 / 100
+    elif nozzboxstart > 0:
+        nozzboxstart = nozzboxstart / 1000
+
+    nozzboxh = float(input("Enter the height of the box in mm (default is 19.05 mm) or enter 0 for inches: "))
+    if nozzboxh == 0:
+        nozzboxh = float(input("Enter the distance in inches: "))
+        nozzboxh = nozzboxh * 2.54 / 100
+    elif nozzboxh > 0:
+        nozzboxh = nozzboxh / 1000
+
+    nozzboxl = float(input("Enter the (side-to-side) length of the box in mm (default is 43.142 mm) or "
+                           "enter 0 for inches: "))
+    if nozzboxl == 0:
+        nozzboxl = float(input("Enter the length in inches: "))
+        nozzboxl = nozzboxl * 2.54 / 100
+    elif nozzboxl > 0:
+        nozzboxl = nozzboxl / 1000
+
+    nozzboxw = float(input("Enter the (back-to-front) width of the box in mm (default is 14.199 mm) or "
+                           "enter 0 for inches: "))
+    if nozzboxw == 0:
+        nozzboxw = float(input("Enter the distance in inches: "))
+        nozzboxw = nozzboxw * 2.54 / 100
+    elif nozzboxw > 0:
+        nozzboxw = nozzboxw / 1000
+
+    params = [reacdist, nozzdia, nozzang, nozzconelen, nozzcylrad, nozzcylh, nozzholderrad, nozzholderheight,
+              nozzboxstart, nozzboxh, nozzboxl, nozzboxw]
 
     fname = "cust_nozz_" + str(int(nozzang)) + "deg.txt"
 
