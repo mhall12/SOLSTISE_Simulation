@@ -9,14 +9,18 @@ def makecone():
     # Distance from the nozzle to the cone in Inches
     conenozzdist = float(input("Enter the distance from the bottom of the nozzle to the top of the cone in inches: "))
 
+    coneheight = float(input("Enter the cone height in inches, from the top of the ISO-100 cylinder"
+                             " to the top of the cone: "))
+
+    iso160height = float(input("Enter the distance from the bottom of the nozzle to the top of the "
+                               "ISO-160 base in inches: "))
+
     # Outer diameter of the top of the cone
     conedia = float(input("Enter the outer diameter of the top of the cone in inches: "))
 
-    # Distance from the top of the ISO 100 base to the top of the cone
-    coneheight = float(input("Enter the cone height in inches, from the top of the ISO base to the top of the cone: "))
-
-    print("The side of the cone is described by a polynomial (up to order 3) of the form radius = a * height + b, "
-          "\n where height and radius are in inches. ")
+    print("The side of the cone is described by a polynomial (up to order 3) of the form: radius = a_i * y^i, "
+          "\n where y and radius are in inches. The y-distance is defined as 0 at the top of the cone and"
+          "\nincreases going down the cone.")
 
     # et polyorder to some high value so that the user gets stuck in the while loop until they enter 3 or less.
     polyorder = 4
@@ -32,11 +36,8 @@ def makecone():
     conediastring = conediastring.replace('.', '-')
 
     # Add all the input parameters to a new list called coneparms:
-    coneparms = [conenozzdist]
-    coneparms.append(conedia)
-    coneparms.append(coneheight)
+    coneparms = [conenozzdist, coneheight, iso160height, conedia, polyorder]
 
-    coneparms.append(polyorder)
     # In the for loop, add 0's for the coefficients not being used and let the user
     # input coefficients for the ones that are.
     for i in range(4):
@@ -45,15 +46,19 @@ def makecone():
         if polyorder < expon:
             coneparms.append(0)
         else:
-            coneparms.append(float(input("Enter the coefficient on the x^" + str(expon) + " term (inlude the sign!): ")))
+            coneparms.append(float(input("Enter the coefficient on the y^" + str(expon) +
+                                         " term (include the sign!): ")))
 
-    fname = "cust_cone_" + str(polyorder) + "_" + conediastring + "in.pkl"
+    fname = "cust_cone_" + str(polyorder) + "_" + conediastring + "in.txt"
 
-    # Write coneparms to a pickle.
-    with open(fname, 'wb') as f:
-        pickle.dump(coneparms, f)
+    file = open(fname, "w+")
+
+    for i in coneparms:
+        file.write(str(i) + "\n")
 
     return fname
 
+
 if __name__ == "__main__":
+
     makecone()

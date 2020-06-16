@@ -101,10 +101,10 @@ else:
     coneopt = 0
 
 if coneopt == 0:
-    conepkl = "SOLSTISE_cone_3_2-6in.pkl"
+    conetxt = "SOLSTISE_cone_3_2-6in.txt"
 
 else:
-    list_cones = glob.glob('*cone*.pkl')
+    list_cones = glob.glob('*cone*.txt')
     latest_cone = max(list_cones, key=os.path.getctime)
     print("\nThe most recently created cone input file is: " + latest_cone)
     yn = input("\nWould you like to use this file? [Y/N] ")
@@ -122,20 +122,20 @@ else:
                 filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
 
                 if len(list_cones) >= filenum > 0:
-                    conepkl = list_cones[filenum - 1]
+                    conetxt = list_cones[filenum - 1]
                 elif filenum > len(list_cones):
                     print("ERROR: Number entered is greater than the number of cone input files...")
                 else:
                     list_file_check = []
                     while len(list_file_check) == 0:
-                        conepkl = input("Enter the name of the cone input file: ")
-                        list_file_check = glob.glob(conepkl)
+                        conetxt = input("Enter the name of the cone input file: ")
+                        list_file_check = glob.glob(conetxt)
                         if len(list_file_check) == 0:
                             print("ERROR: The file does not exist...")
         else:
-            conepkl = makecone()
+            conetxt = makecone()
     else:
-        conepkl = latest_cone
+        conetxt = latest_cone
 
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
     try:
@@ -226,7 +226,7 @@ if pipeyn == "N" or pipeyn == "n":
         phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
         phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conepkl, nozztxt)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt)
 
 else:
     list_pipe_files = glob.glob('PipeOut*.txt')
@@ -271,4 +271,4 @@ else:
     lines = file.readlines()
 
     sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]),
-           ebeam, filein, reac, conepkl, nozztxt)
+           ebeam, filein, reac, conetxt, nozztxt)

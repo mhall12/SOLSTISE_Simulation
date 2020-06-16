@@ -17,7 +17,7 @@ import pickle
 import warnings
 
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conepkl, nozztxt):
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -174,9 +174,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # Parameters of the nozzle, cone, and pipe get entered here:
 
-    # Have to open the cone pickle:
-    with open(conepkl, 'rb') as f:
-        coneparms = pickle.load(f)
+    # Have to open the cone text file:
+    conefile = open(conetxt, "r")
+
+    # coneparms in order will have conenozzdist (in), coneheight (in), iso160height (in), conedia (in), polyorder,
+    # ^3 coeff, ^2 coeff, ^1 coeff, ^0 coeff
+    coneparms = conefile.readlines()
 
     nozzfile = open(nozztxt, "r")
 
@@ -184,12 +187,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # cylinder radius (m), cylinder height (m), holder radius (m), and holder height (m).
     nozzparms = nozzfile.readlines()
 
-    nozzleconedistin = coneparms[0]  # dist between nozzle and cone in inches
+    nozzleconedistin = float(coneparms[0])  # dist between nozzle and cone in inches
     reacdistbelownozzle = float(nozzparms[0]) / 10 / 2.54  # dist below nozzle the reaction happens in inches
     nozzconelen = float(nozzparms[3])  # nozzle cone length in m
-    nozzcylrad = float(nozzparms[4])  # nozzle cylinder radius in m
+    nozzcylrad = float(nozzparms[4]) / 2  # nozzle cylinder radius in m
     nozzcylh = float(nozzparms[5])  # nozzle cylinder height in m
-    nozzholdrad = float(nozzparms[6])  # nozzle holder radius in m
+    nozzholdrad = float(nozzparms[6]) / 2  # nozzle holder radius in m
     nozzholdh = float(nozzparms[7])  # nozzle holder height in m
 
     # Distance from the bottom of the nozzle holder to the bottom of the box
@@ -205,20 +208,18 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     nozzboxhalfl = float(nozzparms[10]) / 2
     nozzboxhalfw = float(nozzparms[11]) / 2
 
-    conedia = coneparms[1]  # cone outer diameter in inches
-    coneheight = coneparms[2]  # cone height in inches as measured from the top of the ISO base.
+    conedia = float(coneparms[3])  # cone outer diameter in inches
+    coneheight = float(coneparms[1])  # cone height in inches as measured from the top of the ISO-100 cylinder.
 
     # Height above the cone that the reaction occurs
     reacheight = ((nozzleconedistin - reacdistbelownozzle) * 2.54) / 100
-    rcone = ((conedia / 2) * 2.54) / 100
 
-    # ISO base is 5.12 inches outer diameter, below is converted to meters.
-    baseheight = reacheight + coneheight * 2.54 / 100
+    conefitdist = reacheight + coneheight * 2.54 / 100
 
     # In the new SOLSTISE designs, the ISO base isn't really present, so we'll make this the size of the bottom
     # of the cone instead.
     basedia = 4.2  # inches
-    risobase = (basedia / 2) * 2.54 / 100
+    riso100cyl = (basedia / 2) * 2.54 / 100
 
     # distance from the reaction that the cone side equation starts (this equation starts at ~5.5, now 3.83).
     # sideheight = (5.5 - reacdistbelownozzle) * 2.54 / 100
@@ -227,7 +228,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # Polynomial coefficients for the current best cone: Top of cone is 3.83 in away from nozzle
 
     # poly3 = [0.0611, -0.8077, 3.5255, -3.7867]
-    poly3 = [coneparms[4], coneparms[5], coneparms[6], coneparms[7]]
+    poly3 = [float(coneparms[5]), float(coneparms[6]), float(coneparms[7]), float(coneparms[8])]
 
     rconeside = lambda y: (poly3[0] * (y + reacdistbelownozzle - nozzleconedistin) ** 3 +
                            poly3[1] * (y + reacdistbelownozzle - nozzleconedistin) ** 2 +
@@ -249,8 +250,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     rpipe = lambda ph: cheight*np.sin(ph) + pipepm * np.sqrt(cheight**2*np.sin(ph)**2 - cheight**2 + rblock**2)
 
-    # Distance from the top of the cone to the top of the vertical ISO160 Pipe in m
-    isopipeheight = 0.1651
+    # Distance from the reaction to the top of the vertical ISO160 Pipe in m
+    iso160pipeheight = (float(coneparms[2]) - reacdistbelownozzle) * 2.54 / 100
 
     # ***************************************************************************************
     # ***************************************************************************************
@@ -327,7 +328,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         maskrpipe = (r > rpipe(phic))
 
         # Shadowing from the vertical portion of the ISO160 pipe. Radius is 3.25 inches.
-        masktoppipe = (rxzplane < 0.08255) & (-1*ypos > (isopipeheight + reacheight))
+        masktoppipe = (rxzplane < 0.08255) & (-1*ypos > iso160pipeheight)
 
         # maskphipipe is the mask that determines whether or not the particle is within the phi boundaries of the pipe
         # if maskphipipe and maskrpipe are true, then the particle is blocked by the pipe
@@ -342,9 +343,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         # With the new cone, masktop does not need to be used anymore since the long straight neck at the top of
         # the cone has been removed.
         masksides = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight) & \
-                    ((-1 * ypos) < baseheight)
+                    ((-1 * ypos) < conefitdist)
         # masktest = (rxzplane < rconeside(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > sideheight)
-        maskbase = (rxzplane < risobase) & ((-1 * ypos) > baseheight) & ((-1 * ypos) < (isopipeheight + reacheight))
+        maskbase = (rxzplane < riso100cyl) & ((-1 * ypos) > conefitdist) & ((-1 * ypos) < iso160pipeheight)
 
         maskcone = masksides | maskbase
 
