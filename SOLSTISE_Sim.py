@@ -4,6 +4,7 @@ from Event_Builder import BuildEvts
 from PipeMaker import makepipe
 from ConeMaker import makecone
 from NozzleMaker import makenozz
+from shutil import copyfile
 import numpy as np
 import glob
 import os
@@ -25,13 +26,39 @@ print("")
 print("                     Particle Shadowing Simulation Code")
 input("\n\n\nTo continue, press ENTER")
 
-list_files = glob.glob('*evts*.txt')
+if not os.path.exists("Event_Files"):
+    print("An Event_Files directory was not found, so one was created for you!\n")
+    os.mkdir("Event_Files")
+
+if not os.path.exists("Output_Files"):
+    print("An Output_Files directory was not found, so one was created for you!\n")
+    os.mkdir("Output_Files")
+
+if not os.path.exists("Geometry_Files"):
+    print("A Geometry_Files directory was not found, so one was created for you! \n")
+    os.mkdir("Geometry_Files")
+
+evtdir = "./Event_Files/"
+geodir = "./Geometry_Files/"
+
+defnozz = ".SOLSTISE_nozz_default.txt"
+defcone = ".SOLSTISE_cone_3_2-6in.txt"
+
+if not os.path.exists(geodir + defnozz[1:]):
+    copyfile(defnozz, geodir + defnozz[1:])
+    print("The default nozzle file was copied to the Geometry_Files directory!")
+if not os.path.exists(geodir + defcone[1:]):
+    copyfile(defcone, geodir + defcone[1:])
+    print("The default receiver cone file was copied to the Geometry_Files directory!")
+
+list_files = glob.glob(evtdir + '*evts*.txt')
 
 if len(list_files) == 0:
     print("It appears that no event files exist, so we'll create one now!")
     filein = BuildEvts()
 else:
     latest_file = max(list_files, key=os.path.getctime)
+    latest_file = latest_file[14:]
     print("\nThe most recently created input file is: " + latest_file)
     yn = input("\nWould you like to use this file? [Y/N] ")
 
@@ -41,29 +68,29 @@ else:
         if newevtfileyn == "N" or newevtfileyn == "n":
             print("\n")
             for i in range(len(list_files)):
-                print(str(i+1) + ") " + list_files[i])
+                print(str(i+1) + ") " + list_files[i][14:])
 
             filenum = 1000000
             while filenum > len(list_files):
                 filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
 
                 if len(list_files) >= filenum > 0:
-                    filein = list_files[filenum-1]
+                    filein = list_files[filenum-1][14:]
                 elif filenum > len(list_files):
                     print("ERROR: Number entered is greater than the number of simulation files...")
                 else:
                     list_file2 = []
-                    numuscore = 0
-                    while len(list_file2) == 0 or numuscore != 4:
+                    while len(list_file2) == 0:
                         filein = input("\nEnter the name of an existing input file (.dat or .txt): ")
-                        list_file2 = glob.glob(filein)
-                        numuscopre = filein.count("_")
-                        if len(list_file2) == 0 or numuscore != 4:
-                            print("\nERROR: Incorrect file name syntax or the file does not exist...")
+                        list_file2 = glob.glob(evtdir + filein)
+
+                        if len(list_file2) == 0:
+                            print("\nERROR: The file does not exist...")
         else:
             filein = BuildEvts()
     else:
         filein = latest_file
+        print(filein)
 
 print("\nThe file to be used is: " + filein)
 
@@ -86,7 +113,7 @@ print("The beam energy is: " + str(ebeam) + " MeV")
 # opposite direction, we'll just skip over the pipe definition and make the radius of the pipe tiny so it doesn't
 # interfere with the reaction products...
 
-datas = np.genfromtxt(filein)
+datas = np.genfromtxt(evtdir + filein)
 if datas[:, 0].mean() > 90:
     invkin = 1
 else:

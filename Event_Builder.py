@@ -5,9 +5,14 @@ from stopyt import desorb
 import pickle
 import pandas as pd
 import numpy as np
-
+import os
 
 def BuildEvts():
+    if not os.path.exists("Event_Files"):
+        print("An Event_Files directory was not found, so one was created for you!")
+        os.mkdir("Event_Files")
+
+    evtdir = "Event_Files"
 
     # Have the user enter a reaction of the form Target(Beam, Ejectile). The recoil is calculated.
     reac = input("Enter a reaction of the form d(17F,p): ")
@@ -170,8 +175,8 @@ def BuildEvts():
             beamstrag = dfout['E_strag_FWHM'][0]
             angstrag = dfout['AngleStrag'][0] + angstrag
 
-            print(beame)
-            print(np.average(beame))
+            # print(beame)
+            # print(np.average(beame))
 
     else:
         if levnum > 0:
@@ -189,17 +194,17 @@ def BuildEvts():
     reac = reac.replace(")", "_")
 
     if levnum > 0 and elossopt == 0:
-        outfilename = reac + str(int(beamenergy)) + "_evts_artsm.txt"
+        outfilename = "./" + evtdir + "/" + reac + str(int(beamenergy)) + "_evts_artsm.txt"
     elif levnum > 0 and elossopt == 1:
-        outfilename = reac + str(int(beamenergy)) + "_evts_eloss_" + gasorsolid + ".txt"
+        outfilename = "./" + evtdir + "/" + reac + str(int(beamenergy)) + "_evts_eloss_" + gasorsolid + ".txt"
     else:
-        outfilename = reac + str(int(beamenergy)) + "_evts_allE.txt"
+        outfilename = "./" + evtdir + "/" + reac + str(int(beamenergy)) + "_evts_allE.txt"
 
     file = open(outfilename, "w+")
 
     # Need to create a pickle of targetparms so we can open it again later.
     if elossopt == 1:
-        pklname = reac + str(int(beamenergy)) + "_tgt_" + gasorsolid + ".pkl"
+        pklname = "./" + evtdir + "/" + reac + str(int(beamenergy)) + "_tgt_" + gasorsolid + ".pkl"
         with open(pklname, 'wb') as f:
             pickle.dump(targetparms, f)
 
@@ -272,7 +277,7 @@ def BuildEvts():
     # Write the numpy results array into a text file.
     np.savetxt(outfilename, results.T, delimiter='\t')
 
-    return outfilename
+    return outfilename[14:]
 
 
 if __name__ == "__main__":

@@ -21,10 +21,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
+    evtdir = "./Event_Files/"
+    outdir = "./Output_Files/"
+
     # Open the targetparms pkl:
     # targetparms now contains all the information needed for the desorb calculation.
     if fnmatch.fnmatch(filein, '*eloss*'):
-        pklname = filein[:-16] + 'tgt_' + filein[-5] + '.pkl'
+        pklname = evtdir + filein[:-16] + 'tgt_' + filein[-5] + '.pkl'
 
         with open(pklname, 'rb') as f:
             targetparms = pickle.load(f)
@@ -90,7 +93,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     q = 1.6e-19  # 1 elemental charge in coulombs
 
     # Generates a pandas data frame of shape (xxx,2) whose columns are theta angle and energy.
-    df = pd.read_csv(filein, sep="\t", header=None, low_memory=False)
+    df = pd.read_csv(evtdir + filein, sep="\t", header=None, low_memory=False)
     if not fnmatch.fnmatch(filein, '*eloss*'):
         df.columns = ["Theta_Deg", "Energy"]
     else:
@@ -569,13 +572,14 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     pklstring = writefilebase + '*.pkl'
 
-    list_pkls = glob.glob(pklstring)
+    list_pkls = glob.glob(outdir + pklstring)
 
     # The point of the following section is to change writefile if a file with the same data already exists
     # so we don't overwrite something we don't want to.
 
     if len(list_pkls) > 0:
         latest_pkl = max(list_pkls, key=os.path.getctime)
+        latest_pkl = latest_pkl[15:]
         if not latest_pkl[-6].isdigit():
             lnum = int(latest_pkl[-5])
         else:
@@ -585,14 +589,14 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         fileyn = input("\n\nAn event file using this data already exists. Would you like to overwrite the file? [Y/N] ")
         if fileyn == "n" or fileyn == "N":
             print("\nA number will be appended onto the end of the file name.")
-            while os.path.exists(writefile + ".pkl"):
+            while os.path.exists(outdir + writefile + ".pkl"):
                 lnum = lnum + 1
                 writefile = writefilebase + str(lnum)
         else:
             # Latest pkl already contains lnum
             writefile = latest_pkl[:-4]
 
-    df_all.to_pickle(writefile + ".pkl")
+    df_all.to_pickle(outdir + writefile + ".pkl")
 
     print("\nOutput file named " + writefile + ".pkl was generated.")
 
@@ -600,7 +604,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     if plotyn == "N" or plotyn == "n":
         print("\nNow exiting. You can plot the simulated data any time by running Plotter.py.")
     else:
-        plot(writefile + ".pkl")
+        plot(outdir + writefile + ".pkl")
 
  #   input("\nPress ENTER to end.")
 

@@ -10,6 +10,7 @@ from mpl_toolkits import mplot3d
 import glob
 import os
 import fnmatch
+import sys
 
 def plot(pklin):
 
@@ -17,6 +18,8 @@ def plot(pklin):
 
     # Read the pickled DataFrame File here.
     df = pd.read_pickle(pklin)
+
+    print(pklin)
 
     print("\n********************************Simulation Parameters*********************************\n"
           "The Reacton is: " + df['Reaction'][0] +
@@ -928,8 +931,10 @@ if __name__ == "__main__":
     print("                     Particle Shadowing Plotting Code")
     input("\n\n\nTo continue, press ENTER")
 
+    outdir = "./Output_Files/"
+
     # Get a list of all the pkl files that are already created:
-    list_pickles = glob.glob('*evt*.pkl')
+    list_pickles = glob.glob(outdir + '*evt*.pkl')
 
     # If there aren't any pickles, prompt the user to make one.
     if len(list_pickles) == 0:
@@ -937,17 +942,19 @@ if __name__ == "__main__":
     else:
         # If there are pickles, get the pickle that was modified last:
         latest_file = max(list_pickles, key=os.path.getctime)
+        latest_file = latest_file[15:]
         print("\nThe most recently created simulated DataFrame file is: " + latest_file)
         yn = input("\nWould you like to use this file? [Y/N] ")
         if yn == "N" or yn == "n":
             if len(list_pickles) == 1:
                 # If the user wants to use a different pickle file but there is only one, make the user rum the sim.
                 print("\nYou only have one DataFrame file. To create another, run SOLSTISE_Sim.py")
+                sys.exit()
             # if there is more than one, list them and give them a number so the user can choose.
             if len(list_pickles) > 1:
                 print("\n")
                 for i in range(len(list_pickles)):
-                    print(str(i + 1) + ") " + list_pickles[i])
+                    print(str(i + 1) + ") " + list_pickles[i][15:])
 
                 filenum = 1000000
                 while filenum > len(list_pickles) or filenum == 0:
@@ -955,9 +962,9 @@ if __name__ == "__main__":
                     if filenum == 0 or len(list_pickles) < filenum:
                         print("ERROR: Number entered does not correspond to a DataFrame file...")
                     else:
-                        filein = list_pickles[filenum-1]
+                        filein = list_pickles[filenum-1][15:]
         else:
             filein = latest_file
 
-    print("\nThe file to be used is: " + filein)
-    plot(filein)
+        print("\nThe file to be used is: " + filein)
+        plot(outdir + filein)
