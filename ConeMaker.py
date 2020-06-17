@@ -49,9 +49,10 @@ def makecone():
             coneparms.append(float(input("Enter the coefficient on the y^" + str(expon) +
                                          " term (include the sign!): ")))
 
+    geodir = "./Geometry_Files/"
     fname = "cust_cone_" + str(polyorder) + "_" + conediastring + "in.txt"
 
-    file = open(fname, "w+")
+    file = open(geodir + fname, "w+")
 
     for i in coneparms:
         file.write(str(i) + "\n")

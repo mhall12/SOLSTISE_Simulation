@@ -23,13 +23,14 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     evtdir = "./Event_Files/"
     outdir = "./Output_Files/"
+    geodir = "./Geometry_Files/"
 
     # Open the targetparms pkl:
     # targetparms now contains all the information needed for the desorb calculation.
     if fnmatch.fnmatch(filein, '*eloss*'):
-        pklname = evtdir + filein[:-16] + 'tgt_' + filein[-5] + '.pkl'
+        pklname = filein[:-16] + 'tgt_' + filein[-5] + '.pkl'
 
-        with open(pklname, 'rb') as f:
+        with open(evtdir + pklname, 'rb') as f:
             targetparms = pickle.load(f)
 
         # The list has to contain other lists, so many of the parameters will require [][0]
@@ -178,13 +179,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # Parameters of the nozzle, cone, and pipe get entered here:
 
     # Have to open the cone text file:
-    conefile = open(conetxt, "r")
+    conefile = open(geodir + conetxt, "r")
 
     # coneparms in order will have conenozzdist (in), coneheight (in), iso160height (in), conedia (in), polyorder,
     # ^3 coeff, ^2 coeff, ^1 coeff, ^0 coeff
     coneparms = conefile.readlines()
 
-    nozzfile = open(nozztxt, "r")
+    nozzfile = open(geodir + nozztxt, "r")
 
     # nozzparms in order will have the reaction distance (mm), nozzle diameter (in), nozzle angle (deg), cone length (m)
     # cylinder radius (m), cylinder height (m), holder radius (m), and holder height (m).

@@ -102,9 +102,10 @@ def makenozz():
     params = [reacdist, nozzdia, nozzang, nozzconelen, nozzcyldia, nozzcylh, nozzholderdia, nozzholderheight,
               nozzboxstart, nozzboxh, nozzboxl, nozzboxw]
 
+    geodir = "./Geometry_Files/"
     fname = "cust_nozz_" + str(int(nozzang)) + "deg.txt"
 
-    file = open(fname, "w+")
+    file = open(geodir + fname, "w+")
 
     for i in params:
         file.write(str(i) + "\n")

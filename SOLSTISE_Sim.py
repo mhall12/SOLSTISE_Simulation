@@ -131,8 +131,9 @@ if coneopt == 0:
     conetxt = "SOLSTISE_cone_3_2-6in.txt"
 
 else:
-    list_cones = glob.glob('*cone*.txt')
+    list_cones = glob.glob(geodir + '*cone*.txt')
     latest_cone = max(list_cones, key=os.path.getctime)
+    latest_cone = latest_cone[17:]
     print("\nThe most recently created cone input file is: " + latest_cone)
     yn = input("\nWould you like to use this file? [Y/N] ")
 
@@ -142,21 +143,21 @@ else:
         if newconeyn == 'n' or newconeyn == 'N':
             print("\n")
             for i in range(len(list_cones)):
-                print(str(i + 1) + ") " + list_cones[i])
+                print(str(i + 1) + ") " + list_cones[i][17:])
 
             filenum = 1000000
             while filenum > len(list_cones):
                 filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
 
                 if len(list_cones) >= filenum > 0:
-                    conetxt = list_cones[filenum - 1]
+                    conetxt = list_cones[filenum - 1][17:]
                 elif filenum > len(list_cones):
                     print("ERROR: Number entered is greater than the number of cone input files...")
                 else:
                     list_file_check = []
                     while len(list_file_check) == 0:
                         conetxt = input("Enter the name of the cone input file: ")
-                        list_file_check = glob.glob(conetxt)
+                        list_file_check = glob.glob(geodir + conetxt)
                         if len(list_file_check) == 0:
                             print("ERROR: The file does not exist...")
         else:
@@ -176,8 +177,9 @@ else:
 if nozzopt == 0:
     nozztxt = 'SOLSTISE_nozz_default.txt'
 else:
-    list_nozz = glob.glob('*nozz*.txt')
+    list_nozz = glob.glob(geodir + '*nozz*.txt')
     latest_nozz = max(list_nozz, key=os.path.getctime)
+    latest_nozz = latest_nozz[17:]
     print("\nThe most recently created nozzle input file is: " + latest_nozz)
     yn = input("\nWould you like to use this file? [Y/N] ")
 
@@ -187,21 +189,21 @@ else:
         if newnozzyn == 'n' or newnozzyn == 'N':
             print("\n")
             for i in range(len(list_nozz)):
-                print(str(i + 1) + ") " + list_nozz[i])
+                print(str(i + 1) + ") " + list_nozz[i][17:])
 
             filenum = 1000000
             while filenum > len(list_nozz):
                 filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
 
                 if len(list_nozz) >= filenum > 0:
-                    nozztxt = list_nozz[filenum - 1]
+                    nozztxt = list_nozz[filenum - 1][17:]
                 elif filenum > len(list_nozz):
                     print("ERROR: Number entered is greater than the number of nozzle input files...")
                 else:
                     list_file_check = []
                     while len(list_file_check) == 0:
                         nozztxt = input("Enter the name of the nozzle input file: ")
-                        list_file_check = glob.glob(nozztxt)
+                        list_file_check = glob.glob(geodir + nozztxt)
                         if len(list_file_check) == 0:
                             print("ERROR: The file does not exist...")
         else:
@@ -256,7 +258,7 @@ if pipeyn == "N" or pipeyn == "n":
     sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt)
 
 else:
-    list_pipe_files = glob.glob('PipeOut*.txt')
+    list_pipe_files = glob.glob(geodir + 'PipeOut*.txt')
 
     if len(list_pipe_files) == 0:
         print("\nNo pipe setup file exists in your directory, so we'll make one now.")
@@ -264,28 +266,29 @@ else:
         pipedeffile = makepipe()
     else:
         latest_pipe_file = max(list_pipe_files, key=os.path.getctime)
-        print("The most recently created pipe setup file is: " + latest_pipe_file)
-        pfileyn = input("Would you like to use this file? [Y/N] ")
+        latest_pipe_file = latest_pipe_file[17:]
+        print("\nThe most recently created pipe setup file is: " + latest_pipe_file)
+        pfileyn = input("\nWould you like to use this file? [Y/N] ")
         if pfileyn == "N" or pfileyn == "n":
             pfileyn2 = input("Would you like to generate a new custom pipe input file? [Y/N] ")
             if pfileyn2 == "N" or pfileyn2 == "n":
                 print("\n")
                 for i in range(len(list_pipe_files)):
-                    print(str(i + 1) + ") " + list_pipe_files[i])
+                    print(str(i + 1) + ") " + list_pipe_files[i][17:])
 
                 filenum = 1000000
                 while filenum > len(list_pipe_files):
                     filenum = int(input("\nChoose a number from the list, or enter 0 to manually type the file name: "))
 
                     if len(list_pipe_files) >= filenum > 0:
-                        pipedeffile = list_pipe_files[filenum - 1]
+                        pipedeffile = list_pipe_files[filenum - 1][17:]
                     elif filenum > len(list_pipe_files):
                         print("ERROR: Number entered is greater than the number of simulation files...")
                     else:
                         list_file_check = []
                         while len(list_file_check) == 0:
                             pipedeffile = input("Enter the name of the pipe input file: ")
-                            list_file_check = glob.glob(pipedeffile)
+                            list_file_check = glob.glob(geodir + pipedeffile)
                             if len(list_file_check) == 0:
                                 print("ERROR: The file does not exist...")
             else:
@@ -293,7 +296,7 @@ else:
         else:
             pipedeffile = latest_pipe_file
 
-    file = open(pipedeffile, "r")
+    file = open(geodir + pipedeffile, "r")
 
     lines = file.readlines()
 

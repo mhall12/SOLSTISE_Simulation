@@ -3,7 +3,6 @@ import math
 import matplotlib.pyplot as plt
 
 
-
 def makepipe():
     # main will ask the user questions and call the relevant functions to track the particles from VIKAR
 
@@ -126,7 +125,9 @@ def makepipe():
 
     # input("\nPress ENTER to continue.")
 
-    file = open(fname, "w+")
+    geodir = "./Geometry_Files/"
+
+    file = open(geodir + fname, "w+")
 
     # Build the pipe setup file here
     for i in range(5):
