@@ -6,10 +6,15 @@ The SOLSTISE Simulation code simulates reactions within a magnetic spectrometer 
 The code is written in Python 3, so it (obviously) is a prerequisite to run the code. Most of the packages necessary to run the code are included in Anaconda, so it is recommended to just install Anaconda on your machine from https://docs.anaconda.com/anaconda/install/ or using the method of your choice. 
 
 **Note** You need AT LEAST pandas version 1.0.3 and numpy version 1.15.1 to run the code, otherwise it will probably crash. You can check the versions via:
+
 >>python3
+
 >>import pandas as pd
+
 >>import numpy as np
+
 >>pd.__version__
+
 >>np.__version__
 
 If your version numbers are below the ones I used to write the code, you can update anaconda by typing:
