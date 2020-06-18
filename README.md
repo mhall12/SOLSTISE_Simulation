@@ -13,9 +13,9 @@ The code is written in Python 3, so it (obviously) is a prerequisite to run the 
 
 >>import numpy as np
 
->>pd.__version__
+>>pd.\_\_version\_\_
 
->>np.__version__
+>>np.\_\_version\_\_
 
 If your version numbers are below the ones I used to write the code, you can update anaconda by typing:
 >>conda update
