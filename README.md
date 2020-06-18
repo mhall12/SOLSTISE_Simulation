@@ -5,7 +5,17 @@ The SOLSTISE Simulation code simulates reactions within a magnetic spectrometer 
 
 The code is written in Python 3, so it (obviously) is a prerequisite to run the code. Most of the packages necessary to run the code are included in Anaconda, so it is recommended to just install Anaconda on your machine from https://docs.anaconda.com/anaconda/install/ or using the method of your choice. 
 
-If you don't want to install Anaconda for whatever reason (not to worry, these snakes don't jump), *probably* the only packages you'd need to install are: matplotlib, sympy, and numpy, and pandas. You may also need X11 installed and running for the matplotlib plots. 
+**Note** You need AT LEAST pandas version 1.0.3 and numpy version 1.15.1 to run the code, otherwise it will probably crash. You can check the versions via:
+>>python3
+>>import pandas as pd
+>>import numpy as np
+>>pd.__version__
+>>np.__version__
+
+If your version numbers are below the ones I used to write the code, you can update anaconda by typing:
+>>conda update
+
+If you don't want to install Anaconda for whatever reason (not to worry, these snakes don't jump), *probably* the only packages you'd need to install are: matplotlib, sympy, and numpy, and pandas. Everything else should come in the python standard library. You may also need X11 installed and running for the matplotlib plots. 
 
 Required Files:
 
@@ -40,6 +50,8 @@ The code can be run by typing:
 >>python3 SOLSTISE_Sim.py
 
 Additionally, individual codes (EventBuilder, Plotter.py, stopyt.py) can be run in "standalone" mode if necessary in the same fashion. stopyt.py has its own front-end that can calculate energy loss like the old stopit fortran code. 
+
+***
 
 The code currently (6/18/20) on first run when downloaded from Github will make 3 new directories, it will then copy a couple of hidden text files to the Geometry_Files folder if they aren't there already. Then, since no event files have been made, it will immediately run EventBuilder. EventBuilder has 3 different modes of operation. The user can specify whether or not they want to produce results with artificial energy loss/smearing (artsm.txt), calculated energy loss (using stopyt) (eloss.txt), or an "all energies" option (allE.txt), which can be used if the user does not want to specify specific populated energy levels. Using the "all energies" option allows for the creation of blocked particle contour plots in Plotter.py. The EventBuilder code will produce a .txt file with the particle information and a .pkl file that has the target information in the Event_Files folder (if using the stopyt energy loss option). Be aware that if you try to make a file with the same reaction and energy as one that has been previously made, it will be overwritten (if it has the same extension).
 
