@@ -15,6 +15,7 @@ import fnmatch
 from stopyt import desorb
 import pickle
 import warnings
+from random import randrange
 
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt):
@@ -290,6 +291,22 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # I make the assumption that the energy loss and angular spread will be tiny and don't take it into account here.
     disttravl = np.zeros_like(phic)
 
+    helpfultip = ["You probably don\'t have enough time to make a cup of coffee…",
+                  "If you're getting up for a bathroom break, you\'d better be quick!",
+                  "Jeopardy jingle: do do do do do do do, do do do do doot! do do do do do",
+                  "The Tennessee jumping snake can grow up to 5 feet in length and jump up to 7 feet high!",
+                  "Close your eyes and pretend that you\'re not waiting for this code to run.",
+                  "If your office has windows, look outside! If your office doesn\'t, pretend to.",
+                  "The coffee cart beckons... later.",
+                  "Honk if this code is taking too long to run!",
+                  "Hold on to your butts...",
+                  "An actual tip: You can still draw each histogram in Plotter, even if it isn't listed "
+                  "(though it might not make sense...).",
+                  "An actual tip: Each section of the code can be run individually Ex: >>python3 Plotter.py",
+                  "An actual tip: If the code keeps crashing, you may need to upgrade your version of pandas or numpy."]
+
+    htipnum = randrange(13)
+
     # Simulating events status bar for the for loop
     print("Simulating Events...")
     statbar = "[                              ]"
@@ -301,6 +318,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # Splits the flight time into 300 segments for tracking purposes to see whether or not the particle is blocked.
     for i in range(300):
+
+        if i == 100:
+            print(helpfultip[htipnum], end='\n')
 
         if i % 10 == 0:
             statbar = statbar.replace(" ", "=", 1)
