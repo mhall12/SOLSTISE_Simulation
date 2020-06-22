@@ -108,7 +108,10 @@ ebeam = int(filein[(uslocs[2]+1):uslocs[3]])
 
 print("The beam energy is: " + str(ebeam) + " MeV")
 
-bfield = float(input("\nEnter the magnetic field strength in Tesla: "))
+try:
+    bfield = float(input("\nEnter the magnetic field strength in Tesla: "))
+except ValueError:
+    bfield = 2.0
 
 # need to load the file into a numpy array to do genfromtxt to determine whether or not the reaction is going to be
 # measured in normal or inverse kinematics, then ask which way the return pipe is facing. If the pipe is facing the

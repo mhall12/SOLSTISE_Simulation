@@ -832,12 +832,12 @@ def plot(pklin):
                             plt.rc('ytick', labelsize=16)
                             ax32 = plt.subplot(111, projection='polar')
                         pbins2 = pbins2 * np.pi / 180
-                        if i != 3:
+                        if i != 2:
                             if i > 0:
                                 ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
                             if i == 0:
                                 ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=14, MarkerEdgeColor='Black', alpha=0.7)
-                        if i == 3:
+                        if i == 2:
                             pbins2gt0 = pbins2[pbins2 < np.pi]
                             divpgt0 = divp[pbins2 < np.pi]
 

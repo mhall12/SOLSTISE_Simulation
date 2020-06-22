@@ -56,6 +56,18 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
         phi2block = 3/2*np.pi + np.arctan(rblock/(-1*cheight))
 
+    # Control which way the reaction products bend in the field based on the solenoid.
+    # HELIOS particles bend CCW looking downstream at target, Ben thinks they go the same way in SOLARIS, but it can be
+    # changed here easily if need be. cwsign = -1 is CCW, cwsign = 1 is CW.:
+    # HELIOS
+    if rbore == 0.46:
+        cwsign = -1
+    # SOLARIS
+    if rbore == 0.45:
+        cwsign = -1
+    else:
+        cwsign = -1
+
     # The z axis points in beam direction, the x-axis points to beam right, and the y-axis points up
 
     # Get the various parameters from readmass. In this case, we don't actually want z/atarg to be defined here
@@ -158,6 +170,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     phi = np.random.rand(len(df))
     # then multiply the phi array by 2pi to get a real phi value and put it into the dataframe
     df['Phi'] = phi * 2 * np.pi
+    # Phi for debugging
+    # df['Phi'] = np.zeros_like(df['Energy']) + np.pi
 
     # creates a mask the same shape as the energy array
 
@@ -305,7 +319,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
                   "An actual tip: Each section of the code can be run individually Ex: >>python3 Plotter.py",
                   "An actual tip: If the code keeps crashing, you may need to upgrade your version of pandas or numpy."]
 
-    htipnum = randrange(13)
+    htipnum = randrange(12)
 
     # Simulating events status bar for the for loop
     print("Simulating Events...")
@@ -330,9 +344,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
         # If we aren't doing the energy loss I want the code to function like normal.
 
-        xpos = ((vperp/omega)*np.sin((omega*t)-phii))-((vperp/omega)*np.sin(-phii))
-        ypos = ((vperp/omega)*np.cos(omega*t-phii))-vperp/omega*np.cos(-phii)
+        xpos = ((vperp/omega)*np.sin((omega*t) - cwsign * phii)) - ((vperp/omega)*np.sin(-1 * cwsign * phii))
+        ypos = (cwsign * (vperp/omega)*np.cos(omega*t - cwsign * phii)) - \
+               cwsign * vperp/omega*np.cos(-1 * cwsign * phii)
         zpos = vpar*t + zoff
+
+        # For debugging:
+        # print(str(xpos[0]) + " " + str(ypos[0]))
 
         if (i+1) % 10 == 0 and elossbool:
             disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (zlast - zpos) ** 2) + disttravl
