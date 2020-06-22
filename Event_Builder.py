@@ -21,11 +21,11 @@ def BuildEvts():
     kinemat = 3
     while kinemat > 2 or kinemat == 0:
         try:
-            kinemat = int(input("Will the reaction be measured in inverse (1) or normal kinematics (2)? "))
+            kinemat = int(input("Will the reaction be measured upstream (1) or downstream (2) of the target? "))
         except ValueError:
             kinemat = 1
         if kinemat > 2 or kinemat == 0:
-            print("ERROR: Please choose 1 for normal kinematics or 2 for inverse kinematics...")
+            print("ERROR: Please choose 1 for upstream or 2 for downstream...")
 
     # Go into readmass to get the masses of the four particles from the entered reaction.
     masses, ztarget, atarget, zejectile, aejectile, zbeam, abeam = readmass(reac)
