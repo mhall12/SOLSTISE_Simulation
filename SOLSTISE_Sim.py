@@ -108,6 +108,8 @@ ebeam = int(filein[(uslocs[2]+1):uslocs[3]])
 
 print("The beam energy is: " + str(ebeam) + " MeV")
 
+bfield = float(input("\nEnter the magnetic field strength in Tesla: "))
+
 # need to load the file into a numpy array to do genfromtxt to determine whether or not the reaction is going to be
 # measured in normal or inverse kinematics, then ask which way the return pipe is facing. If the pipe is facing the
 # opposite direction, we'll just skip over the pipe definition and make the radius of the pipe tiny so it doesn't
@@ -255,7 +257,7 @@ if pipeyn == "N" or pipeyn == "n":
         phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
         phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt, bfield)
 
 else:
     list_pipe_files = glob.glob(geodir + 'PipeOut*.txt')
@@ -301,4 +303,4 @@ else:
     lines = file.readlines()
 
     sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]),
-           ebeam, filein, reac, conetxt, nozztxt)
+           ebeam, filein, reac, conetxt, nozztxt, bfield)

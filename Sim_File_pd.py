@@ -18,7 +18,7 @@ import warnings
 from random import randrange
 
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt):
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt, bfield):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -90,7 +90,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     tcm = mt/(mb+mt)*ebeam
 
     amutokg = 1.66053907e-27  # amu to kg conversion
-    B = 2.0
+    B = bfield
    # B = 1.915  # teslas
     q = 1.6e-19  # 1 elemental charge in coulombs
 

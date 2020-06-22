@@ -36,7 +36,10 @@ def BuildEvts():
     for i in range(4):
         masses[i] = masses[i] * utoMeV
 
-    beamenergy = float(input("Enter a beam energy in MeV: "))
+    beamenergy = float(input("Enter a beam energy in MeV (or enter 0 for MeV/u): "))
+    if beamenergy == 0:
+        beamenergyu = float(input("Enter a beam energy in MeV/u: "))
+        beamenergy = beamenergyu * abeam
 
     # Entering 0 makes the program randomly generate excitation energies within the specified range.
     levnum = int(input("Enter the number of energy levels to be populated in the recoil (or 0 for "
