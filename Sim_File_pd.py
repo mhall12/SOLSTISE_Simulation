@@ -18,7 +18,8 @@ import warnings
 from random import randrange
 
 
-def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt, bfield):
+def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt,
+           bfield, beamdiamm, jetrin):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -51,6 +52,10 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         elossbool = True
     else:
         elossbool = False
+        thickness = 'N/A'
+        jetpress = 'N/A'
+        champress = 'N/A'
+        jetrad = 'N/A'
 
     if rblock < rbore:
         phi1block = 3/2*np.pi - np.arctan(rblock/(-1*cheight))
@@ -287,17 +292,23 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     if elossbool:
         if gas:
             # Set the jet radius here, gets set from targetparms. Redefinition could be removed:
-            jetr = jetrad / 1000
+            jetr = jetrad / 100
 
             # zoff is now the z offset in m.
             zoff = df['z_Offset'].to_numpy() / 100.0 - jetr
+
             jetroff = zoff
             jetroff = np.where(zoff < -jetr, -jetr, jetroff)
             jetroff = np.where(zoff > jetr, jetr, jetroff)
         else:
             zoff = np.zeros_like(df['Energy'].to_numpy())
+
     else:
-        zoff = np.zeros_like(df['Energy'].to_numpy())
+        zoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), ((jetrin * 2)/1000)/2.355)
+
+    beamspotdia = beamdiamm / 1000  # beamdiamm mm FWHM
+    xoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), beamspotdia / 2.355)
+    yoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), beamspotdia / 2.355)
 
     # For the ejectile energy loss, the energy loss will be split into two layers (if gas target).
     # The first layer will be the jetlength, defined below which is the approximate straight-line distance the
@@ -321,9 +332,11 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     htipnum = randrange(12)
 
+    i_final = np.zeros_like(df['Energy'])
+
     # Simulating events status bar for the for loop
     print("Simulating Events...")
-    statbar = "[                              ]"
+    statbar = "[                                   ]"
 
     vperp = df['vel_perp'].to_numpy()
     phii = df['Phi'].to_numpy()
@@ -331,7 +344,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     tred = df['t_reduced'].to_numpy()
 
     # Splits the flight time into 300 segments for tracking purposes to see whether or not the particle is blocked.
-    for i in range(300):
+    for i in range(350):
 
         if i == 100:
             print(helpfultip[htipnum], end='\n')
@@ -340,23 +353,29 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
             statbar = statbar.replace(" ", "=", 1)
             print(statbar, end='\r', flush=True)
 
+        # Loop goes to 350 because we want to make sure all of the particles have hit the detector. With the beam spot
+        # size offset, it doesn't necessarily happen at t_reduced (though most particles do).
         t = tred/300 * (i+1)
 
         # If we aren't doing the energy loss I want the code to function like normal.
 
-        xpos = ((vperp/omega)*np.sin((omega*t) - cwsign * phii)) - ((vperp/omega)*np.sin(-1 * cwsign * phii))
+        xpos = ((vperp/omega)*np.sin((omega*t) - cwsign * phii)) - ((vperp/omega)*np.sin(-1 * cwsign * phii)) + xoff
         ypos = (cwsign * (vperp/omega)*np.cos(omega*t - cwsign * phii)) - \
-               cwsign * vperp/omega*np.cos(-1 * cwsign * phii)
+               cwsign * vperp/omega*np.cos(-1 * cwsign * phii) + yoff
         zpos = vpar*t + zoff
 
         # For debugging:
         # print(str(xpos[0]) + " " + str(ypos[0]))
 
-        if (i+1) % 10 == 0 and elossbool:
+        if (i+1) % 10 == 0 and elossbool and i < 300:
             disttravl = np.sqrt((xlast - xpos) ** 2 + (ylast - ypos) ** 2 + (zlast - zpos) ** 2) + disttravl
 
         # r is the radial position of the particle
         r = np.sqrt(xpos**2 + ypos**2)
+
+        # Grab the iteration where the radius is less than the detector radius (i.e. it hits the detector)
+        if i > 295:
+            i_final = np.where((r < r0) & (i_final == 0), i, i_final)
 
         # phic is the phi current position of the particle. Before I had phic = np.arctan2(ypos, xpos) + np.pi which is
         # wrong. We actually need to add 360 deg if y<0 and add 0 if y > 0
@@ -390,12 +409,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         maskbase = (rxzplane < riso100cyl) & ((-1 * ypos) > conefitdist) & ((-1 * ypos) < iso160pipeheight)
 
         maskcone = masksides | maskbase
-
-        # we want only particles that come out at backward angles for inverse, and forward angles for normal kin
-        if invkin:
-            maskz = zpos < 0
-        else:
-            maskz = zpos > 0
 
         # masknozzle determines if the the particle hits the nozzle.
         # masknozzle = masknozzle & ((rxzplane < rnozzle(-1 * ypos * 100 / 2.54)) & ((-1 * ypos) > reacdistbelownozzle *
@@ -435,16 +448,34 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         #maskmaster = maskmaster*np.invert(maskcone | masknozzle | maskrpipe | maskphipipe)
         maskrbore = maskrbore & (r < rbore)
 
-        if (i+1) % 10 == 0 and elossbool:
+        if (i+1) % 10 == 0 and elossbool and i < 300:
             xlast = xpos
             ylast = ypos
             zlast = zpos
 
-    # Move maskmaster from line 367
+    # Calculate the final z and phi of the particles based on the iteration where they hit the detector array
+    t_final = tred/300 * (i_final + 1)
+    xpos = ((vperp / omega) * np.sin((omega * t_final) - cwsign * phii)) - (
+                (vperp / omega) * np.sin(-1 * cwsign * phii)) + xoff
+    ypos = (cwsign * (vperp / omega) * np.cos(omega * t_final - cwsign * phii)) - \
+           cwsign * vperp / omega * np.cos(-1 * cwsign * phii) + yoff
+    phic = np.where(ypos < 0, np.arctan2(ypos, xpos) + 2 * np.pi, np.arctan2(ypos, xpos))
+    zpos = vpar*t_final + zoff
+
+    # Move maskmaster from line 367 and maskz out of the loop
+    # we want only particles that come out at backward angles for inverse, and forward angles for normal kin
+    if invkin:
+        maskz = zpos < 0
+    else:
+        maskz = zpos > 0
 
     maskmaster = maskmaster_cone & maskmaster_pipe & maskmaster_nozzle
 
     print("\n")
+
+    # Grab the max energy before the eloss section because sometimes we get one really large value that messes up the
+    # histogram ranges in plotter...
+    maxe = df['Energy'].max()
 
     if elossbool:
         # Need to set up the projectile data here that goes into desorb:
@@ -567,37 +598,27 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     else:
         custpipe = True
 
-    if elossbool:
-        dictparams = {
-            "Reaction": reac,
-            "Beam Energy": ebeam,
-            "Magnetic Field": B,
-            "Reaction Distance from Nozzle": reacdistbelownozzle,
-            "Nozzle-Cone Distance": nozzleconedistin,
-            "Bore Radius": rbore,
-            "Custom Pipe?": custpipe,
-            "Pipe Radius": rblock,
-            "Pipe Left Edge Angle": int(phi1block*180/np.pi),
-            "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
-            "Cone Opening Diameter": conedia,
-            "Cone Height": coneheight,
-            "Calculated Energy Loss?": elossbool,
-            "Gas?": gas
-        }
-    else:
-        dictparams = {
-            "Reaction": reac,
-            "Beam Energy": ebeam,
-            "Magnetic Field": B,
-            "Reaction Distance from Nozzle": reacdistbelownozzle,
-            "Nozzle-Cone Distance": nozzleconedistin,
-            "Bore Radius": rbore,
-            "Custom Pipe?": custpipe,
-            "Pipe Radius": rblock,
-            "Pipe Left Edge Angle": int(phi1block*180/np.pi),
-            "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
-            "Cone Opening Diameter": conedia,
-            "Cone Height": coneheight
+    dictparams = {
+        "Reaction": reac,
+        "Beam Energy": ebeam,
+        "Magnetic Field": B,
+        "Reaction Distance from Nozzle": reacdistbelownozzle,
+        "Nozzle-Cone Distance": nozzleconedistin,
+        "Bore Radius": rbore,
+        "Custom Pipe?": custpipe,
+        "Pipe Radius": rblock,
+        "Pipe Left Edge Angle": int(phi1block*180/np.pi),
+        "Pipe Right Edge Angle": int(phi2block * 180 / np.pi),
+        "Cone Opening Diameter": conedia,
+        "Cone Height": coneheight,
+        "Calculated Energy Loss?": elossbool,
+        "Cone File": conetxt,
+        "Nozzle File": nozztxt,
+        "Solid Thickness": thickness,
+        "Jet Pressure": jetpress,
+        "Chamber Pressure": champress,
+        "Jet Radius": jetrad,
+        "Max Energy": maxe
         }
 
     dfparams = pd.DataFrame([dictparams])

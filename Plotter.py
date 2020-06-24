@@ -12,9 +12,8 @@ import os
 import fnmatch
 import sys
 
-def plot(pklin):
 
-    # In the future I might hide the contour plots if the user doesn't have an allE pickle.
+def plot(pklin):
 
     # Read the pickled DataFrame File here.
     df = pd.read_pickle(pklin)
@@ -27,13 +26,19 @@ def plot(pklin):
           "\nMagnetic Field: " + str(df['Magnetic Field'][0]) + " Tesla" +
           "\nReaction Distance from Nozzle: " + str(df['Reaction Distance from Nozzle'][0]) + ' inches' +
           "\nNozzle-Cone Distance: " + str(df['Nozzle-Cone Distance'][0]) + ' inches'
+          "\nReceiver Cone Opening Diameter: " + str(df['Cone Opening Diameter'][0]) + " inches" +
+          "\nReceiver Cone Height: " + str(df["Cone Height"][0]) + " inches"
           "\nMagnet Bore Radius: " + str(df['Bore Radius'][0]) + ' m' +
           "\nCustom Pipe? " + str(df['Custom Pipe?'][0]) +
           "\nPipe Radius: " + str(df["Pipe Radius"][0]) + " m"
           "\nPipe Left Edge Angle: " + str(df['Pipe Left Edge Angle'][0]) + " Degrees" +
           "\nPipe Right Edge Angle: " + str(df['Pipe Right Edge Angle'][0]) + " Degrees" +
-          "\nReceiver Cone Opening Diameter: " + str(df['Cone Opening Diameter'][0]) + " inches" +
-          "\nReceiver Cone Height: " + str(df["Cone Height"][0]) + " inches"
+          "\nReceiver Cone File Used: " + df['Cone File'][0] +
+          "\nNozzle File Used: " + df['Nozzle File'][0] +
+          "\nSolid Target Thickness: " + str(df['Solid Thickness'][0]) + " mg/cm^2" +
+          "\nJet Pressure: " + str(df['Jet Pressure'][0]) + " Torr" +
+          "\nJet Radius: " + str(df["Jet Radius"][0]) + " mm" +
+          "\nChamber Pressure: " + str(df['Chamber Pressure'][0]) + " Torr" +
           "\n**************************************************************************************\n")
 
     # Create the detector array here:
@@ -84,7 +89,7 @@ def plot(pklin):
     blu = newcmpBlue(1)
     red = newcmpRed(1)
 
-    # Switch is used in a while loop to see if we should continue running the progran. once it is !=0 the program closes
+    # Switch is used in a while loop to see if we should continue running the program. once it is !=0 the program closes
     switch = 0
 
     # Histogram order to get the quadrants right.
@@ -98,7 +103,8 @@ def plot(pklin):
         zmin = 0
         zmax = df['zpos_final'].max()
 
-    emax = 2 * df['Energy'].mean() + 2
+    # Get the ax energy from the data frame. This assumes no shadowing, so we can also see where the bore shadows.
+    emax = df['Max Energy'][0]
 
     exmax = 2 * df['Ex_Reconstructed'].mean() + 0.5
 
@@ -185,7 +191,7 @@ def plot(pklin):
                 if (plotnum == 1 or plotnum == 3) and i > 0:
                     plt.subplot(2, 2, i)
                     plt.hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
-                               df['Energy'][detarr[i] & df["Unblocked"]], bins=(750, 750),
+                               df['Energy'][detarr[i] & df["Unblocked"]], bins=(550, 550),
                                range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
                     plt.xlabel('z(m)')
                     plt.ylabel('Energy (MeV)')
@@ -196,13 +202,13 @@ def plot(pklin):
                     plt.subplot(2, 2, i)
                     try:
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
+                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
+                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
+                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
                         plt.xlabel('z(m)')
                         plt.ylabel('Energy (MeV)')
@@ -832,20 +838,24 @@ def plot(pklin):
                             plt.rc('ytick', labelsize=16)
                             ax32 = plt.subplot(111, projection='polar')
                         pbins2 = pbins2 * np.pi / 180
-                        if i != 2:
+                        if i !=2 and i != 3:
                             if i > 0:
-                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
+                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=8,
+                                          MarkerEdgeColor='Black', alpha=0.7)
                             if i == 0:
-                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=14, MarkerEdgeColor='Black', alpha=0.7)
-                        if i == 2:
+                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=14,
+                                          MarkerEdgeColor='Black', alpha=0.7)
+                        if i == 2 or i == 3:
                             pbins2gt0 = pbins2[pbins2 < np.pi]
                             divpgt0 = divp[pbins2 < np.pi]
 
                             pbins2lt0 = pbins2[pbins2 > np.pi]
                             divplt0 = divp[pbins2 > np.pi]
 
-                            ax32.plot(pbins2gt0, divpgt0, marker='o', color=stdcolors[i], label=labels32[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
-                            ax32.plot(pbins2lt0, divplt0, marker='o', color=stdcolors[i], markersize=8, MarkerEdgeColor='Black', alpha=0.7)
+                            ax32.plot(pbins2gt0, divpgt0, marker='o', color=stdcolors[i], label=labels32[i],
+                                      markersize=8, MarkerEdgeColor='Black', alpha=0.7)
+                            ax32.plot(pbins2lt0, divplt0, marker='o', color=stdcolors[i], markersize=8,
+                                      MarkerEdgeColor='Black', alpha=0.7)
 
                         #ax32.set_rorigin(.2)
                         ax32.grid(True)

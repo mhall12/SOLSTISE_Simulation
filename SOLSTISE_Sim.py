@@ -113,6 +113,19 @@ try:
 except ValueError:
     bfield = 2.0
 
+try:
+    beamdia = float(input("\nEnter the beam diameter (FWHM) to be used in the simulation in mm: "))
+except ValueError:
+    beamdia = 1
+
+if not fnmatch.fnmatch(filein, '*eloss*'):
+    try:
+        jetrad = float(input("\nEnter the jet radius in mm (typical values are on the order of 1.0 to 1.75 mm): "))
+    except ValueError:
+        jetrad = 1.25
+else:
+    jetrad = 0
+
 # need to load the file into a numpy array to do genfromtxt to determine whether or not the reaction is going to be
 # measured in normal or inverse kinematics, then ask which way the return pipe is facing. If the pipe is facing the
 # opposite direction, we'll just skip over the pipe definition and make the radius of the pipe tiny so it doesn't
@@ -260,7 +273,7 @@ if pipeyn == "N" or pipeyn == "n":
         phi1 = (180 + 90)*math.pi/180 - math.asin(piper/pipecenter)
         phi2 = 2*math.pi - (phi1 - math.pi)
 
-    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt, bfield)
+    sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt, bfield, beamdia, jetrad)
 
 else:
     list_pipe_files = glob.glob(geodir + 'PipeOut*.txt')
@@ -306,4 +319,4 @@ else:
     lines = file.readlines()
 
     sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]),
-           ebeam, filein, reac, conetxt, nozztxt, bfield)
+           ebeam, filein, reac, conetxt, nozztxt, bfield, beamdia, jetrad)
