@@ -147,20 +147,21 @@ def plot(pklin):
               "25) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
               "26) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
               "27) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-              "28) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n")
+              "28) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
+              "29) Lab Angle vs Initial Phi: Polar contour plot of detected particles.\n")
     if not fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("29) Fraction of particles blocked vs lab angle. \n"
-              "30) Fraction of particles blocked vs energy. \n"
-              "31) Fraction of particles blocked vs z position. \n"
-              "32) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")
+        print("30) Fraction of particles blocked vs lab angle. \n"
+              "31) Fraction of particles blocked vs energy. \n"
+              "32) Fraction of particles blocked vs z position. \n"
+              "33) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")
 
     if fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("33) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
-              "34) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
-              "35) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D) \n"
-              "36) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
+        print("34) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
+              "35) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
+              "36) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D) \n"
+              "37) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
               "detectors (1D)\n"
-              "37) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
+              "38) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
     print("0) End\n\n")
 
     while switch == 0:
@@ -177,7 +178,8 @@ def plot(pklin):
 
         if plotnum > 0:
             # initialize the figure here, it might not be necessary.
-            fig = plt.figure()
+            if plotnum != 29:
+                fig = plt.figure()
 
             # Set the font sizes here and the font used below. The title font sizes are handled when the hist is made.
             plt.rc('axes', labelsize=18)
@@ -300,7 +302,7 @@ def plot(pklin):
 
                 # 14-29 are contour plots of blocked particles. These should only be used with "allE" simulated files
                 # because they don't really make sense with specific excited states populated.
-                if 12 < plotnum < 33:
+                if (12 < plotnum < 34) or plotnum == 105:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
                     # degree.
@@ -346,7 +348,11 @@ def plot(pklin):
                                                                   df['Energy'][detarr[i] & df["AllPossible"]],
                                                                   bins=(binsphi, binse))
 
-                    if plotnum < 29:
+                    unblockedtvphi, pbins, tbins = np.histogram2d(df['Phi_Deg'][detarr[i] & df["AllPossible"]],
+                                                                  df['Theta_Deg'][detarr[i] & df["AllPossible"]],
+                                                                  bins=(binsphi, binstheta))
+
+                    if plotnum < 30 or plotnum == 105:
                         # The following lines bin the particles into either energy vs theta or energy vs z 2d histograms
                         # Ex: unbloxkedevt is an array that has given each particle a theta and E bin, and tbins and
                         # ebins are the corresponding bin edges.
@@ -373,13 +379,24 @@ def plot(pklin):
                                                                                detarr[i]],
                                                                   bins=(binsz, binse))
 
+                        blockedtvphi, pbins, tbins = np.histogram2d(df['Phi_Deg'][(df['Blocked_Cone'] |
+                                                                                  df['Blocked_Pipe'] |
+                                                                                  df['Blocked_Nozzle']) &
+                                                                                  detarr[i]],
+                                                                    df['Theta_Deg'][(df['Blocked_Cone'] |
+                                                                                    df['Blocked_Pipe'] |
+                                                                                    df['Blocked_Nozzle']) &
+                                                                                    detarr[i]],
+                                                                    bins=(binsphi, binstheta))
+
                         coneblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
                                                                       df['Energy'][df['Blocked_Cone'] & detarr[i]],
                                                                       bins=(binstheta, binse))
                         pipeblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
                                                                       df['Energy'][df['Blocked_Pipe'] & detarr[i]],
                                                                       bins=(binstheta, binse))
-                        nozzleblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]],
+                        nozzleblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Nozzle'] &
+                                                                                        detarr[i]],
                                                                         df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
                                                                         bins=(binstheta, binse))
 
@@ -389,7 +406,8 @@ def plot(pklin):
                         pipeblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
                                                                       df['Energy'][df['Blocked_Pipe'] & detarr[i]],
                                                                       bins=(binsz, binse))
-                        nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]],
+                        nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] &
+                                                                                         detarr[i]],
                                                                         df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
                                                                         bins=(binsz, binse))
 
@@ -405,6 +423,9 @@ def plot(pklin):
 
                         ratioevz = np.divide((unblockedevz - blockedevz), unblockedevz, out=np.zeros_like(blockedevz),
                                              where=unblockedevz != 0)
+
+                        ratiotvp = np.divide((unblockedtvphi - blockedtvphi), unblockedtvphi,
+                                             out=np.zeros_like(blockedtvphi), where=unblockedtvphi != 0)
 
                         ratioconeevt = np.divide((unblockedevt - coneblockedevt), unblockedevt,
                                                  out=np.zeros_like(coneblockedevt), where=unblockedevt != 0)
@@ -428,6 +449,7 @@ def plot(pklin):
 
                         ratioevt = ratioevt.T
                         ratioevz = ratioevz.T
+                        ratiotvp = ratiotvp
 
                         ratioconeevt = ratioconeevt.T
                         ratiopipeevt = ratiopipeevt.T
@@ -442,12 +464,15 @@ def plot(pklin):
                         tbins2 = np.zeros(90)
                         ebins2 = np.zeros(150)
                         zbins2 = np.zeros(100)
+                        pbins2 = np.zeros(numphibins)
 
                         # And here get the bin centers by taking the averages of three bin edges.
 
                         for k in range(150):
                             if k < 90:
                                 tbins2[k] = (tbins[k] + tbins[k + 1]) / 2
+                            if k < numphibins:
+                                pbins2[k] = (pbins[k] + pbins[k + 1]) / 2
                             if k < 100:
                                 zbins2[k] = (zbins[k] + zbins[k + 1]) / 2
                             ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
@@ -456,6 +481,7 @@ def plot(pklin):
 
                         xevt, yevt = np.meshgrid(tbins2, ebins2)
                         xevz, yevz = np.meshgrid(zbins2, ebins2)
+                        xtvp, ytvp = np.meshgrid(tbins2, pbins2 * np.pi/180)
 
                         # Now, since we have so many bins, the contour plots won't look nice. If we put too few bins the
                         # contours also don't look great. So, the solution is to use a lot of bins and use these gaussian
@@ -463,6 +489,7 @@ def plot(pklin):
 
                         ratioevt_blurr = ndimage.gaussian_filter(ratioevt, sigma=1.5, order=0)
                         ratioevz_blurr = ndimage.gaussian_filter(ratioevz, sigma=1.5, order=0)
+                        ratiotvp_blurr = ndimage.gaussian_filter(ratiotvp, sigma=1, order=0)
 
                         ratioconeevt_blurr = ndimage.gaussian_filter(ratioconeevt, sigma=1.5, order=0)
                         ratiopipeevt_blurr = ndimage.gaussian_filter(ratiopipeevt, sigma=1.5, order=0)
@@ -475,13 +502,16 @@ def plot(pklin):
                         # 13 is the contour plot of percentage of detected particles.
                         if plotnum == 13 and i == 0:
 
-                            cf = plt.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                           .85, .9, .95, 1], cmap='YlGnBu')
-                            cs = plt.contour(xevt, yevt, ratioevt_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
-                            manual_locations = [(92, 5), (94, 5), (97, 5), (104, 5), (110, 5)]
-                            labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-90)
+                            cf = plt.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                           .8, .85, .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                          .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+                            #cs = plt.contour(xevt, yevt, ratioevt_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
+                            #manual_locations = [(92, 5), (94, 5), (97, 5), (104, 5), (110, 5)]
+                            #labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-90)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -490,14 +520,17 @@ def plot(pklin):
                         # 14 is a contour plot of percetage of particles not blocked by the cone.
                         if plotnum == 14 and i == 0:
 
-                            cf = plt.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                               .8, .85, .9, .95, 1], cmapbb='Greens')
-                            cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.5, .6, .7, .8, .9],
-                                             colors='k', linewidths=1.2)
-                            manual_locations = [(94, 5), (96, 5), (100, 5), (106, 5)]
-                            labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-90)
+                            cf = plt.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
+                            cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                              .75, .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+                            #cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.5, .6, .7, .8, .9],
+                            #                 colors='k', linewidths=1.2)
+                            #manual_locations = [(94, 5), (96, 5), (100, 5), (106, 5)]
+                            #labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-90)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -509,11 +542,13 @@ def plot(pklin):
 
                             cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
                                               [.65, .7, .75, .8, .85, .9, .95, 1], cmap='Reds')
-                            cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.7, .8, .9], colors='k', linewidths=1.2)
-                            manual_locations = [(112, 5), (109, 6.2), (92, 9)]
-                            labels = plt.clabel(cs, inline=1, inline_spacing=-20, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-90)
+                            cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.65, .7, .75, .8, .85, .9, .95, 1],
+                                             colors='k', linewidths=.2)
+                            #cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.7, .8, .9], colors='k', linewidths=1.2)
+                            #manual_locations = [(112, 5), (109, 6.2), (92, 9)]
+                            #labels = plt.clabel(cs, inline=1, inline_spacing=-20, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-90)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -525,11 +560,13 @@ def plot(pklin):
 
                             cf = plt.contourf(xevt, yevt, rationozzleevt_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
                                                                                  .96, .98, 1], cmap='Blues')
-                            cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.88, .92, .96], colors='k', linewidths=1.2)
-                            manual_locations = [(100, 7.5), (110, 6), (115, 4)]
-                            labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-90)
+                            cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
+                                                                                .96, .98, 1], colors='k', linewidths=.2)
+                            #cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.88, .92, .96], colors='k', linewidths=1.2)
+                            #manual_locations = [(100, 7.5), (110, 6), (115, 4)]
+                            #labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-90)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -540,11 +577,11 @@ def plot(pklin):
                         if plotnum == 17 and i > 0:
                             plt.subplot(2, 2, i)
                             cf = plt.contourf(xevt, yevt, ratioevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], cmap='YlGnBu')
-                            cs = plt.contour(xevt, yevt, ratioevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55,
-                                                                          .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], colors='k', linewidths=.2)
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                               .85, .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevt, yevt, ratioevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
+                                                                          .55, .6, .65, .7, .75, .8, .85, .9, .95, 1],
+                                             colors='k', linewidths=.2)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -555,11 +592,11 @@ def plot(pklin):
                         if plotnum == 18 and i > 0:
                             plt.subplot(2, 2, i)
                             cf = plt.contourf(xevt, yevt, ratioconeevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], cmap='Greens')
-                            cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
-                                                                              .55, .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], colors='k', linewidths=.3)
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                               .85, .9, .95, 1], cmap='Greens')
+                            cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                              .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                              .9, .95, 1], colors='k', linewidths=.3)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -571,11 +608,11 @@ def plot(pklin):
                         if plotnum == 19 and i > 0:
                             plt.subplot(2, 2, i)
                             cf = plt.contourf(xevt, yevt, ratiopipeevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], cmap='Reds')
-                            cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5,
-                                                                              .55, .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], colors='k', linewidths=.2)
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                               .85, .9, .95, 1], cmap='Reds')
+                            cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                              .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                              .9, .95, 1], colors='k', linewidths=.2)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('Lab Angle (Deg)')
                             plt.ylabel('Energy (MeV)')
@@ -588,8 +625,8 @@ def plot(pklin):
                         if plotnum == 20 and i > 0:
                             plt.subplot(2, 2, i)
                             cf = plt.contourf(xevt, yevt, rationozzleevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85,
-                                               .9, .95, 1], cmap='Blues')
+                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                               .85, .9, .95, 1], cmap='Blues')
                             cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
                                                                                 .5, .55, .6, .65, .7, .75, .8, .85,
                                                                                 .9, .95, 1], colors='k', linewidths=.2)
@@ -603,13 +640,16 @@ def plot(pklin):
 
                         if plotnum == 21 and i == 0:
 
-                            cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                           .85, .9, .95, 1], cmap='YlGnBu')
-                            cs = plt.contour(xevz, yevz, ratioevz_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
-                            manual_locations = [(-.35, 5), (-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                            labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-70)
+                            cf = plt.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                           .8, .85, .9, .95, 1], cmap='YlGnBu')
+                            cs = plt.contour(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                          .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+                            #cs = plt.contour(xevz, yevz, ratioevz_blurr, [.5, .6, .7, .8, .9], colors='k', linewidths=1.2)
+                            #manual_locations = [(-.35, 5), (-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
+                            #labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-70)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('z (m)')
                             plt.ylabel('Energy (MeV)')
@@ -617,14 +657,17 @@ def plot(pklin):
 
                         if plotnum == 22 and i == 0:
 
-                            cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                               .8, .85, .9, .95, 1], cmap='Greens')
-                            cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.5, .6, .7, .8, .9], colors='k',
-                                             linewidths=1.2)
-                            manual_locations = [(-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                            labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=16, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-70)
+                            cf = plt.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
+                            cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                              .75, .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+                            #cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.5, .6, .7, .8, .9], colors='k',
+                            #                 linewidths=1.2)
+                            #manual_locations = [(-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
+                            #labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=16, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-70)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('z (m)')
                             plt.ylabel('Energy (MeV)')
@@ -634,14 +677,16 @@ def plot(pklin):
 
                         if plotnum == 23 and i == 0:
 
-                            cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.74, .78, .82, .86, .90, .94, .98, 1],
-                                              cmap='Reds')
-                            cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.78, .86, .94], colors='k',
-                                             linewidths=1.2)
-                            manual_locations = [(-.35, 6.2), (-.22, 7.3), (-.1, 8.3)]
-                            labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(0)
+                            cf = plt.contourf(xevz, yevz, ratiopipeevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                               .95, 1], cmap='Reds')
+                            cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                              .95, 1], colors='k', linewidths=.2)
+                            #cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.78, .86, .94], colors='k',
+                            #                 linewidths=1.2)
+                            #manual_locations = [(-.35, 6.2), (-.22, 7.3), (-.1, 8.3)]
+                            #labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(0)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('z (m)')
                             plt.ylabel('Energy (MeV)')
@@ -649,14 +694,16 @@ def plot(pklin):
 
                         if plotnum == 24 and i == 0:
 
-                            cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.80, .82, .84, .86, .88, .90, .92, .94,
-                                                                                 .96, .98, 1], cmap='Blues')
-                            cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.88, .92, .96],
-                                             colors='k', linewidths=1.2)
-                            manual_locations = [(-.4, 4.5), (-.35, 5), (-.2, 5)]
-                            labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
-                            for l in labels:
-                                l.set_rotation(-65)
+                            cf = plt.contourf(xevz, yevz, rationozzleevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                                 .95, 1], cmap='Blues')
+                            cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                                .95, 1], colors='k', linewidths=.2)
+                            #cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.88, .92, .96],
+                            #                 colors='k', linewidths=1.2)
+                            #manual_locations = [(-.4, 4.5), (-.35, 5), (-.2, 5)]
+                            #labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14, manual=manual_locations)
+                            #for l in labels:
+                            #    l.set_rotation(-65)
                             cbar = fig.colorbar(cf)
                             plt.xlabel('z (m)')
                             plt.ylabel('Energy (MeV)')
@@ -720,10 +767,21 @@ def plot(pklin):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title27, fontsize=18)
 
+                        if plotnum == 29 and i == 0:
+                            plt.rc('axes', labelsize=16)
+                            plt.rc('xtick', labelsize=16)
+                            plt.rc('ytick', labelsize=16)
+                            fig2, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+                            cf = ax.contourf(ytvp, xtvp, ratiotvp_blurr, cmap='hot')
+                            ax.contour(ytvp, xtvp, ratiotvp_blurr, colors='k', linewidths=.2)
+                            plt.xlabel('Initial Phi Angle (Deg)')
+                            plt.ylabel('Lab Angle (Deg)', rotation=0, size=14, labelpad=-370)
+                            cbar = fig2.colorbar(cf)
+
                         # Here we do something a little different, and instead of contour plots we do ratio plots,
                         # still using the bins that were defined above.
 
-                if plotnum > 28 and plotnum < 33:
+                if plotnum > 29 and plotnum < 34:
                     # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
                     # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
                     # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
@@ -807,28 +865,28 @@ def plot(pklin):
                     pbins2 = pbins2[zeromask]
 
                     # The next 3 hists are the ratio plots broken up by detector on the same plot:
-                    if plotnum == 29:
+                    if plotnum == 30:
                         plt.plot(tbins2, divt, marker='o')
                         plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower right', fontsize=16)
                         plt.xlabel('Lab Angle (Deg)')
                         plt.ylabel('Fraction of Particles Detected')
 
-                    if plotnum == 30:
+                    if plotnum == 31:
                         plt.plot(ebins2, dive, marker='o')
                         plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower left', fontsize=16)
                         plt.xlabel('Energy (MeV)')
                         plt.ylabel('Fraction of Particles Detected')
 
-                    if plotnum == 31:
+                    if plotnum == 32:
                         plt.plot(zbins2, divz, marker='o')
                         plt.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower left', fontsize=16)
                         plt.xlabel('z (m)')
                         plt.ylabel('Fraction of Particles Detected')
 
-                    if plotnum == 32:
+                    if plotnum == 33:
 
                         stdcolors = ['Blue', 'Orange', 'limegreen', 'Red', 'Purple']
                         labels32 = ['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4']
@@ -840,11 +898,11 @@ def plot(pklin):
                         pbins2 = pbins2 * np.pi / 180
                         if i !=2 and i != 3:
                             if i > 0:
-                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=8,
-                                          MarkerEdgeColor='Black', alpha=0.7)
+                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i],
+                                          markersize=8, MarkerEdgeColor='Black', alpha=0.7)
                             if i == 0:
-                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i], markersize=14,
-                                          MarkerEdgeColor='Black', alpha=0.7)
+                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i],
+                                          markersize=14, MarkerEdgeColor='Black', alpha=0.7)
                         if i == 2 or i == 3:
                             pbins2gt0 = pbins2[pbins2 < np.pi]
                             divpgt0 = divp[pbins2 < np.pi]
@@ -857,16 +915,15 @@ def plot(pklin):
                             ax32.plot(pbins2lt0, divplt0, marker='o', color=stdcolors[i], markersize=8,
                                       MarkerEdgeColor='Black', alpha=0.7)
 
-                        #ax32.set_rorigin(.2)
                         ax32.grid(True)
                         plt.legend(fontsize=16, bbox_to_anchor=(1.0, .9))
                         plt.xlabel('Initial Phi Angle (Deg)')
                         plt.ylabel('Fraction of Particles Detected', rotation=0, size=14, labelpad=-370)
 
                 # This next section is for solid targets only:
-                if plotnum > 32:
+                if plotnum > 33:
 
-                    if (plotnum == 33 or plotnum == 34) and i > 0:
+                    if (plotnum == 34 or plotnum == 35) and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
                                     df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
@@ -874,14 +931,14 @@ def plot(pklin):
                         plt.xlabel('z(m)')
                         plt.ylabel('Energy (MeV)')
 
-                        if plotnum == 34:
+                        if plotnum == 35:
                             plt.hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
                                        df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
                                        range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                             plt.xlabel('z(m)')
                             plt.ylabel('Energy (MeV)')
 
-                    if (plotnum == 35) and i > 0:
+                    if (plotnum == 36) and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
                                     df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
@@ -889,13 +946,13 @@ def plot(pklin):
                         plt.xlabel('z(m)')
                         plt.ylabel('Energy (MeV)')
 
-                    if plotnum == 36 and i == 0:
+                    if plotnum == 37 and i == 0:
                         plt.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"]], bins=750, range=[-0.2, exmax])
                         plt.xlabel('Excitation Energy (MeV)')
                         plt.ylabel('Counts')
 
                         # 35 is the same as 11 but also showing blocked particles.
-                    if plotnum == 37 and i > 0:
+                    if plotnum == 38 and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist((df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]],
                                   df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]),
@@ -903,7 +960,7 @@ def plot(pklin):
                         plt.xlabel('Excitation Energy (MeV)')
                         plt.ylabel('Counts')
 
-                    if plotnum == 38 and i > 0:
+                    if plotnum == 39 and i > 0:
                         plt.subplot(2, 2, i)
                         plt.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
                                  range=[-0.2, exmax])

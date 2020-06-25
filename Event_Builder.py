@@ -131,9 +131,10 @@ def BuildEvts():
             density = [0]
             thickness = [0]
             thkin = [0]
-            jetpress = [float(input("Enter the pressure in the jet in Torr: "))]
-            jetrad = [float(input("Enter the radius of the jet in mm: "))]
-            champress = [float(input("Enter the ambient pressure in the magnet in Torr: "))]
+            jetpress = [float(input("Enter the pressure in the jet in Torr (typically ~400 Torr): "))]
+            jetrad = [float(input("Enter the radius of the jet in mm (typically 1.0 to 1.75 mm): "))]
+            champress = [float(input("Enter the ambient pressure in the magnet in Torr (typically less than 1.0 Torr)"
+                                     ": "))]
             chamdist = [float(input("Enter the distance from the end of the magnet to the jet in cm \n"
                                     "(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
             # Convert jetrad into cm
@@ -237,7 +238,7 @@ def BuildEvts():
 
     # Here I'm trying to calculate the min theta that the particles can actually come out at from the math
     if masses[2] > masses[0]:
-        thmin = np.acos(-1 * np.sqrt(-((masses[3] + masses[2]) *
+        thmin = np.arccos(-1 * np.sqrt(-((masses[3] + masses[2]) *
                                        (masses[3] * qval + (masses[3] - masses[1]) * beame2)) /
                                      (masses[1] * masses[2] * beame2)))
         thmindeg = thmin * 180 / np.pi
