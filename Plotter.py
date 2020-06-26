@@ -162,6 +162,9 @@ def plot(pklin):
               "37) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
               "detectors (1D)\n"
               "38) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D)\n")
+
+    print("100) Toggle on z-axis detector positions.")
+    print("101) Toggle off z-axis detector positions.")
     print("0) End\n\n")
 
     while switch == 0:
@@ -178,8 +181,29 @@ def plot(pklin):
 
         if plotnum > 0:
             # initialize the figure here, it might not be necessary.
-            if plotnum != 29:
+            if plotnum != 29 and plotnum < 100:
                 fig = plt.figure()
+
+            if plotnum == 100:
+                for j in range(5):
+                    detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det2"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det1"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det3"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det4"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6'])]
+            if plotnum == 101:
+                for j in range(5):
+                    detarr = [df["AllPossible"],
+                              df["Det2"],
+                              df["Det1"],
+                              df["Det3"],
+                              df["Det4"]]
+
 
             # Set the font sizes here and the font used below. The title font sizes are handled when the hist is made.
             plt.rc('axes', labelsize=18)
@@ -921,7 +945,7 @@ def plot(pklin):
                         plt.ylabel('Fraction of Particles Detected', rotation=0, size=14, labelpad=-370)
 
                 # This next section is for solid targets only:
-                if plotnum > 33:
+                if plotnum > 33 and plotnum < 40:
 
                     if (plotnum == 34 or plotnum == 35) and i > 0:
                         plt.subplot(2, 2, i)

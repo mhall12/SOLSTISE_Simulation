@@ -19,7 +19,7 @@ from random import randrange
 
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt,
-           bfield, beamdiamm, jetrin):
+           bfield, beamdiamm, jetrin, detzi):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -563,6 +563,16 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     df["Det2"] = (phic > np.pi/2) & (phic < np.pi)
     df["Det3"] = (phic > np.pi) & (phic < 3*np.pi/2)
     df["Det4"] = (phic > 3*np.pi/2) & (phic < 2*np.pi)
+
+    # mask for individual detectors here. Need det_zpos_i which gives the start of the detector array.
+    # Dets are 5 mm wide with 1 cm gaps
+    det_zpos_i = detzi
+    df['Detz1'] = (np.abs(zpos) > np.abs(det_zpos_i)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.05))
+    df['Detz2'] = (np.abs(zpos) > (np.abs(det_zpos_i) + 0.06)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.11))
+    df['Detz3'] = (np.abs(zpos) > (np.abs(det_zpos_i) + 0.12)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.17))
+    df['Detz4'] = (np.abs(zpos) > (np.abs(det_zpos_i) + 0.18)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.23))
+    df['Detz5'] = (np.abs(zpos) > (np.abs(det_zpos_i) + 0.24)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.29))
+    df['Detz6'] = (np.abs(zpos) > (np.abs(det_zpos_i) + 0.3)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.35))
 
     if invkin:
         masktheta = df["Theta_Deg"] > 95
