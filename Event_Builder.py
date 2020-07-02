@@ -208,15 +208,17 @@ def BuildEvts():
 
     file = open(outfilename, "w+")
 
-    # Need to create a pickle of targetparms so we can open it again later.
-    if elossopt == 1:
-        pklname = "./" + evtdir + "/" + reac + str(int(beamenergy)) + "_tgt_" + gasorsolid + ".pkl"
-        with open(pklname, 'wb') as f:
-            pickle.dump(targetparms, f)
-
     # dead is for debugging and can be ignored for now.
     thmindeg = 0
     dead = 0
+
+    # Append 3 seed events on to beame2 for Ex calculation later at the beginning of the array
+    avgbeame = np.average(beame2)
+    for i in range(3):
+        beame2 = np.insert(beame2, 0, avgbeame)
+
+    if levnum > 0:
+        numevents = numevents + 3
 
     # The beam energy is now a numpy array, so no longer need the for loop here...
     # But we have to assign some level numbers:
@@ -225,13 +227,23 @@ def BuildEvts():
         # Assigns a random level number to each of the events.
         nplevnums = np.random.randint(levnum, size=numevents)
 
+        # Set the level numbers for the first 3 events used for the excitation energy spectrum:
+        nplevnums[0] = 0
+        nplevnums[1] = 0
+        if levnum > 2:
+            nplevnums[2] = levnum - 2
+        else:
+            nplevnums[2] = levnum - 1
+
         exenergy = np.zeros(len(nplevnums))
         for i in range(levnum):
             indmask = nplevnums == i
             exenergy[indmask] = levels[i]
+
     if levnum == 0:
         # In this case, generate a number between 0 and 1, and multiply it by the energyend (highest desired Ex).
         exenergy = np.random.rand(numevents)
+
         exenergy = exenergy * energyend
 
     qval = (masses[0] + masses[1] - masses[2] - masses[3]) - exenergy
@@ -248,9 +260,18 @@ def BuildEvts():
     # Normal kinematics, random angle between 0 and 90
     if kinemat == 2:
         theta = np.random.rand(numevents) * 90
+
+        # Hardcode angles in for the first 3 events
+        theta[0] = 75
+        theta[1] = 25
+        theta[2] = 45
     # Inverse kinematics, random angle between 90 and 180
     if kinemat == 1:
         theta = np.random.rand(numevents) * (180-thmindeg) + thmindeg
+        # Hardcode angles in for the first 3 events
+        theta[0] = 95
+        theta[1] = 115
+        theta[2] = 115
 
     trad = theta * np.pi / 180
 
@@ -273,11 +294,22 @@ def BuildEvts():
     if elossopt == 0:
         results = np.array([theta, eejec2])
     else:
+        # Need to create a pickle of targetparms so we can open it again later.
+        targetparms.append([exenergy[0]])
+        targetparms.append([exenergy[2]])
+        pklname = "./" + evtdir + "/" + reac + str(int(beamenergy)) + "_tgt_" + gasorsolid + ".pkl"
+        with open(pklname, 'wb') as f:
+            pickle.dump(targetparms, f)
+
         if gas[0]:
             # jetradin_2 comes out in cm
+            for i in range(3):
+                jetradin_2 = np.insert(jetradin_2, 0, jetrad[0])
             results = np.array([theta, eejec2, jetradin_2])
         else:
             # thkin comes out as mg/cm^2
+            for i in range(3):
+                thkin = np.insert(thkin, 0, thickness[0] / 2)
             results = np.array([theta, eejec2, thkin])
 
     # Write the numpy results array into a text file.

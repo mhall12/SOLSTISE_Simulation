@@ -156,7 +156,8 @@ def plot(pklin):
               "33) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")
 
     if fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("34) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
+        print("10) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D)\n"
+              "34) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
               "35) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
               "36) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D) \n"
               "37) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
@@ -303,7 +304,7 @@ def plot(pklin):
 
                 # 10 is the Excitation Energy reconstructed from the "detected" energy and z position
                 if plotnum == 10 and i == 0:
-                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"]], bins=750, range=[-.2, exmax])
+                    plt.hist(df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]], bins=750, range=[-.2, exmax])
                     plt.xlabel('Excitation Energy (MeV)')
                     plt.ylabel('Counts')
 

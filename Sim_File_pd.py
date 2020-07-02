@@ -48,6 +48,13 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         jetrad = targetparms[6][0]
         champress = targetparms[7][0]
         gas = targetparms[8][0]
+        if len(targetparms) == 12:
+            ex1 = targetparms[10][0]
+            ex2 = targetparms[11][0]
+        else:
+            ex1 = 1
+            ex2 = 2
+            print("***You're using an old file, so the Excitation Energy calculation will not work correctly!***")
 
         elossbool = True
     else:
@@ -598,10 +605,24 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # We'll also reconstruct the Q-value spectrum from the "detected" particles.
     # First we have to calculate the CM Energy:
+    if not elossbool:
+        df['EnergyCM'] = df['Energy'] + .5 * me * utoMeV * (vcm / c) ** 2 - me * utoMeV * (vcm / c) / t_final * \
+                         df['zpos_final'] / c
+        df['Ex_Reconstructed'] = tcm + qvalnoex - df['EnergyCM'] * (me + mr) / mr
+    else:
+        # Calculate the Ex spectrum differently for energy loss.
+        # The first 3 events are hard coded in to be "average" events
+        # Rotate the E vs z spectrum:
+        slope = (df['Energy'][1] - df['Energy'][0]) / (zpos[1] - zpos[0])
 
-    df['EnergyCM'] = df['Energy'] + .5 * me * utoMeV * (vcm / c) ** 2 - me * utoMeV * (vcm / c) / df['t_reduced'] * \
-                     df['zpos_final'] / c
-    df['Ex_Reconstructed'] = tcm + qvalnoex - df['EnergyCM'] * (me + mr) / mr
+        icept = df['Energy'][0] - slope * zpos[0]
+
+        exi = df['Energy'] - slope * zpos
+
+        exslope = (ex1 - ex2) / (exi[0] - exi[2])
+        exicept = ex1 - exslope * exi[0]
+
+        df['Ex_Reconstructed'] = exslope * exi + exicept
 
     if rblock < rbore:
         custpipe = False
@@ -627,7 +648,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         "Solid Thickness": thickness,
         "Jet Pressure": jetpress,
         "Chamber Pressure": champress,
-        "Jet Radius": jetrad,
+        "Jet Radius": jetrad * 10,
         "Max Energy": maxe
         }
 
