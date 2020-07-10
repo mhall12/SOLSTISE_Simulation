@@ -384,57 +384,61 @@ def plot(pklin):
 
                         # a note, unblocked is actually "AllPossible" NOT "Unblocked" like the mask...
 
-                        blockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][(df['Blocked_Cone'] |
-                                                                                  df['Blocked_Pipe'] |
-                                                                                  df['Blocked_Nozzle']) &
-                                                                                  detarr[i]],
-                                                                  df['Energy'][(df['Blocked_Cone'] |
-                                                                               df['Blocked_Pipe'] |
-                                                                               df['Blocked_Nozzle']) &
-                                                                               detarr[i]],
-                                                                  bins=(binstheta, binse))
-
-                        blockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
-                                                                                  df['Blocked_Pipe'] |
-                                                                                  df['Blocked_Nozzle']) &
-                                                                                  detarr[i]],
-                                                                  df['Energy'][(df['Blocked_Cone'] |
-                                                                               df['Blocked_Pipe'] |
-                                                                               df['Blocked_Nozzle']) &
-                                                                               detarr[i]],
-                                                                  bins=(binsz, binse))
-
-                        blockedtvphi, pbins, tbins = np.histogram2d(df['Phi_Deg'][(df['Blocked_Cone'] |
-                                                                                  df['Blocked_Pipe'] |
-                                                                                  df['Blocked_Nozzle']) &
-                                                                                  detarr[i]],
-                                                                    df['Theta_Deg'][(df['Blocked_Cone'] |
-                                                                                    df['Blocked_Pipe'] |
-                                                                                    df['Blocked_Nozzle']) &
-                                                                                    detarr[i]],
-                                                                    bins=(binsphi, binstheta))
-
-                        coneblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
-                                                                      df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                        try:
+                            blockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][(df['Blocked_Cone'] |
+                                                                                      df['Blocked_Pipe'] |
+                                                                                      df['Blocked_Nozzle']) &
+                                                                                      detarr[i]],
+                                                                      df['Energy'][(df['Blocked_Cone'] |
+                                                                                   df['Blocked_Pipe'] |
+                                                                                   df['Blocked_Nozzle']) &
+                                                                                   detarr[i]],
                                                                       bins=(binstheta, binse))
-                        pipeblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
-                                                                      df['Energy'][df['Blocked_Pipe'] & detarr[i]],
-                                                                      bins=(binstheta, binse))
-                        nozzleblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Nozzle'] &
+
+                            blockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
+                                                                                      df['Blocked_Pipe'] |
+                                                                                      df['Blocked_Nozzle']) &
+                                                                                      detarr[i]],
+                                                                      df['Energy'][(df['Blocked_Cone'] |
+                                                                                   df['Blocked_Pipe'] |
+                                                                                   df['Blocked_Nozzle']) &
+                                                                                   detarr[i]],
+                                                                      bins=(binsz, binse))
+
+                            blockedtvphi, pbins, tbins = np.histogram2d(df['Phi_Deg'][(df['Blocked_Cone'] |
+                                                                                      df['Blocked_Pipe'] |
+                                                                                      df['Blocked_Nozzle']) &
+                                                                                      detarr[i]],
+                                                                        df['Theta_Deg'][(df['Blocked_Cone'] |
+                                                                                        df['Blocked_Pipe'] |
+                                                                                        df['Blocked_Nozzle']) &
                                                                                         detarr[i]],
-                                                                        df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
-                                                                        bins=(binstheta, binse))
+                                                                        bins=(binsphi, binstheta))
 
-                        coneblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
-                                                                      df['Energy'][df['Blocked_Cone'] & detarr[i]],
-                                                                      bins=(binsz, binse))
-                        pipeblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
-                                                                      df['Energy'][df['Blocked_Pipe'] & detarr[i]],
-                                                                      bins=(binsz, binse))
-                        nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] &
-                                                                                         detarr[i]],
-                                                                        df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
-                                                                        bins=(binsz, binse))
+
+                            coneblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
+                                                                          df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                                                                          bins=(binstheta, binse))
+                            pipeblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
+                                                                          df['Energy'][df['Blocked_Pipe'] & detarr[i]],
+                                                                          bins=(binstheta, binse))
+                            nozzleblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Nozzle'] &
+                                                                                            detarr[i]],
+                                                                            df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
+                                                                            bins=(binstheta, binse))
+
+                            coneblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
+                                                                          df['Energy'][df['Blocked_Cone'] & detarr[i]],
+                                                                          bins=(binsz, binse))
+                            pipeblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
+                                                                          df['Energy'][df['Blocked_Pipe'] & detarr[i]],
+                                                                          bins=(binsz, binse))
+                            nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] &
+                                                                                             detarr[i]],
+                                                                            df['Energy'][df['Blocked_Nozzle'] & detarr[i]],
+                                                                            bins=(binsz, binse))
+                        except KeyError:
+                            print("KeyError suppressed.")
 
                         # Here we get the ratios that we want to use to make the contour plots. Instead of unblocked minus
                         # blocked over unblocked we could have used the unblocked mask and just done "detected/unblocked"

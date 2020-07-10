@@ -217,8 +217,7 @@ def BuildEvts():
     for i in range(3):
         beame2 = np.insert(beame2, 0, avgbeame)
 
-    if levnum > 0:
-        numevents = numevents + 3
+    numevents = numevents + 3
 
     # The beam energy is now a numpy array, so no longer need the for loop here...
     # But we have to assign some level numbers:
