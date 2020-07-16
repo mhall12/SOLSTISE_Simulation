@@ -695,7 +695,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     if plotyn == "N" or plotyn == "n":
         print("\nNow exiting. You can plot the simulated data any time by running Plotter.py.")
     else:
-        plot(outdir + writefile + ".pkl")
+        plot(outdir + writefile + ".pkl", "")
 
  #   input("\nPress ENTER to end.")
 
