@@ -211,11 +211,12 @@ def plot(pklin, pkloverlay):
                 detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
 
             # initialize the figure here, it might not be necessary.
-            if (plotnum == 4 or plotnum == 10 or 13 <= plotnum <= 16 or 21 <= plotnum <= 24 or
+            if (plotnum == 4 or plotnum == 7 or plotnum == 10 or 13 <= plotnum <= 16 or 21 <= plotnum <= 24 or
                 30 <= plotnum <= 32 or plotnum == 37) and not overlaybool:
 
                 fig, axs = plt.subplots()
-            if (1 <= plotnum <= 3 or 5 <= plotnum <= 9 or plotnum == 11 or plotnum == 12 or 17 <= plotnum <= 20 or
+            if (1 <= plotnum <= 3 or 5 <= plotnum <= 6 or 8<= plotnum <= 9 or plotnum == 11 or plotnum == 12 or
+                17 <= plotnum <= 20 or
                 25 <= plotnum <= 28 or 34 <= plotnum <= 36 or 38 <= plotnum <= 39) and not overlaybool:
 
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
@@ -320,8 +321,8 @@ def plot(pklin, pkloverlay):
                    # axi[i].set_ylabel('Counts')
 
                 if plotnum == 7 and i == 0:
-                    axs.hist2d(df['Theta_Deg'][df["Unblocked"]],
-                               df['Energy'][df["Unblocked"]], bins=(750, 750),
+                    axs.hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
+                               df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
                                range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
                     axs.set_xlabel('Lab Angle (Deg)')
                     axs.set_ylabel('Energy (MeV)')
