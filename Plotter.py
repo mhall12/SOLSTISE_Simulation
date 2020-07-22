@@ -280,8 +280,8 @@ def plot(pklin, pkloverlay):
                 #    axs.ylabel('Counts')
 
                 if plotnum == 4 and i == 0:
-                    axs.hist2d(df['zpos_final'][df["Unblocked"]],
-                               df['Energy'][df["Unblocked"]], bins=(550, 550),
+                    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+                               df['Energy'][df["Unblocked"] & detarr[i]], bins=(550, 550),
                                range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
                     axs.set_xlabel('z (m)')
                     axs.set_ylabel('Energy (MeV)')
