@@ -1063,7 +1063,7 @@ def plot(pklin, pkloverlay):
                         axi[i].set_ylabel('Energy (MeV)')
 
                     if plotnum == 37 and i == 0:
-                        axs.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"]], bins=750, range=[-0.2, exmax])
+                        axs.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750, range=[-0.2, exmax])
                         axs.set_xlabel('Excitation Energy (MeV)')
                         axs.set_ylabel('Counts')
 

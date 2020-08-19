@@ -95,7 +95,14 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     index = np.arange(len(energy))
 
     # eloss runs the energy loss code and outputs a dataframe with the final energies and projectile params
-    df_fin = eloss(z_projectile, a_projectile, energy, index)
+    df_fin, dedxtot = eloss(z_projectile, a_projectile, energy, index)
+
+    dedxcalc = np.zeros_like(energy)
+
+    for num in range(len(dedxtot)):
+        dedxcalc = (a_absorber[num] * numa_absorber[num]) / a_tot * dedxtot[num] + dedxcalc
+
+    df_fin["dedxcalc"] = dedxcalc
 
     dEtotsum = ei - (energy - df_fin['DeltaE_tot'])
 
@@ -184,6 +191,9 @@ def eloss(z_projectile, a_projectile, energy, index):
     # we need to run the loop through the maximum number of integrations so we need to keep track of the minimum k.
     num_integrations = np.amax(num_int)
     k_min = np.amin(k)
+    dedxtot = np.empty(0)
+
+    #print(dedxtot)
 
     # the while loop runs as long as the minimum k has not hit the max number of integrations.
     while k_min < num_integrations:
@@ -193,6 +203,7 @@ def eloss(z_projectile, a_projectile, energy, index):
         k_min = np.amin(k)
         j_end = len(ab.z)
         j = 0
+        dedxnum = 1
 
         # Debugging string
         # printstring = "k is currently: " + str(k_min) + " and k_max is currently: " + str(num_integrations)
@@ -212,6 +223,12 @@ def eloss(z_projectile, a_projectile, energy, index):
 
             # dedx calculates the dE energy loss and returns it.
             delta_e = dedx(z_proj, a_proj, e_curr, vel, j)
+
+            if j == 0 and dedxnum < len(ab.z):
+                dedxtot = delta_e
+
+            if j > 0 and dedxnum < len(ab.z):
+                dedxtot = np.vstack((dedxtot, delta_e))
 
             # sign is always -1, so just hard code it in from the original desorb code.
             e_curr = e_curr + delta_e * -1 * fx
@@ -258,7 +275,7 @@ def eloss(z_projectile, a_projectile, energy, index):
 
             j = j + 1
 
-
+        dedxnum = dedxnum + 1
 
         # need a mask for k = 1, then change ded1st and dednext if it is 1.
         k1mask = k == 1
@@ -365,7 +382,7 @@ def eloss(z_projectile, a_projectile, energy, index):
 
     ab.thick_frac = thkfracin
 
-    return projectiledf
+    return projectiledf, dedxtot
 
 
 def dedx(z_proj, a_proj, en, vel, j):
@@ -543,6 +560,8 @@ if __name__ == "__main__":
               "2) Define the absorber layers. \n"
               "3) Run the energy loss code. \n"
               "4) Find the layer thickness for a final projectile energy. \n"
+              "5) Edit a layer isotope. \n"
+              "6) Estimate the dE/dx of each layer. \n"
               "0) Exit."
               "\n***********************************************************")
 
@@ -982,6 +1001,55 @@ if __name__ == "__main__":
 
                 input("Press ENTER to continue.")
 
+        if option == 5:
+            if len(individuallayers) == 0:
+                print("Please define the stopping layers using Option 2 first.")
+            else:
+                # Here, we'll allow the user to change the isotope of an element in the compound.
+                if len(ele_absorber) > 1:
+                    lnum = 100
+                    while lnum > len(ele_absorber):
+                        lnum = int(input("Enter the layer number you would like to edit: ")) - 1
+                        if lnum + 1 > len(ele_absorber):
+                            print("ERROR: The number entered is larger than the number of layers.")
+                else:
+                    lnum = 0
 
+                for i in range(len(ele_absorber[lnum])):
+                    loopnum = i + 1
+                    print(str(loopnum) + ") " + str(ele_absorber[lnum][i]))
 
+                elnum = -1
+                while elnum + 1 > loopnum or elnum + 1 <= 0:
+                    elnum = int(input("Choose an element from the list to change its mass number: ")) - 1
+                    if elnum + 1 > loopnum or elnum+1 <= 0:
+                        print("ERROR: The number entered is invalid.")
 
+                print("The current mass number of this isotope is A=" + str(a_absorber[lnum][elnum]) + ".")
+
+                a_absorber[lnum][elnum] = int(input("Enter the new mass number: "))
+
+        if option == 6:
+            if len(individual_proj) == 0:
+                print("Please define the stopping particles using Option 1 first.")
+            if len(individuallayers) == 0:
+                print("Please define the stopping layers using Option 2 first.")
+            if len(individual_proj) > 0 and len(individuallayers) > 0:
+                proj_energycurr = proj_ei
+
+            dedxlayer = []
+            for i in range(len(z_absorber)):
+                thickness = 0.0001
+                pressure = 0.01
+                warnings.filterwarnings("ignore")
+                df_f = desorb(proj_z, proj_a, proj_energycurr, z_absorber[i], a_absorber[i], numa_absorber[i], isgas[i],
+                          den[i], thickness, pressure, leng[i], proj_ei)
+                dedxlayer.append(df_f['dedxcalc'])
+
+            df_out_indlayer = pd.DataFrame()
+            df_out_indlayer['Isotope'] = proj_symblistnp
+            df_out_indlayer['Initial Energy (MeV)'] = proj_ei
+            for i in range(len(individuallayers)):
+                stringgy = str(i + 1) + ": " + individuallayers[i] + " dE/dx (MeV/mg/cm^2)"
+                df_out_indlayer[stringgy] = dedxlayer[i]
+            print(df_out_indlayer)
