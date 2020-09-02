@@ -224,10 +224,12 @@ def eloss(z_projectile, a_projectile, energy, index):
             # dedx calculates the dE energy loss and returns it.
             delta_e = dedx(z_proj, a_proj, e_curr, vel, j)
 
-            if j == 0 and dedxnum < len(ab.z):
+            print(ab.thick_frac[j])
+
+            if j == 0 and dedxnum < len(ab.z) and ab.thick_frac[j] <= .0001:
                 dedxtot = delta_e
 
-            if j > 0 and dedxnum < len(ab.z):
+            if j > 0 and dedxnum < len(ab.z) and ab.thick_frac[j] <= .0001:
                 dedxtot = np.vstack((dedxtot, delta_e))
 
             # sign is always -1, so just hard code it in from the original desorb code.
@@ -1040,7 +1042,7 @@ if __name__ == "__main__":
             dedxlayer = []
             for i in range(len(z_absorber)):
                 thickness = 0.0001
-                pressure = 0.01
+                pressure = 0.001
                 warnings.filterwarnings("ignore")
                 df_f = desorb(proj_z, proj_a, proj_energycurr, z_absorber[i], a_absorber[i], numa_absorber[i], isgas[i],
                           den[i], thickness, pressure, leng[i], proj_ei)
