@@ -224,12 +224,18 @@ def eloss(z_projectile, a_projectile, energy, index):
             # dedx calculates the dE energy loss and returns it.
             delta_e = dedx(z_proj, a_proj, e_curr, vel, j)
 
-            print(ab.thick_frac[j])
+            if isinstance(ab.thick_frac[j], (list, tuple, np.ndarray)):
+                thkcheck = 1
+            else:
+                if ab.thick_frac[j] <= 0.0001:
+                    thkcheck = 0
+                else:
+                    thkcheck = 1
 
-            if j == 0 and dedxnum < len(ab.z) and ab.thick_frac[j] <= .0001:
+            if j == 0 and dedxnum < len(ab.z) and thkcheck == 0:
                 dedxtot = delta_e
 
-            if j > 0 and dedxnum < len(ab.z) and ab.thick_frac[j] <= .0001:
+            if j > 0 and dedxnum < len(ab.z) and thkcheck == 0:
                 dedxtot = np.vstack((dedxtot, delta_e))
 
             # sign is always -1, so just hard code it in from the original desorb code.

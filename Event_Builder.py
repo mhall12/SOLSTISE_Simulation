@@ -178,8 +178,8 @@ def BuildEvts():
             dfout = desorb(zbeam, abeam, beame, zt, at, num, gas[0], density[0], thkin, prs, leng, beamei)
             beame = dfout['Energy_i'].to_numpy() - dfout['DeltaE_tot'].to_numpy()
             # We have two layers, so get the total sum of the energy and angular straggling:
-            beamstrag = dfout['E_strag_FWHM'][0]
-            angstrag = dfout['AngleStrag'][0] + angstrag
+            beamstrag = dfout['E_strag_FWHM'].to_numpy() + beamstrag
+            angstrag = dfout['AngleStrag'].to_numpy() + angstrag
 
             # print(beame)
             # print(np.average(beame))
@@ -271,6 +271,10 @@ def BuildEvts():
         theta[0] = 95
         theta[1] = 115
         theta[2] = 115
+
+    # Also need to hard code in the angle straggling, which is used in a normal dist later
+    for i in range(3):
+        angstrag = np.insert(angstrag, 0, 0, axis=0)
 
     trad = theta * np.pi / 180
 
