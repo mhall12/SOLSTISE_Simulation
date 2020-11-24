@@ -69,6 +69,7 @@ def BuildEvts():
     numevents = int(input("\nInput the number of events you would like to generate: "))
 
     beamenp = np.zeros(numevents) + beamenergy
+    angstrag = np.array([0])
 
     # We now have an energy loss code, so we need to see if the user wants artificial
     # smearing if the allE option isn't used.
