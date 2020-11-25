@@ -1,3 +1,5 @@
+import math
+
 def makenozz():
 
     # Code for defining nozzle parameters. The information from the text file is then
@@ -31,12 +33,15 @@ def makenozz():
         nozzconelen = nozzconelen / 1000
 
     # Cylinder dia for the rest of the nozzle. Also in meters.
-    nozzcyldia = float(input("Enter the diameter of the nozzle cylinder (above the cone) in mm (Enter 0 for inches): "))
-    if nozzcyldia == 0:
-        nozzcyldia = float(input("Enter the diameter in inches: "))
-        nozzcyldia = nozzcyldia * 2.54 / 100
-    elif nozzcyldia > 0:
-        nozzcyldia = nozzcyldia / 1000
+    # nozzcyldia = float(input("Enter the diameter of the nozzle cylinder (above the cone) in mm (Enter 0 for inches): "))
+    # if nozzcyldia == 0:
+    #     nozzcyldia = float(input("Enter the diameter in inches: "))
+    #     nozzcyldia = nozzcyldia * 2.54 / 100
+    # elif nozzcyldia > 0:
+    #    nozzcyldia = nozzcyldia / 1000
+
+    nozzcyldia = 2 * nozzconelen * math.tan(nozzang * math.pi/180) + nozzdia * 2.54 / 100
+    print("The nozzle cylinder diameter was calculated to be: ", nozzcyldia * 1000, " mm.")
 
     # Nozzle cylinder height is in m
     nozzcylh = float(input("Enter the distance from the bottom of the nozzle cylinder to the bottom of the nozzle "
@@ -49,7 +54,7 @@ def makenozz():
 
     print("Now, we'll define the nozzle holder. The holder is made of a cylinder and a box portion.")
 
-    # Radius of the nozzle holder is also in m
+    # Diameter of the nozzle holder is also in m
     nozzholderdia = float(input("Enter the diameter of the nozzle holder cylinder in mm (default is 19.05 mm) "
                                 "or enter 0 for inches: "))
     if nozzholderdia > 0:
@@ -83,7 +88,7 @@ def makenozz():
     elif nozzboxh > 0:
         nozzboxh = nozzboxh / 1000
 
-    nozzboxl = float(input("Enter the (side-to-side) length of the box in mm (default is 43.142 mm) or "
+    nozzboxl = float(input("Enter the (side-to-side) width of the box in mm (default is 43.142 mm) or "
                            "enter 0 for inches: "))
     if nozzboxl == 0:
         nozzboxl = float(input("Enter the length in inches (default is 1.7 in): "))
@@ -91,7 +96,7 @@ def makenozz():
     elif nozzboxl > 0:
         nozzboxl = nozzboxl / 1000
 
-    nozzboxw = float(input("Enter the (back-to-front) width of the box in mm (default is 14.199 mm) or "
+    nozzboxw = float(input("Enter the (back-to-front) length of the box in mm (default is 14.199 mm) or "
                            "enter 0 for inches: "))
     if nozzboxw == 0:
         nozzboxw = float(input("Enter the distance in inches (default is 0.559 in): "))
