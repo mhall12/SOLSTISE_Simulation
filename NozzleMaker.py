@@ -1,9 +1,22 @@
 import math
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
 
 def makenozz():
 
     # Code for defining nozzle parameters. The information from the text file is then
     # used in the main simulation code to define the nozzle for shadowing..
+
+    hp = input("To open a figure that will help explain some of the required dimensions, enter H. Otherwise, press "
+               "ENTER to continue.")
+
+    if hp == "H" or hp == "h":
+        plt.ion()
+        img = mpimg.imread("./Jupyter_Pics/NozzleFig.png")
+        imgplot = plt.imshow(img)
+        plt.show()
+        plt.ioff()
 
     # Distance below the nozzle that the reaction occurs (output in mm):
     reacdist = float(input("Enter the distance that the reactions occur below the nozzle in mm (Enter 0 for inches): "))
@@ -21,7 +34,7 @@ def makenozz():
     # Angle the outside of the nozzle makes from vertical.
     print("The outside of the nozzle is defined from the exhaust and up, "
           "using a cone shape and then a cylindrical shape.")
-    nozzang = float(input("Enter the angle in degrees that the outside of the nozzle makes with the vertical axis: "))
+    nozzang = float(input("Enter the angle in degrees that the nozzle cone makes with the vertical axis: "))
 
     # Output this one in m so we don't need to convert again.
     nozzconelen = float(input("Enter the distance from the cone exhaust to the "
@@ -31,6 +44,10 @@ def makenozz():
         nozzconelen = nozzconelen * 2.54 / 100
     elif nozzconelen > 0:
         nozzconelen = nozzconelen / 1000
+
+    print(nozzconelen)
+
+    print(nozzconelen * math.tan(nozzang * math.pi/180))
 
     # Cylinder dia for the rest of the nozzle. Also in meters.
     # nozzcyldia = float(input("Enter the diameter of the nozzle cylinder (above the cone) in mm (Enter 0 for inches): "))
