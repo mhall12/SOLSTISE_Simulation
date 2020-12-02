@@ -257,7 +257,7 @@ def makenozz():
     for i in params:
         file.write(str(i) + "\n")
 
-    print("A custon nozzle file was created with the name " + fname + "!")
+    print("A custom nozzle file was created with the name " + fname + "!")
 
     return fname
 
