@@ -51,8 +51,18 @@ The code finishes by saving a .pkl file of the final data frame, which can be ru
 Questions? Email: mhall12@alumni.nd.edu
 
 ## Example output plots:
-### Contour plot in all four detector quadrants with gas jet target simulation overlay:
-![image](https://user-images.githubusercontent.com/13751793/101208487-e0f22980-3637-11eb-9b66-1aeb7a275d35.png)
 
-### Polar plot showing fraction of particles detected vs initial phi angle:
+### E vs z contour plot in all four detector quadrants with gas jet target simulation overlay:
+![image](https://user-images.githubusercontent.com/13751793/101208487-e0f22980-3637-11eb-9b66-1aeb7a275d35.png)
+***
+### E vs angle contour with overlay showing individual detector coverage:
+![image](https://user-images.githubusercontent.com/13751793/101209935-46dfb080-363a-11eb-90a8-d45233f320d8.png)
+***
+### Polar plots showing fraction of particles detected vs initial phi angle:
 ![image](https://user-images.githubusercontent.com/13751793/101208830-5c53db00-3638-11eb-9782-bc7772248802.png)
+![image](https://user-images.githubusercontent.com/13751793/101209060-bd7bae80-3638-11eb-9b44-0184a06b62e3.png)
+***
+### Fraction of particles detected vs initial lab angle:
+![image](https://user-images.githubusercontent.com/13751793/101209193-fe73c300-3638-11eb-8d19-03f6229cf08d.png)
+
+
