@@ -50,6 +50,9 @@ The code finishes by saving a .pkl file of the final data frame, which can be ru
 
 Questions? Email: mhall12@alumni.nd.edu
 
-##Example output plots:
-#Contour plot in all four detector quadrants with gas jet target simulation overlay:
+## Example output plots:
+### Contour plot in all four detector quadrants with gas jet target simulation overlay:
 ![image](https://user-images.githubusercontent.com/13751793/101208487-e0f22980-3637-11eb-9b66-1aeb7a275d35.png)
+
+### Polar plot showing fraction of particles detected vs initial phi angle:
+![image](https://user-images.githubusercontent.com/13751793/101208830-5c53db00-3638-11eb-9782-bc7772248802.png)
