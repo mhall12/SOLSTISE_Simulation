@@ -22,45 +22,21 @@ If your version numbers are below the ones I used to write the code, you can upd
 
 If you don't want to install Anaconda for whatever reason (not to worry, these snakes don't jump), *probably* the only packages you'd need to install are: matplotlib, sympy, and numpy, and pandas. Everything else should come in the python standard library. You may also need X11 installed and running for the matplotlib plots. 
 
-Required Files:
-
-SOLSTISE_Sim.py
-
-CircleAreaCalc.py
-
-Sim_File_pd.py
-
-EventBuilder.py
-
-Plotter.py
-
-PipeMaker.py
-
-ConeMaker.py
-
-NozzleMaker.py
-
-stopyt.py
-
-massreader.py
-
-masses.txt
-
-isotopetable.txt
-
 Code Summary:
 
-The code can be run by typing:
+For a longer summary and more explanation, check out the Jupyter notebook. It has much of the functionality of the full code and gives some useful explanation for first time users.
+
+The code can be run in a terminal via:
 
 >>python3 SOLSTISE_Sim.py
 
-Additionally, individual codes (EventBuilder, Plotter.py, stopyt.py) can be run in "standalone" mode if necessary in the same fashion. stopyt.py has its own front-end that can calculate energy loss like the old stopit fortran code. 
+Additionally, individual codes (EventBuilder, Plotter.py, stopyt.py, etc) can be run in "standalone" mode if necessary in the same fashion. stopyt.py has its own front-end that can calculate energy loss like the old stopit fortran code. 
 
 ***
 
-The code currently (6/18/20) on first run when downloaded from Github will make 3 new directories, it will then copy a couple of hidden text files to the Geometry_Files folder if they aren't there already. Then, since no event files have been made, it will immediately run EventBuilder. EventBuilder has 3 different modes of operation. The user can specify whether or not they want to produce results with artificial energy loss/smearing (artsm.txt), calculated energy loss (using stopyt) (eloss.txt), or an "all energies" option (allE.txt), which can be used if the user does not want to specify specific populated energy levels. Using the "all energies" option allows for the creation of blocked particle contour plots in Plotter.py. The EventBuilder code will produce a .txt file with the particle information and a .pkl file that has the target information in the Event_Files folder (if using the stopyt energy loss option). Be aware that if you try to make a file with the same reaction and energy as one that has been previously made, it will be overwritten (if it has the same extension).
+On first run, the code will make 3 new directories, it will then copy a couple of hidden text files to the Geometry_Files folder if they aren't there already. Then, since no event files have been made, it will immediately run EventBuilder. EventBuilder has 3 different modes of operation. The user can specify whether or not they want to produce results with artificial energy loss/smearing (artsm.txt), calculated energy loss (using stopyt) (eloss.txt), or an "all energies" option (allE.txt), which can be used if the user does not want to specify specific populated energy levels. Using the "all energies" option allows for the creation of blocked particle contour plots in Plotter.py. The EventBuilder code will produce a .txt file with the particle information and a .pkl file that has the target information in the Event_Files folder (if using the stopyt energy loss option). Be aware that if you try to make a file with the same reaction and energy as one that has been previously made, it will be overwritten (if it has the same extension).
 
-It then reads in the text file (.txt or .dat) that is output from EventBuilder.py (two columns, lab angle and energy when no energy loss is used. Three columns with energy loss, lab angle, energy, thickness/z-position). 
+It then reads in the text file that is output from EventBuilder.py (two columns, lab angle and energy when no energy loss is used. Three columns with energy loss, lab angle, energy, thickness/z-position). 
 
 ***
 
@@ -73,3 +49,20 @@ The "detectors" are currently split into four quadrants when looking downstream 
 The code finishes by saving a .pkl file of the final data frame, which can be run in Plotter.py at any time. This file is not overwritten if you run the code again (if you don't want it to be). Plotter can then be used to draw various histograms (unblocked particles, shadowed particles, etc). Additionally, contour plots of the shadowed particles can be drawn if the "all energies" option was used in EventBuilder. Special histograms can be drawn if a solid target is used. 
 
 Questions? Email: mhall12@alumni.nd.edu
+
+## Example output plots:
+
+### E vs z contour plot in all four detector quadrants with gas jet target simulation overlay:
+![image](https://user-images.githubusercontent.com/13751793/101208487-e0f22980-3637-11eb-9b66-1aeb7a275d35.png)
+***
+### E vs angle contour with overlay showing individual detector coverage:
+![image](https://user-images.githubusercontent.com/13751793/101209935-46dfb080-363a-11eb-90a8-d45233f320d8.png)
+***
+### Polar plots showing fraction of particles detected vs initial phi angle:
+![image](https://user-images.githubusercontent.com/13751793/101208830-5c53db00-3638-11eb-9782-bc7772248802.png)
+![image](https://user-images.githubusercontent.com/13751793/101209060-bd7bae80-3638-11eb-9b44-0184a06b62e3.png)
+***
+### Fraction of particles detected vs initial lab angle:
+![image](https://user-images.githubusercontent.com/13751793/101209193-fe73c300-3638-11eb-8d19-03f6229cf08d.png)
+
+
