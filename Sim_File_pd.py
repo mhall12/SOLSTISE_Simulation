@@ -84,7 +84,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # Get the various parameters from readmass. In this case, we don't actually want z/atarg to be defined here
     # because they'll be wrong if it's a solid target
-    masses, ztarg_buff, atarg_buff, zeject, aeject, zbeam, abeam = readmass(reac)
+    masses, ztarg_buff, atarg_buff, zeject, aeject, zbeam, abeam, buff = readmass(reac)
 
 
     # reaction of form t(b,e)R

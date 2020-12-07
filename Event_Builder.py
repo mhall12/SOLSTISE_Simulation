@@ -30,7 +30,11 @@ def BuildEvts():
             print("ERROR: Please choose 1 for upstream or 2 for downstream...")
 
     # Go into readmass to get the masses of the four particles from the entered reaction.
-    masses, ztarget, atarget, zejectile, aejectile, zbeam, abeam = readmass(reac)
+    masses, ztarget, atarget, zejectile, aejectile, zbeam, abeam, reac2 = readmass(reac)
+
+    if reac2 != reac:
+        print("\nThe reaction was updated from ", reac, " to ", reac2)
+        reac = reac2
 
     utoMeV = 931.4941
 
