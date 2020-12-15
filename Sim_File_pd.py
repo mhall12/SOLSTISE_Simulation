@@ -143,8 +143,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     omega = (q * B) / (me * amutokg)
     tcyc = (2 * np.pi) / omega
 
-    print(tcyc)
-
     # Velocity of the ejectile in the lab frame (m/s) added to dataframe
     df['vel_ejec'] = np.sqrt((2 * df['Energy'] * mevtoj) / (me * amutokg))
     # Velocities parallel to the z-axis and perpendicular to the z-axis.
@@ -487,6 +485,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     maxe = df['Energy'].max()
 
     if elossbool:
+        print("\nNow calculating the energy loss of the reaction products...")
         # Need to set up the projectile data here that goes into desorb:
         zp = np.zeros_like(phic) + zeject
         ap = np.zeros_like(phic) + aeject

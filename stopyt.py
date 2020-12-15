@@ -197,6 +197,11 @@ def eloss(z_projectile, a_projectile, energy, index):
 
     # the while loop runs as long as the minimum k has not hit the max number of integrations.
     while k_min < num_integrations:
+        kperc = str(int(k_min / num_integrations * 100))
+
+        if (k_min > 5):
+            print("The energy loss calculation is " + kperc + "% complete.", end='\r', flush=True)
+
         # increase k for each particle
         k = k + 1
         # get the new kmin
