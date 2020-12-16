@@ -573,7 +573,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     df["Det4"] = (phic > 3*np.pi/2) & (phic < 2*np.pi)
 
     # mask for individual detectors here. Need det_zpos_i which gives the start of the detector array.
-    # Dets are 5 mm wide with 1 cm gaps
+    # Dets are 5 cm length with 1 cm gaps
     det_zpos_i = detzi
     df['Detz1'] = (np.abs(zpos) > np.abs(det_zpos_i)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.05))
     df['Detz2'] = (np.abs(zpos) > (np.abs(det_zpos_i) + 0.06)) & (np.abs(zpos) < (np.abs(det_zpos_i) + 0.11))
