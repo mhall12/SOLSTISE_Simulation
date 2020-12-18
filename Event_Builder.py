@@ -187,7 +187,7 @@ def BuildEvts():
             angstrag = dfout['AngleStrag'].to_numpy() + angstrag
 
             # print(beame)
-            # print(np.average(beame))
+            #print(np.average(beame))
 
     else:
         if levnum > 0:

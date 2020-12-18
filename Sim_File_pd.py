@@ -139,6 +139,83 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     # Convert the angle to radians and add it to the dataframe
     df['Theta_Rad'] = df['Theta_Deg'] * np.pi/180
 
+    # makes a phi array the same size as the theta array, random number 0 to 1
+    phi = np.random.rand(len(df))
+    # then multiply the phi array by 2pi to get a real phi value and put it into the dataframe
+    df['Phi'] = phi * 2 * np.pi
+    # Phi for debugging
+    # df['Phi'] = np.zeros_like(df['Energy']) + np.pi
+
+    # this initializes phic, which tracks the current position of the phi particle.
+    phic = df['Phi']
+
+    # Grab the max energy before the eloss section because sometimes we get one really large value that messes up the
+    # histogram ranges in plotter...
+    maxe = df['Energy'].max()
+
+    # ELOSS HERE
+    if elossbool:
+        print("\nNow calculating the energy loss of the reaction products...")
+        # Need to set up the projectile data here that goes into desorb:
+        zp = np.zeros_like(phic) + zeject
+        ap = np.zeros_like(phic) + aeject
+        proj_e = df['Energy'].to_numpy()
+
+        emaxinit = df['Energy'].max()
+
+        # Make an empty data frame to store the output:
+        df_elossout = pd.DataFrame()
+        proj_ein = proj_e
+
+        if gas:
+            # Set the jet radius here, gets set from targetparms. Redefinition could be removed:
+            jetr = jetrad / 100
+            # zoff is now the z offset in m.
+            zoff = df['z_Offset'].to_numpy() / 100.0 - jetr
+
+            jetroff = zoff
+            jetroff = np.where(zoff < -jetr, -jetr, jetroff)
+            jetroff = np.where(zoff > jetr, jetr, jetroff)
+
+            # The distance that the particle must traverse to get out of the jet is set here.
+            jetlength = np.abs(
+                jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy()) ** 2 * np.cos(df['Phi'].to_numpy()) ** 2 +
+                               np.cos(df['Theta_Rad'].to_numpy()) ** 2) + jetroff /
+                np.sqrt(np.sin(df['Theta_Rad'].to_numpy()) ** 2 * np.cos(df['Phi'].to_numpy()) ** 2 +
+                        np.cos(df['Theta_Rad'].to_numpy()) ** 2))
+
+            # convert jetlength to cm:
+            jetlength = jetlength * 100.0
+
+            df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, 0, 0, jetpress, jetlength,
+                                    proj_e)
+
+            proj_ein = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
+
+        if not gas:
+            zoff = np.zeros_like(df['Energy'].to_numpy())
+
+            print("\nYou're using a solid target, so the energy loss calculation is going to take a minute or two...")
+
+            if invkin:
+                # If in inverse kinematics, we want the target thickness to be the thickness traversed by the beam,
+                # which is what we get from event builder.
+                indthickness = df['Tgt_Thick'].to_numpy() / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
+            else:
+                # If in normal kinematics, we want to subtract the thickness seen by the beam from the target thickness
+                # So, if the beam sees 0.95 mg/cm^2 of a 1 mg/cm^2 target, the light ejectile will see 0.05 mg/cm^2
+                indthickness = (thickness - df['Tgt_Thick'].to_numpy()) / np.sin(df['Theta_Rad'].to_numpy())
+
+            # We don't need a for loop here because there's only one layer for the protons to lose energy
+            df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, density, indthickness, 0, 0, proj_e)
+            proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
+
+        estragtot = df_elossout['E_strag_FWHM'].to_numpy()
+
+        df['Energy'] = np.random.normal(proj_e, estragtot)
+    else:
+        zoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), ((jetrin * 2) / 1000) / 2.355)
+
     # Cyclotron frequency and period.
     omega = (q * B) / (me * amutokg)
     tcyc = (2 * np.pi) / omega
@@ -170,6 +247,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     df = df[maskarg]
 
+    zoff = zoff[maskarg]
+    phic = phic[maskarg]
+    if elossbool:
+        if gas:
+            jetlength = jetlength[maskarg]
+
     df = df.reset_index(drop=True)
     #print(df)
 
@@ -177,13 +260,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     # Reduced cyclotron frequency because of the finite size of the detector array.
     df['t_reduced'] = tcyc - r0/(df['v0']*np.sin(df['Theta_CM']))
-
-    # makes a phi array the same size as the theta array, random number 0 to 1
-    phi = np.random.rand(len(df))
-    # then multiply the phi array by 2pi to get a real phi value and put it into the dataframe
-    df['Phi'] = phi * 2 * np.pi
-    # Phi for debugging
-    # df['Phi'] = np.zeros_like(df['Energy']) + np.pi
 
     # creates a mask the same shape as the energy array
 
@@ -195,8 +271,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     maskrbore = df['Energy'] > 0
     # maskcone initialized like maskrbore
     masknozzle = df['Energy'] > 0
-    # this initializes phic, which tracks the current position of the phi particle.
-    phic = df['Phi']
 
     # ***************************************************************************************
     # ***************************************************************************************
@@ -296,23 +370,6 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     ylast = np.zeros_like(phic)
     zlast = np.zeros_like(phic)
 
-    if elossbool:
-        if gas:
-            # Set the jet radius here, gets set from targetparms. Redefinition could be removed:
-            jetr = jetrad / 100
-
-            # zoff is now the z offset in m.
-            zoff = df['z_Offset'].to_numpy() / 100.0 - jetr
-
-            jetroff = zoff
-            jetroff = np.where(zoff < -jetr, -jetr, jetroff)
-            jetroff = np.where(zoff > jetr, jetr, jetroff)
-        else:
-            zoff = np.zeros_like(df['Energy'].to_numpy())
-
-    else:
-        zoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), ((jetrin * 2)/1000)/2.355)
-
     beamspotdia = beamdiamm / 1000  # beamdiamm mm FWHM
     xoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), beamspotdia / 2.355)
     yoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), beamspotdia / 2.355)
@@ -342,7 +399,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     i_final = np.zeros_like(df['Energy'])
 
     # Simulating events status bar for the for loop
-    print("Simulating Events...")
+    print("\nSimulating Events...")
     statbar = "[                                   ]"
 
     vperp = df['vel_perp'].to_numpy()
@@ -480,12 +537,7 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
     print("\n")
 
-    # Grab the max energy before the eloss section because sometimes we get one really large value that messes up the
-    # histogram ranges in plotter...
-    maxe = df['Energy'].max()
-
     if elossbool:
-        print("\nNow calculating the energy loss of the reaction products...")
         # Need to set up the projectile data here that goes into desorb:
         zp = np.zeros_like(phic) + zeject
         ap = np.zeros_like(phic) + aeject
@@ -498,50 +550,17 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         proj_ein = proj_e
 
         if gas:
-            # The distance that the particle must traverse to get out of the jet is set here.
-            jetlength = np.abs(
-                jetr / np.sqrt(np.sin(df['Theta_Rad'].to_numpy()) ** 2 * np.cos(df['Phi'].to_numpy()) ** 2 +
-                               np.cos(df['Theta_Rad'].to_numpy()) ** 2) + jetroff /
-                np.sqrt(np.sin(df['Theta_Rad'].to_numpy()) ** 2 * np.cos(df['Phi'].to_numpy()) ** 2 +
-                        np.cos(df['Theta_Rad'].to_numpy()) ** 2))
-
-            # convert jetlength to cm:
-            jetlength = jetlength * 100.0
+            print("\nNow calculating the energy loss of the reaction products...")
 
             chamlength = disttravl * 100.0 - jetlength
 
-            for j in range(2):
-                # j = 0 corresponds to the jet thickness, and 1 corresponds to the chamber
-                if j == 0:
-                    df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, 0, 0, jetpress, jetlength,
+            df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, 0, 0, champress, chamlength,
                                          proj_e)
 
-                    proj_ein = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
-                if j == 1:
-                    df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, 0, 0, champress, chamlength,
-                                         proj_e)
-
-                    proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
-                    estragtot = df_elossout['E_strag_FWHM'].to_numpy()
-        if not gas:
-            print("\nYou're using a solid target, so the energy loss calculation is going to take a minute or two...")
-
-            if invkin:
-                # If in inverse kinematics, we want the target thickness to be the thickness traversed by the beam,
-                # which is what we get from event builder.
-                indthickness = df['Tgt_Thick'].to_numpy() / np.sin(df['Theta_Rad'].to_numpy() - np.pi/2)
-            else:
-                # If in normal kinematics, we want to subtract the thickness seen by the beam from the target thickness
-                # So, if the beam sees 0.95 mg/cm^2 of a 1 mg/cm^2 target, the light ejectile will see 0.05 mg/cm^2
-                indthickness = (thickness - df['Tgt_Thick'].to_numpy()) / np.sin(df['Theta_Rad'].to_numpy())
-
-            # We don't need a for loop here because there's only one layer for the protons to lose energy
-            df_elossout = desorb(zp, ap, proj_ein, ztarg, atarg, numtarg, gas, density, indthickness, 0, 0, proj_e)
             proj_e = df_elossout['Energy_i'].to_numpy() - df_elossout['DeltaE_tot'].to_numpy()
             estragtot = df_elossout['E_strag_FWHM'].to_numpy()
 
-        emask = emaxinit > proj_e
-        df['Energy'] = np.random.normal(proj_e, estragtot)
+            df['Energy'] = np.random.normal(proj_e, estragtot)
 
         # Detector energy resolution assumed to be 25 keV, divide by 2.355 to get sigma
         df['Energy'] = np.random.normal(df['Energy'], 0.025 / 2.355)
