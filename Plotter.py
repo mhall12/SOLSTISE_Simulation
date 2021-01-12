@@ -13,6 +13,19 @@ import fnmatch
 import sys
 
 
+class Color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
+
 def plot(pklin, pkloverlay):
 
     # Read the pickled DataFrame File here.
@@ -121,108 +134,283 @@ def plot(pklin, pkloverlay):
     thmax = df['Theta_Deg'].max()
     thmin = df['Theta_Deg'].min()
 
-    print("\n\nChoose from the list below to plot histograms from the generated data.\n"
-          "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
-          "looking down the beam axis.\n")
-    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("\n1) Energy vs z: Unblocked particles in all 4 detectors (2D).\n"
-              "2) Energy vs z: Blocked particles in all 4 detectors (2D).\n"
-              "3) Energy vs z: Unblocked and blocked particles in all 4 detectors (2D).\n"
-              "4) Energy vs z: Unblocked particles (2D).\n"
-              "5) Counts vs z: Blocked counts vs z in all 4 detectors (1D).\n"
-              "6) Counts vs z: Blocked counts vs z in all 4 detectors stacked (1D).\n"
-              "7) Energy vs Lab Angle: Unblocked particles (2D).\n"
-              "8) Energy vs Lab Angle: Unblocked particles Energy vs ejected lab angle in all 4 detectors (2D).\n"
-              "9) Energy vs Lab Angle: Unblocked and blocked particles Energy vs ejected lab "
-              "angle in all 4 detectors (2D).\n"
-              "10) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D).\n"
-              "11) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
-              "detectors (1D).\n"
-              "12) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D).\n")
-    if fnmatch.fnmatch(pklin, '*allE*'):
-        print("13) Energy vs Lab Angle: Contour plot of detected particles. \n"
-              "14) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
-              "15) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
-              "16) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
-              "17) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
-              "18) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-              "19) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-              "20) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-              "21) Energy vs z: Contour plot of detected particles. \n"
-              "22) Energy vs z: Contour plot of particles not blocked by the cone. \n"
-              "23) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
-              "24) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
-              "25) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
-              "26) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-              "27) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-              "28) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-              "29) Lab Angle vs Initial Phi: Polar contour plot of detected particles.\n")
-    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("30) Fraction of particles blocked vs lab angle. \n"
-              "31) Fraction of particles blocked vs energy. \n"
-              "32) Fraction of particles blocked vs z position. \n"
-              "33) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")
+    # Change quadrant of CM angle to be in line with HELIOS spreadsheet
+    df['CM_Deg'] = -1 * df["Theta_CM"] * 180 / np.pi + 180
+    cmmin = df['CM_Deg'].min()
+    cmmax = df['CM_Deg'].max()
 
-    if fnmatch.fnmatch(pklin, '*eloss_s*'):
-        print("34) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
-              "35) Energy vs z: Unblocked and Blocked particles in all 4 detectors (2D). \n"
-              "36) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
-              "37) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D). \n"
-              "38) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
-              "detectors (1D).\n"
-              "39) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D).\n")
-
-    print("100) Toggle on z-axis detector positions.")
-    print("101) Toggle off z-axis detector positions.")
     if fnmatch.fnmatch(pkloverlay, "*evts*"):
-        print("\n200) Toggle on overlay histograms.")
-        print("201) Toggle off overlay histograms.")
-    print("0) End\n\n")
+        df_over['CM_Deg'] = -1 * df_over["Theta_CM"] * 180 / np.pi + 180
+
+
+
+
+
+#    print("\n\nChoose from the list below to plot histograms from the generated data.\n"
+#          "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
+#          "looking down the beam axis.\n")
+#    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
+#        print("\n1) Energy vs z: Unblocked particles in all 4 detectors (2D).\n"
+#              "2) Energy vs z: Blocked particles in all 4 detectors (2D).\n"
+#              "3) Energy vs z: Unblocked and blocked particles in all 4 detectors (2D).\n"
+#              "4) Energy vs z: Unblocked particles (2D).\n"
+#              "5) Counts vs z: Blocked counts vs z in all 4 detectors (1D).\n"
+#              "6) Counts vs z: Blocked counts vs z in all 4 detectors stacked (1D).\n"
+#              "7) Lab Angle vs z: Unblocked particles in all 4 detectors (2D).\n"
+##              "8) Lab Angle vs z: Unblocked particles (2D).\n"
+#              "9) CM Angle vs z: Unblocked particles in all 4 detectors (2D).\n"
+#              "10) CM Angle vs z: Unblocked particles (2D).\n"
+#              "11) Energy vs Lab Angle: Unblocked particles (2D).\n"
+#              "12) Energy vs Lab Angle: Unblocked particles in all 4 detectors (2D).\n"
+ #             "13) Energy vs Lab Angle: Unblocked and blocked particles Energy vs ejected lab "
+#              "angle in all 4 detectors (2D).\n"
+#              "14) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D).\n"
+#              "15) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
+#              "detectors (1D).\n"
+#              "16) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D).\n")
+#    if fnmatch.fnmatch(pklin, '*allE*'):
+#        print("17) Energy vs Lab Angle: Contour plot of detected particles. \n"
+#              "18) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
+#              "19) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
+#              "20) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
+#              "21) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
+#              "22) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+#              "23) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+#              "24) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
+#              "25) Energy vs z: Contour plot of detected particles. \n"
+#              "26) Energy vs z: Contour plot of particles not blocked by the cone. \n"
+#              "27) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
+#              "28) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
+#              "29) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
+#              "30) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+#              "31) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+#              "32) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
+#              "33) CM Angle vs z: Contour plot of detected particles. \n"
+ #             "34) CM Angle vs z: Contour plot of particles not blocked by the cone. \n"
+#              "35) CM Angle vs z: Contour plot of particles not blocked by the pipe. \n"
+#              "36) CM Angle vs z: Contour plot of particles not blocked by the nozzle. \n"
+#              "37) CM Angle vs z: Contour plot of detected particles in all 4 detectors.. \n"
+#              "38) CM Angle vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
+#              "39) CM Angle vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
+#              "40) CM Angle vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
+#              "41) Lab Angle vs Initial Phi: Polar contour plot of detected particles.\n")
+#    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
+#        print("42) Fraction of particles blocked vs lab angle. \n"
+#              "43) Fraction of particles blocked vs energy. \n"
+#              "44) Fraction of particles blocked vs z position. \n"
+#              "45) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")#
+#
+#    if fnmatch.fnmatch(pklin, '*eloss_s*'):
+#        print("46) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
+#              "47) Energy vs z: Unblocked and Blocked particles in all 4 detectors (2D). \n"
+#              "48) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
+#              "49) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D). \n"
+#              "50) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
+#              "detectors (1D).\n"
+#              "51) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D).\n")
+
+
 
     overlaybool = False
+    detposbool = False
+    overlayonoff = Color.RED + "OFF" + Color.END
+    detposonoff = Color.RED + "OFF" + Color.END
+
+    lastentry = ''
 
     while switch == 0:
+
+        print('\n' + Color.BOLD + "Standard Plots:\n" + Color.END + Color.CYAN + Color.UNDERLINE +
+              "A:" + Color.END + Color.CYAN + " 1) Energy vs z-position\n"
+                                              "   2) Lab Angle vs Energy\n"
+                                              "   3) Lab Angle vs z-position\n"
+                                              "   4) Center-of-Mass Angle vs z-position\n"
+                                              "   5) Excitation Energy Spectrum (Set C=0)" + Color.END)
+        print(Color.RED + Color.UNDERLINE +
+              "\tB:" + Color.END + Color.RED + " 0) Sum Spectrum\n"
+                                               "\t   1) Broken down by detector" + Color.END)
+        print(Color.GREEN + Color.UNDERLINE + "\t\tC:" + Color.END + Color.GREEN + " 0) 2D Histogram(s)" + Color.END)
+        if not fnmatch.fnmatch(pklin, '*allE*') or overlaybool:
+            print(
+                Color.UNDERLINE + Color.YELLOW + "\t\t\tD:" + Color.END + Color.YELLOW + " 0) Unblocked Particles "
+                                                                                         "Only\n"
+                                                                                         "\t\t\t   1) Unblocked + "
+                                                                                         "Shadowed Particles\n"
+                                                                                         "\t\t\t   2) Shadowed "
+                                                                                         "Particles Only" + Color.END)
+        if fnmatch.fnmatch(pklin, '*allE*') and not overlaybool:
+            print(Color.GREEN + "\t\t   1) Shadowing Contour Plots (no D needed)\n"
+                                "\t\t   2) Cone Shadowing Contour Plots (no D needed)\n"
+                                "\t\t   3) Pipe Shadowing Contour Plots (no D needed)\n"
+                                "\t\t   4) Nozzle Shadowing Contour Plots (no D needed)" + Color.END)
+        print(Color.BOLD + "\nSpecial Plots:\n" + Color.END + Color.CYAN + Color.UNDERLINE +
+              "A:" + Color.END + Color.CYAN + " 6) Phi vs Lab Angle Polar Plots (no C/D needed)" + Color.END)
+        print(Color.RED + Color.UNDERLINE + "\tB:" + Color.END + Color.RED + " 0) Ratio Plot")
+        print("\t   1) Contour Plot" + Color.END)
+        print(Color.CYAN + "   7) 1D Ratio Plots (no C/D needed)" + Color.END)
+        print(Color.RED + Color.UNDERLINE + "\tB:" + Color.END + Color.RED + " 0) Fraction Blocked vs Lab Angle\n" +
+              "\t   1) Fraction Blocked vs Energy\n"
+              "\t   2) Fraction Blocked vs z-position\n" + Color.END)
+
+        print(Color.BOLD + "Other Options:" + Color.END)
+        print(Color.PURPLE + "100: Toggle ON z-axis detector positions.")
+        print("101: Toggle OFF z-axis detector positions.")
+        if fnmatch.fnmatch(pkloverlay, "*evts*"):
+            print("\n200: Toggle ON overlay histograms.")
+            print("201: Toggle OFF overlay histograms.")
+            print("300: Auto Overlay.")
+        print("400: Print Data to CSV.")
+        print("0) End\n\n" + Color.END)
+
+        print("\nThe syntax for choosing plots is as follows: " + Color.CYAN + "A" + Color.END +
+              "." + Color.RED + "B" + Color.END + "." + Color.GREEN + "C" + Color.END + "." + Color.YELLOW + "D" +
+              Color.END + " (Example, 2.1.0.3).\n")
+
         plt.ion()
+
+        if overlaybool:
+            overlayonoff = Color.GREEN + "ON" + Color.END
+        else:
+            overlayonoff = Color.RED + "OFF" + Color.END
 
         # try except ensures the program does not segfault if the user does not enter a number (i.e. presses enter too
         # many times or something.)
         while True:
             try:
-                plotnum = int(input("Enter a Histogram Number: "))
+                print("\nDetector Positions: ", detposonoff)
+                if fnmatch.fnmatch(pkloverlay, "*evts*"):
+                    print("Overlay: ", overlayonoff)
+                plotnum = str(input("Entry: "))
+                if 100 > int(plotnum[0]) > 7:
+                    raise ValueError
                 break
-            except:
-                print("\n*****Enter an integer number from the list!*****\n")
+            except (ValueError, IndexError):
+                print("\n*****Incorrect Syntax!*****\n")
 
-        if plotnum > 0:
+        currentry = plotnum
+
+        #if currentry == '300':
+        #    autooverlaybool = True
+        #else:
+        #    autooverlaybool = False
+
+        if plotnum == '300':
+            if lastentry == '':
+                print("ERROR: You must make a contour plot before using the Auto Overlay...")
+                lastentry = '1000'
+            plotnum = lastentry
+            plotnum = plotnum[:4] + '0' + plotnum[5:]
+            plotnum = plotnum[:6] + '0'
+
+        # Grab A, B, C, D here. If the user didn't specify a C/D, set them to 0.
+
+        if plotnum.count(".") == 3:
+            aa = plotnum[0]
+            bb = plotnum[2]
+            cc = plotnum[4]
+            dd = plotnum[6]
+        elif plotnum.count(".") == 2:
+            aa = plotnum[0]
+            bb = plotnum[2]
+            cc = plotnum[4]
+            dd = "9"
+            if cc == '0':
+                dd = "0"
+        elif plotnum.count(".") == 1:
+            aa = plotnum[0]
+            bb = plotnum[2]
+            cc = "9"
+            dd = "9"
+        else:
+            aa = plotnum
+            bb = "9"
+            cc = "9"
+            dd = "9"
+
+        plotnum = aa + '.' + bb + '.' + cc + '.' + dd
+
+        sol = fnmatch.fnmatch(pklin, '*_s*')
+
+        if aa != "0" and int(aa) < 400:
             # Set the font sizes here and the font used below. The title font sizes are handled when the hist is made.
             plt.rc('axes', labelsize=18)
             plt.rc('xtick', labelsize=18)
             plt.rc('ytick', labelsize=18)
             plt.rcParams["font.family"] = "STIXGeneral"
 
-            if plotnum == 200:
+            # 1) On when aa=200 or the current entry is 300
+            # 2) Off when aa=201 or the current entry isn't 30
+
+            if currentry == '300':
                 overlaybool = True
                 df = df_over
-                detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
+                if detposbool:
+                    detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det2"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det1"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det3"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det4"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6'])]
+                else:
+                    detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
 
-            if plotnum == 201:
+            if aa == "200" and fnmatch.fnmatch(pkloverlay, "*evts*"):
+                overlaybool = True
+                df = df_over
+                if detposbool:
+                    detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det2"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det1"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det3"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det4"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6'])]
+                else:
+                    detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
+                overlayonoff = Color.GREEN + "ON" + Color.END
+
+            if aa == "201" and fnmatch.fnmatch(pkloverlay, "*evts*"):
                 overlaybool = False
                 df = df_main
-                detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
+                if detposbool:
+                    detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det2"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det1"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det3"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6']),
+                              df["Det4"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                              df['Detz5'] | df['Detz6'])]
+                else:
+                    detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
+                overlayonoff = Color.RED + "OFF" + Color.END
 
             # initialize the figure here, it might not be necessary.
-            if (plotnum == 4 or plotnum == 7 or plotnum == 10 or 13 <= plotnum <= 16 or 21 <= plotnum <= 24 or
-                30 <= plotnum <= 32 or plotnum == 37) and not overlaybool:
+            # All of these are 1D histograms or single 2D histograms
+            #if (plotnum == 4 or plotnum == 8 or 10 <= plotnum <= 11 or plotnum == 14 or 17 <= plotnum <= 20 or
+            #    25 <= plotnum <= 29 or 33 <= plotnum <= 36 or
+            #    42 <= plotnum <= 44 or plotnum == 41) and not overlaybool:
 
+            if ((int(aa) < 6 and bb == "0") or 100 > int(aa) > 5) and not overlaybool:
                 fig, axs = plt.subplots()
-            if (1 <= plotnum <= 3 or 5 <= plotnum <= 6 or 8<= plotnum <= 9 or plotnum == 11 or plotnum == 12 or
-                17 <= plotnum <= 20 or
-                25 <= plotnum <= 28 or 34 <= plotnum <= 36 or 38 <= plotnum <= 39) and not overlaybool:
-
+            # All these are 1D or 2D histograms broken down by detector
+            if (int(aa) < 6 and bb == "1") and not overlaybool:
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
                 axi = np.array([0, ax1, ax2, ax3, ax4])
 
-            if plotnum == 100:
+            print('AA', aa)
+            print('PLOTNUM', plotnum)
+
+            if aa == "100":
                 for j in range(5):
                     detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
                               df['Detz5'] | df['Detz6']),
@@ -234,38 +422,48 @@ def plot(pklin, pkloverlay):
                               df['Detz5'] | df['Detz6']),
                               df["Det4"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
                               df['Detz5'] | df['Detz6'])]
-            if plotnum == 101:
+                detposonoff = Color.GREEN + "ON" + Color.END
+                detposbool = True
+                print("DETZHAPPENING")
+            if aa == "101":
                 for j in range(5):
                     detarr = [df["AllPossible"],
                               df["Det2"],
                               df["Det1"],
                               df["Det3"],
                               df["Det4"]]
+                detposonoff = Color.RED + "OFF" + Color.END
+                detposbool = False
+                print("DETZHAPPENING2")
 
+
+
+            # i > 0 for the 4 detector plots
+            # i == 0 for the sum spectra
             for i in range(5):
                 # The first histograms are Energy vs Z 2D histograms. 1) unblocked particles only, 2) blocked only,
                 # 3) Unblocked and blocked together on the same hist.
-                if (plotnum == 1 or plotnum == 3) and i > 0:
+                if (plotnum == "1.1.0.0" or plotnum == "1.1.0.1") and i > 0 and not sol:
 
                     axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
                                df['Energy'][detarr[i] & df["Unblocked"]], bins=(550, 550),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
+                                  range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
                     axi[i].set_xlabel('z (m)')
                     axi[i].set_ylabel('Energy (MeV)')
 
-                if (plotnum == 2 or plotnum == 3) and i > 0:
+                if (plotnum == "1.1.0.1" or plotnum == "1.1.0.2") and i > 0 and not sol:
 
                     # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
                     try:
                         axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
                                    df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
+                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
                         axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
                                    df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                         axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
                                    df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                   range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
+                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
                         axi[i].set_xlabel('z (m)')
                         axi[i].set_ylabel('Energy (MeV)')
                     except KeyError:
@@ -279,35 +477,52 @@ def plot(pklin, pkloverlay):
                 #    axs.xlabel('Lab Angle (deg)')
                 #    axs.ylabel('Counts')
 
-                if plotnum == 4 and i == 0:
+                # 1D Unblocked
+                if (plotnum == "1.0.0.0" or plotnum == "1.0.0.1") and i == 0 and not sol:
                     axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
                                df['Energy'][df["Unblocked"] & detarr[i]], bins=(550, 550),
                                range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
                     axs.set_xlabel('z (m)')
                     axs.set_ylabel('Energy (MeV)')
 
+                if (plotnum == "1.0.0.1" or plotnum == "1.0.0.2") and i == 0 and not sol:
+                    try:
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
+                        axs.set_xlabel('z (m)')
+                        axs.set_ylabel('Energy (MeV)')
+                    except KeyError:
+                        print("ERROR")
+
                 # 5 is raw counts vs Z in all four detectors, where 6 is the same but a stacked hist of blocked
                 # particles, broken up by blocking type and detector. Different version
                 # broken up by detector only in plot 30
-                if plotnum == 5 and i > 0:
+                #if plotnum == 5 and i > 0:
+                #
+                #    axi[i].hist(df['zpos_final'][df['Blocked_Cone'] & detarr[i]], bins=375, range=[-0.5, 0],
+                #             color=grn, alpha=1)
+                #    axi[i].hist(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]], bins=375, range=[-0.5, 0],
+                #             color=red, alpha=0.7)
+                #    axi[i].hist(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]], bins=375, range=[-0.5, 0],
+                #             color=blu, alpha=0.6)
+                #    axi[i].set_xlabel('z(m)')
+                #    axi[i].set_ylabel('Counts')
 
-                    axi[i].hist(df['zpos_final'][df['Blocked_Cone'] & detarr[i]], bins=375, range=[-0.5, 0],
-                             color=grn, alpha=1)
-                    axi[i].hist(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]], bins=375, range=[-0.5, 0],
-                             color=red, alpha=0.7)
-                    axi[i].hist(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]], bins=375, range=[-0.5, 0],
-                             color=blu, alpha=0.6)
-                    axi[i].set_xlabel('z(m)')
-                    axi[i].set_ylabel('Counts')
+                #if plotnum == 6 and i > 0:
 
-                if plotnum == 6 and i > 0:
-
-                    axi[i].hist((df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
-                              df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
-                              df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]]),
-                             bins=375, range=[-0.5, 0], color=(grn, red, blu), stacked=True)
-                    axi[i].set_xlabel('z (m)')
-                    axi[i].set_ylabel('Counts')
+                 #   axi[i].hist((df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
+                 #               df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
+                 #               df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]]),
+                 #               bins=375, range=[-0.5, 0], color=(grn, red, blu), stacked=True)
+                 #   axi[i].set_xlabel('z (m)')
+                 #   axi[i].set_ylabel('Counts')
 
                 # 7 is the same as 6 but for theta instead of z.
                 # 7 is also getting repurposed.
@@ -320,60 +535,195 @@ def plot(pklin, pkloverlay):
                    # axi[i].set_xlabel('Lab Angle (Deg)')
                    # axi[i].set_ylabel('Counts')
 
-                if plotnum == 7 and i == 0:
+                # Lab Angle vs z
+                if (plotnum == "3.1.0.0" or plotnum == "3.1.0.1") and i > 0 and not sol:
+
+                    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
+                                  df['Theta_Deg'][detarr[i] & df["Unblocked"]], bins=(550, 550),
+                                  range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlack, zorder=1)
+                    axi[i].set_xlabel('z (m)')
+                    axi[i].set_ylabel('Lab Angle (Deg)')
+
+                if (plotnum == "3.1.0.1" or plotnum == "3.1.0.2") and i > 0 and not sol:
+                    try:
+                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                                   df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpGreen)
+                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpRed)
+                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlue)
+                        axi[i].set_xlabel('z (m)')
+                        axi[i].set_ylabel('Lab Angle (Deg)')
+                    except KeyError:
+                        print("ERROR")
+
+                # Lab Angle vs z
+                if (plotnum == "3.0.0.0" or plotnum == "3.0.0.1") and i == 0 and not sol:
+                    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+                               df['Theta_Deg'][df["Unblocked"] & detarr[i]], bins=(550, 550),
+                               range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlack, zorder=1)
+                    axs.set_xlabel('z (m)')
+                    axs.set_ylabel('Lab Angle (Deg)')
+                if (plotnum == "3.0.0.1" or plotnum == "3.0.0.2") and i == 0 and not sol:
+                    try:
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                                   df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpGreen)
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpRed)
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlue)
+                        axs.set_xlabel('z (m)')
+                        axs.set_ylabel('Lab Angle (Deg)')
+                    except KeyError:
+                        print("ERROR")
+
+                # CM Angle vs z
+                if (plotnum == "4.1.0.0" or plotnum == "4.1.0.1") and i > 0 and not sol:
+                    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
+                                  df['CM_Deg'][detarr[i] & df["Unblocked"]], bins=(550, 550),
+                                  range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlack, zorder=1)
+                    axi[i].set_xlabel('z (m)')
+                    axi[i].set_ylabel('CM Angle (Deg)')
+                if (plotnum == "4.1.0.2" or plotnum == "4.1.0.1") and i > 0 and not sol:
+                    try:
+                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                                   df['CM_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpGreen)
+                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['CM_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpRed)
+                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['CM_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlue)
+                        axi[i].set_xlabel('z (m)')
+                        axi[i].set_ylabel('CM Angle (Deg)')
+                    except KeyError:
+                        print("ERROR")
+
+                if (plotnum == "4.0.0.0" or plotnum == "4.0.0.1") and i == 0 and not sol:
+                    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+                               df['CM_Deg'][df["Unblocked"] & detarr[i]], bins=(550, 550),
+                               range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlack, zorder=1)
+                    axs.set_xlabel('z (m)')
+                    axs.set_ylabel('CM Angle (Deg)')
+                if (plotnum == "4.0.0.2" or plotnum == "4.0.0.1") and i == 0 and not sol:
+                    try:
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                                   df['CM_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpGreen)
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['CM_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpRed)
+                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['CM_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlue)
+                        axs.set_xlabel('z (m)')
+                        axs.set_ylabel('CM Angle (Deg)')
+                    except KeyError:
+                        print("ERROR")
+
+                # Energy vs theta lab
+                if (plotnum == "2.0.0.0" or plotnum == "2.0.0.1") and i == 0 and not sol:
                     axs.hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
                                df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
                                range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
                     axs.set_xlabel('Lab Angle (Deg)')
                     axs.set_ylabel('Energy (MeV)')
+                if (plotnum == "2.0.0.2" or plotnum == "2.0.0.1") and i == 0 and not sol:
+                    try:
+                        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
+                        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
+                        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
+                        axs.set_xlabel('Lab Angle (Deg)')
+                        axs.set_ylabel('Energy (MeV)')
+                    except KeyError:
+                        print("ERROR")
 
-                # 8 is a 2D histogram of E vs theta for the unblocked particles only, 9 is the same but with blocked
-                # particles as well, broken up by blocking type.
-                if (plotnum == 8 or plotnum == 9) and i > 0:
-
-                    axi[i].hist2d(df['Theta_Deg'][df['Unblocked'] & detarr[i]],
-                               df['Energy'][df['Unblocked'] & detarr[i]], bins=(750, 750), range=[[thmin, thmax],
-                                                                                                  [0, emax]],
-                               cmap=newcmpBlack)
-                    if plotnum == 9 and i > 0:
-                        axi[i].hist2d(df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(750, 750),
-                                   range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
-                        axi[i].hist2d(df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(750, 750),
-                                   range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
-                        axi[i].hist2d(df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(750, 750),
-                                   range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
+                if (plotnum == "2.1.0.0" or plotnum == "2.1.0.1") and i > 0 and not sol:
+                    axi[i].hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
+                               df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
+                               range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
                     axi[i].set_xlabel('Lab Angle (Deg)')
                     axi[i].set_ylabel('Energy (MeV)')
+                if (plotnum == "2.1.0.2" or plotnum == "2.1.0.1") and i > 0 and not sol:
+                    try:
+                        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
+                        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
+                        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]],
+                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
+                        axi[i].set_xlabel('Lab Angle (Deg)')
+                        axi[i].set_ylabel('Energy (MeV)')
+                    except KeyError:
+                        print("ERROR")
 
                 # 10 is the Excitation Energy reconstructed from the "detected" energy and z position
-                if plotnum == 10 and i == 0:
+                if plotnum == "5.0.0.0" and i == 0 and not sol:
                     axs.hist(df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]], bins=750, range=[-.2, exmax])
                     axs.set_xlabel('Excitation Energy (MeV)')
                     axs.set_ylabel('Counts')
 
-                # 11 is the same as 10 but also showing blocked particles.
-                if plotnum == 11 and i > 0:
+                if plotnum == "5.0.0.1" and i == 0 and not sol:
+                    axs.hist((df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]],
+                                 df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
+                                 df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
+                                 df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
+                                 bins=750, range=[-.2, exmax], color=(blk, grn, red, blu), stacked=True)
+                    axs.set_xlabel('Excitation Energy (MeV)')
+                    axs.set_ylabel('Counts')
 
-                    axi[i].hist((df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                             bins=1000, range=[0, exmax], color=(blk, grn, red, blu), stacked=True)
-                    axi[i].set_xlabel('Excitation Energy (MeV)')
-                    axi[i].set_ylabel('Counts')
+                if plotnum == "5.0.0.2" and i == 0 and not sol:
+                    axs.hist((df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
+                                 df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
+                                 df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
+                                 bins=750, range=[-.2, exmax], color=(grn, red, blu), stacked=True)
+                    axs.set_xlabel('Excitation Energy (MeV)')
+                    axs.set_ylabel('Counts')
 
-                if plotnum == 12 and i > 0:
+                if plotnum == "5.1.0.0" and i > 0 and not sol:
 
                     axi[i].hist(df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]], bins=750, range=[-.2, exmax])
                     axi[i].set_xlabel('Excitation Energy (MeV)')
                     axi[i].set_ylabel('Counts')
 
+                if plotnum == "5.1.0.1" and i > 0 and not sol:
+
+                    axi[i].hist((df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]],
+                              df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
+                              df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
+                              df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
+                             bins=750, range=[-.2, exmax], color=(blk, grn, red, blu), stacked=True)
+                    axi[i].set_xlabel('Excitation Energy (MeV)')
+                    axi[i].set_ylabel('Counts')
+
+                if plotnum == "5.1.0.2" and i > 0 and not sol:
+
+                    axi[i].hist((df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
+                              df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
+                              df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
+                             bins=750, range=[-.2, exmax], color=(grn, red, blu), stacked=True)
+                    axi[i].set_xlabel('Excitation Energy (MeV)')
+                    axi[i].set_ylabel('Counts')
+
                 # 14-29 are contour plots of blocked particles. These should only be used with "allE" simulated files
                 # because they don't really make sense with specific excited states populated.
-                if (12 < plotnum < 34) or plotnum == 105:
+                if int(cc) > 0 and int(aa) < 7:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
                     # degree.
@@ -383,6 +733,10 @@ def plot(pklin, pkloverlay):
                             binstheta[j] = j * 1 + 90
                         else:
                             binstheta[j] = j * 1
+                    binscm = np.zeros(181)
+                    for j in range(181):
+
+                        binscm[j] = j * 1
                     # We'll also make the energy bins as well:
                     numebins = 150
                     binse = np.zeros(numebins + 1)
@@ -410,9 +764,15 @@ def plot(pklin, pkloverlay):
                     unblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][detarr[i] & df["AllPossible"]],
                                                                 df['Energy'][detarr[i] & df["AllPossible"]],
                                                                 bins=(binstheta, binse))
+                    unblockedcvz, zbins, cbins = np.histogram2d(df['zpos_final'][detarr[i] & df["AllPossible"]],
+                                                                df['CM_Deg'][detarr[i] & df["AllPossible"]],
+                                                                bins=(binsz, binscm))
                     unblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][detarr[i] & df["AllPossible"]],
                                                                 df['Energy'][detarr[i] & df["AllPossible"]],
                                                                 bins=(binsz, binse))
+                    unblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][detarr[i] & df["AllPossible"]],
+                                                                df['Theta_Deg'][detarr[i] & df["AllPossible"]],
+                                                                bins=(binsz, binstheta))
                     df['Phi_Deg'] = df['Phi'] * 180 / np.pi
 
                     unblockedevphi, pbins, ebins = np.histogram2d(df['Phi_Deg'][detarr[i] & df["AllPossible"]],
@@ -423,7 +783,7 @@ def plot(pklin, pkloverlay):
                                                                   df['Theta_Deg'][detarr[i] & df["AllPossible"]],
                                                                   bins=(binsphi, binstheta))
 
-                    if plotnum < 30 or plotnum == 105:
+                    if int(dd) > 1:
                         # The following lines bin the particles into either energy vs theta or energy vs z 2d histograms
                         # Ex: unbloxkedevt is an array that has given each particle a theta and E bin, and tbins and
                         # ebins are the corresponding bin edges.
@@ -441,6 +801,16 @@ def plot(pklin, pkloverlay):
                                                                                    detarr[i]],
                                                                       bins=(binstheta, binse))
 
+                            blockedcvz, zbins, cbins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
+                                                                                      df['Blocked_Pipe'] |
+                                                                                      df['Blocked_Nozzle']) &
+                                                                                      detarr[i]],
+                                                                      df['CM_Deg'][(df['Blocked_Cone'] |
+                                                                                   df['Blocked_Pipe'] |
+                                                                                   df['Blocked_Nozzle']) &
+                                                                                   detarr[i]],
+                                                                      bins=(binsz, binscm))
+
                             blockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
                                                                                       df['Blocked_Pipe'] |
                                                                                       df['Blocked_Nozzle']) &
@@ -451,6 +821,16 @@ def plot(pklin, pkloverlay):
                                                                                    detarr[i]],
                                                                       bins=(binsz, binse))
 
+                            blockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][(df['Blocked_Cone'] |
+                                                                                      df['Blocked_Pipe'] |
+                                                                                      df['Blocked_Nozzle']) &
+                                                                                      detarr[i]],
+                                                                      df['Theta_Deg'][(df['Blocked_Cone'] |
+                                                                                   df['Blocked_Pipe'] |
+                                                                                   df['Blocked_Nozzle']) &
+                                                                                   detarr[i]],
+                                                                      bins=(binsz, binstheta))
+
                             blockedtvphi, pbins, tbins = np.histogram2d(df['Phi_Deg'][(df['Blocked_Cone'] |
                                                                                       df['Blocked_Pipe'] |
                                                                                       df['Blocked_Nozzle']) &
@@ -460,7 +840,6 @@ def plot(pklin, pkloverlay):
                                                                                         df['Blocked_Nozzle']) &
                                                                                         detarr[i]],
                                                                         bins=(binsphi, binstheta))
-
 
                             coneblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Cone'] &
                                                                                           detarr[i]],
@@ -489,6 +868,34 @@ def plot(pklin, pkloverlay):
                                                                             df['Energy'][df['Blocked_Nozzle'] &
                                                                                          detarr[i]],
                                                                             bins=(binsz, binse))
+
+                            coneblockedcvz, zbins, cbins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] &
+                                                                                           detarr[i]],
+                                                                          df['CM_Deg'][df['Blocked_Cone'] & detarr[i]],
+                                                                          bins=(binsz, binscm))
+                            pipeblockedcvz, zbins, cbins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] &
+                                                                                           detarr[i]],
+                                                                          df['CM_Deg'][df['Blocked_Pipe'] & detarr[i]],
+                                                                          bins=(binsz, binscm))
+                            nozzleblockedcvz, zbins, cbins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] &
+                                                                                             detarr[i]],
+                                                                            df['CM_Deg'][df['Blocked_Nozzle'] &
+                                                                                         detarr[i]],
+                                                                            bins=(binsz, binscm))
+
+                            coneblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] &
+                                                                                           detarr[i]],
+                                                                          df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
+                                                                          bins=(binsz, binstheta))
+                            pipeblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][df['Blocked_Pipe'] &
+                                                                                           detarr[i]],
+                                                                          df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
+                                                                          bins=(binsz, binstheta))
+                            nozzleblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] &
+                                                                                             detarr[i]],
+                                                                            df['Theta_Deg'][df['Blocked_Nozzle'] &
+                                                                                         detarr[i]],
+                                                                            bins=(binsz, binstheta))
                         except KeyError:
                             print("KeyError suppressed.")
 
@@ -507,6 +914,12 @@ def plot(pklin, pkloverlay):
 
                         ratioevz = np.divide((unblockedevz - blockedevz), unblockedevz, out=np.zeros_like(blockedevz),
                                              where=unblockedevz != 0)
+
+                        ratiocvz = np.divide((unblockedcvz - blockedcvz), unblockedcvz, out=np.zeros_like(blockedcvz),
+                                             where=unblockedcvz != 0)
+
+                        ratiotvz = np.divide((unblockedtvz - blockedtvz), unblockedtvz, out=np.zeros_like(blockedtvz),
+                                             where=unblockedtvz != 0)
 
                         ratiotvp = np.divide((unblockedtvphi - blockedtvphi), unblockedtvphi,
                                              out=np.zeros_like(blockedtvphi), where=unblockedtvphi != 0)
@@ -529,11 +942,31 @@ def plot(pklin, pkloverlay):
                         rationozzleevz = np.divide((unblockedevz - nozzleblockedevz), unblockedevz,
                                                    out=np.zeros_like(nozzleblockedevz), where=unblockedevz != 0)
 
+                        ratioconecvz = np.divide((unblockedcvz - coneblockedcvz), unblockedcvz,
+                                                 out=np.zeros_like(coneblockedcvz), where=unblockedcvz != 0)
+
+                        ratiopipecvz = np.divide((unblockedcvz - pipeblockedcvz), unblockedcvz,
+                                                 out=np.zeros_like(pipeblockedcvz), where=unblockedcvz != 0)
+
+                        rationozzlecvz = np.divide((unblockedcvz - nozzleblockedcvz), unblockedcvz,
+                                                   out=np.zeros_like(nozzleblockedcvz), where=unblockedcvz != 0)
+
+                        ratioconetvz = np.divide((unblockedtvz - coneblockedtvz), unblockedtvz,
+                                                 out=np.zeros_like(coneblockedtvz), where=unblockedtvz != 0)
+
+                        ratiopipetvz = np.divide((unblockedtvz - pipeblockedtvz), unblockedtvz,
+                                                 out=np.zeros_like(pipeblockedtvz), where=unblockedtvz != 0)
+
+                        rationozzletvz = np.divide((unblockedtvz - nozzleblockedtvz), unblockedtvz,
+                                                   out=np.zeros_like(nozzleblockedtvz), where=unblockedtvz != 0)
+
                         # To actually plot the ratios into histograms we have to transpose the binned arrays:
 
                         ratioevt = ratioevt.T
                         ratioevz = ratioevz.T
                         ratiotvp = ratiotvp
+                        ratiocvz = ratiocvz.T
+                        ratiotvz = ratiotvz.T
 
                         ratioconeevt = ratioconeevt.T
                         ratiopipeevt = ratiopipeevt.T
@@ -543,28 +976,41 @@ def plot(pklin, pkloverlay):
                         ratiopipeevz = ratiopipeevz.T
                         rationozzleevz = rationozzleevz.T
 
+                        ratioconecvz = ratioconecvz.T
+                        ratiopipecvz = ratiopipecvz.T
+                        rationozzlecvz = rationozzlecvz.T
+
+                        ratioconetvz = ratioconetvz.T
+                        ratiopipetvz = ratiopipetvz.T
+                        rationozzletvz = rationozzletvz.T
+
                         # As mentioned, tbins, ebins, and zbins are the bin edges. Here initialize a new array:
 
                         tbins2 = np.zeros(90)
+                        cbins2 = np.zeros(180)
                         ebins2 = np.zeros(150)
                         zbins2 = np.zeros(100)
                         pbins2 = np.zeros(numphibins)
 
                         # And here get the bin centers by taking the averages of three bin edges.
 
-                        for k in range(150):
+                        for k in range(180):
                             if k < 90:
                                 tbins2[k] = (tbins[k] + tbins[k + 1]) / 2
                             if k < numphibins:
                                 pbins2[k] = (pbins[k] + pbins[k + 1]) / 2
                             if k < 100:
                                 zbins2[k] = (zbins[k] + zbins[k + 1]) / 2
-                            ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
+                            if k < 150:
+                                ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
+                            cbins2[k] = (cbins[k] + cbins[k + 1]) / 2
 
                         # To plot them we need to make a mesh grid of the bins:
 
                         xevt, yevt = np.meshgrid(tbins2, ebins2)
                         xevz, yevz = np.meshgrid(zbins2, ebins2)
+                        xcvz, ycvz = np.meshgrid(zbins2, cbins2)
+                        xtvz, ytvz = np.meshgrid(zbins2, tbins2)
                         xtvp, ytvp = np.meshgrid(tbins2, pbins2 * np.pi/180)
 
                         # Now, since we have so many bins, the contour plots won't look nice. If we put too few bins the
@@ -573,6 +1019,8 @@ def plot(pklin, pkloverlay):
 
                         ratioevt_blurr = ndimage.gaussian_filter(ratioevt, sigma=1.5, order=0)
                         ratioevz_blurr = ndimage.gaussian_filter(ratioevz, sigma=1.5, order=0)
+                        ratiocvz_blurr = ndimage.gaussian_filter(ratiocvz, sigma=1.5, order=0)
+                        ratiotvz_blurr = ndimage.gaussian_filter(ratiotvz, sigma=1.5, order=0)
                         ratiotvp_blurr = ndimage.gaussian_filter(ratiotvp, sigma=1, order=0)
 
                         ratioconeevt_blurr = ndimage.gaussian_filter(ratioconeevt, sigma=1.5, order=0)
@@ -583,8 +1031,16 @@ def plot(pklin, pkloverlay):
                         ratiopipeevz_blurr = ndimage.gaussian_filter(ratiopipeevz, sigma=1.6, order=0)
                         rationozzleevz_blurr = ndimage.gaussian_filter(rationozzleevz, sigma=1.6, order=0)
 
+                        ratioconecvz_blurr = ndimage.gaussian_filter(ratioconecvz, sigma=1.5, order=0)
+                        ratiopipecvz_blurr = ndimage.gaussian_filter(ratiopipecvz, sigma=1.5, order=0)
+                        rationozzlecvz_blurr = ndimage.gaussian_filter(rationozzlecvz, sigma=1.5, order=0)
+
+                        ratioconetvz_blurr = ndimage.gaussian_filter(ratioconetvz, sigma=1.5, order=0)
+                        ratiopipetvz_blurr = ndimage.gaussian_filter(ratiopipetvz, sigma=1.5, order=0)
+                        rationozzletvz_blurr = ndimage.gaussian_filter(rationozzletvz, sigma=1.5, order=0)
+
                         # 13 is the contour plot of percentage of detected particles.
-                        if plotnum == 13 and i == 0:
+                        if plotnum == "2.0.1.9" and i == 0:
 
                             cf = axs.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
                                                                            .8, .85, .9, .95, 1], cmap='YlGnBu')
@@ -605,7 +1061,7 @@ def plot(pklin, pkloverlay):
                             plt.suptitle(title13, fontsize=18)
 
                         # 14 is a contour plot of percetage of particles not blocked by the cone.
-                        if plotnum == 14 and i == 0:
+                        if plotnum == "2.0.2.9" and i == 0:
 
                             cf = axs.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
                                                                                .75, .8, .85, .9, .95, 1], cmap='Greens')
@@ -626,7 +1082,7 @@ def plot(pklin, pkloverlay):
                             plt.suptitle(title14, fontsize=18)
 
                         # 15 is the percentage of particles not blocked by the pipe
-                        if plotnum == 15 and i == 0:
+                        if plotnum == "2.0.3.9" and i == 0:
 
                             cf = axs.contourf(xevt, yevt, ratiopipeevt_blurr,
                                               [.65, .7, .75, .8, .85, .9, .95, 1], cmap='Reds')
@@ -645,7 +1101,7 @@ def plot(pklin, pkloverlay):
                             plt.suptitle(title15, fontsize=18)
 
                         # 16 is the percentage of particles not blocked by the nozzle
-                        if plotnum == 16 and i == 0:
+                        if plotnum == "2.0.4.9" and i == 0:
 
                             cf = axs.contourf(xevt, yevt, rationozzleevt_blurr, [.65, .7, .75, .8, .85, .9, .95, 1],
                                               cmap='Blues')
@@ -665,7 +1121,7 @@ def plot(pklin, pkloverlay):
                             plt.suptitle(title16, fontsize=18)
 
                         # 17 is the Energy vs angle split into the four detector quadrants, same as 12
-                        if plotnum == 17 and i > 0:
+                        if plotnum == "2.1.1.9" and i > 0:
 
                             cf = axi[i].contourf(xevt, yevt, ratioevt_blurr,
                                               [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -682,7 +1138,7 @@ def plot(pklin, pkloverlay):
 
                         # 18 is the Energy vs angle not blocked by the cone split into the four detector quadrants,
                         # same as 13
-                        if plotnum == 18 and i > 0:
+                        if plotnum == "2.1.2.9" and i > 0:
 
                             cf = axi[i].contourf(xevt, yevt, ratioconeevt_blurr,
                                               [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -699,7 +1155,7 @@ def plot(pklin, pkloverlay):
 
                         # 19 is the Energy vs angle not blocked by the pipe split into the four detector quadrants,
                         # same as 14
-                        if plotnum == 19 and i > 0:
+                        if plotnum == "2.1.3.9" and i > 0:
 
                             cf = axi[i].contourf(xevt, yevt, ratiopipeevt_blurr,
                                               [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -717,7 +1173,7 @@ def plot(pklin, pkloverlay):
 
                         # 20 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
                         # same as 16
-                        if plotnum == 20 and i > 0:
+                        if plotnum == "2.1.4.9" and i > 0:
 
                             cf = axi[i].contourf(xevt, yevt, rationozzleevt_blurr,
                                               [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -735,7 +1191,7 @@ def plot(pklin, pkloverlay):
 
                         # The contour plot cycle repeats here but is instead made with Energy vs z position.
 
-                        if plotnum == 21 and i == 0:
+                        if plotnum == "1.0.1.9" and i == 0:
 
                             cf = axs.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
                                                                            .8, .85, .9, .95, 1], cmap='GnBu')
@@ -757,7 +1213,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title21, fontsize=18)
 
-                        if plotnum == 22 and i == 0:
+                        if plotnum == "1.0.2.9" and i == 0:
 
                             cf = axs.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
                                                                                .75, .8, .85, .9, .95, 1], cmap='Greens')
@@ -778,7 +1234,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title22, fontsize=18)
 
-                        if plotnum == 23 and i == 0:
+                        if plotnum == "1.0.3.9" and i == 0:
 
                             cf = axs.contourf(xevz, yevz, ratiopipeevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
                                                                                .95, 1], cmap='Reds')
@@ -798,7 +1254,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title23, fontsize=18)
 
-                        if plotnum == 24 and i == 0:
+                        if plotnum == "1.0.4.9" and i == 0:
 
                             cf = axs.contourf(xevz, yevz, rationozzleevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
                                                                                  .95, 1], cmap='Blues')
@@ -818,7 +1274,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title24, fontsize=18)
 
-                        if plotnum == 25 and i > 0:
+                        if plotnum == "1.1.1.9" and i > 0:
 
                             cf = axi[i].contourf(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
                                                                            .5, .55, .6, .65, .7, .75, .8, .85,
@@ -833,7 +1289,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title25, fontsize=18)
 
-                        if plotnum == 26 and i > 0:
+                        if plotnum == "1.1.2.9" and i > 0:
 
                             cf = axi[i].contourf(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
@@ -849,7 +1305,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title26, fontsize=18)
 
-                        if plotnum == 27 and i > 0:
+                        if plotnum == "1.1.3.9" and i > 0:
 
                             cf = axi[i].contourf(xevz, yevz, ratiopipeevz_blurr, [.05, .15, .25, .35, .45,
                                                                                   .55, .65, .75, .85,
@@ -864,7 +1320,7 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title27, fontsize=18)
 
-                        if plotnum == 28 and i > 0:
+                        if plotnum == "1.1.4.9" and i > 0:
 
                             cf = axi[i].contourf(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
                                                                                     .45, .5, .55, .6, .65, .7, .75, .8,
@@ -880,7 +1336,268 @@ def plot(pklin, pkloverlay):
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title28, fontsize=18)
 
-                        if plotnum == 29 and i == 0:
+                        # The contour plot cycle repeats here but is instead made with Lab Angle vs z position.
+                        # All Theta vs z contour
+                        if plotnum == "3.0.1.9" and i == 0:
+
+                            cf = axs.contourf(xtvz, ytvz, ratiotvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                           .8, .85, .9, .95, 1], cmap='GnBu')
+                            cs = axs.contour(xtvz, ytvz, ratiotvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                          .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('Lab Angle (Deg)')
+
+                            title21 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title21, fontsize=18)
+
+                        # Cone Lab Angle vs z
+                        if plotnum == "3.0.2.9" and i == 0:
+
+                            cf = axs.contourf(xtvz, ytvz, ratioconetvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
+                            cs = axs.contour(xtvz, ytvz, ratioconetvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                              .75, .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('Lab Angle (Deg)')
+                            title22 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title22, fontsize=18)
+
+                        # Pipe Lab Angle vs z
+                        if plotnum == "3.0.3.9" and i == 0:
+
+                            cf = axs.contourf(xtvz, ytvz, ratiopipetvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                               .95, 1], cmap='Reds')
+                            cs = axs.contour(xtvz, ytvz, ratiopipetvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                              .95, 1], colors='k', linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('Lab Angle (Deg)')
+                            title23 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title23, fontsize=18)
+
+                        # Nozzle Lab Angle vs z
+                        if plotnum == "3.0.4.9" and i == 0:
+
+                            cf = axs.contourf(xtvz, ytvz, rationozzletvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                                 .95, 1], cmap='Blues')
+                            cs = axs.contour(xtvz, ytvz, rationozzletvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                                .95, 1], colors='k', linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('Lab Angle (Deg)')
+                            title24 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title24, fontsize=18)
+
+                        # 4 detector Lab Angle vs z
+                        if plotnum == "3.1.1.9" and i > 0:
+
+                            cf = axi[i].contourf(xtvz, ytvz, ratiotvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                           .9, .95, 1], cmap='GnBu')
+                            cs = axi[i].contour(xtvz, ytvz, ratiotvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                          .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('Lab Angle (Deg)')
+                            title25 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title25, fontsize=18)
+
+                        # 4 detector cone Lab Angle vs z
+                        if plotnum == "3.1.2.9" and i > 0:
+
+                            cf = axi[i].contourf(xtvz, ytvz, ratioconetvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                  .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                  .85, .9, .95, 1], cmap='Greens')
+                            cs = axi[i].contour(xtvz, ytvz, ratioconetvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                 .85, .9, .95, 1], colors='k',
+                                                linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('Lab Angle (Deg)')
+                            title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title26, fontsize=18)
+
+                        # 4 detector pipe Lab Angle vs z
+                        if plotnum == "3.1.3.9" and i > 0:
+
+                            cf = axi[i].contourf(xtvz, ytvz, ratiopipetvz_blurr, [.05, .15, .25, .35, .45,
+                                                                                  .55, .65, .75, .85,
+                                                                                  .95, 1], cmap='Reds')
+                            cs = axi[i].contour(xtvz, ytvz, ratiopipetvz_blurr, [.05, .15, .25, .35, .45,
+                                                                                 .55, .65, .75, .85,
+                                                                                 .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('Lab Angle (Deg)')
+                            title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title27, fontsize=18)
+
+                        # 4 detector nozzle Lab Angle vs z
+                        if plotnum == "3.1.4.9" and i > 0:
+
+                            cf = axi[i].contourf(xtvz, ytvz, rationozzletvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                    .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                    .85, .9, .95, 1], cmap='Blues')
+                            cs = axi[i].contour(xtvz, ytvz, rationozzletvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                   .85, .9, .95, 1], colors='k',
+                                                linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('Lab Angle (Deg)')
+                            title28 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title28, fontsize=18)
+
+                        # The contour plot cycle repeats here but is instead made with CM Angle vs z position.
+                        # All CM vs z contour
+                        if plotnum == "4.0.1.9" and i == 0:
+
+                            cf = axs.contourf(xcvz, ycvz, ratiocvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                           .8, .85, .9, .95, 1], cmap='GnBu')
+                            cs = axs.contour(xcvz, ycvz, ratiocvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
+                                                                          .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('CM Angle (Deg)')
+
+                            title21 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title21, fontsize=18)
+
+                        # Cone CM vs z
+                        if plotnum == "4.0.2.9" and i == 0:
+
+                            cf = axs.contourf(xcvz, ycvz, ratioconecvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
+                            cs = axs.contour(xcvz, ycvz, ratioconecvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
+                                                                              .75, .8, .85, .9, .95, 1], colors='k',
+                                             linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('CM Angle (Deg)')
+                            title22 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title22, fontsize=18)
+
+                        # Pipe CM vs z
+                        if plotnum == "4.0.3.9" and i == 0:
+
+                            cf = axs.contourf(xcvz, ycvz, ratiopipecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                               .95, 1], cmap='Reds')
+                            cs = axs.contour(xcvz, ycvz, ratiopipecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                              .95, 1], colors='k', linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('CM Angle (Deg)')
+                            title23 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title23, fontsize=18)
+
+                        # Nozzle CM vs z
+                        if plotnum == "4.0.4.9" and i == 0:
+
+                            cf = axs.contourf(xcvz, ycvz, rationozzlecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                                 .95, 1], cmap='Blues')
+                            cs = axs.contour(xcvz, ycvz, rationozzlecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
+                                                                                .95, 1], colors='k', linewidths=.2)
+
+                            cbar = fig.colorbar(cf, ax=axs)
+                            axs.set_xlabel('z (m)')
+                            axs.set_ylabel('CM Angle (Deg)')
+                            title24 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title24, fontsize=18)
+
+                        # 4 detector CM vs z
+                        if plotnum == "4.1.1.9" and i > 0:
+
+                            cf = axi[i].contourf(xcvz, ycvz, ratiocvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                           .9, .95, 1], cmap='GnBu')
+                            cs = axi[i].contour(xcvz, ycvz, ratiocvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
+                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
+                                                                          .9, .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('CM Angle (Deg)')
+                            title25 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title25, fontsize=18)
+
+                        # 4 detector cone CM vs z
+                        if plotnum == "4.1.2.9" and i > 0:
+
+                            cf = axi[i].contourf(xcvz, ycvz, ratioconecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                  .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                  .85, .9, .95, 1], cmap='Greens')
+                            cs = axi[i].contour(xcvz, ycvz, ratioconecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                 .85, .9, .95, 1], colors='k',
+                                                linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('CM Angle (Deg)')
+                            title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title26, fontsize=18)
+
+                        # 4 detector pipe CM vs z
+                        if plotnum == "4.1.3.9" and i > 0:
+
+                            cf = axi[i].contourf(xcvz, ycvz, ratiopipecvz_blurr, [.05, .15, .25, .35, .45,
+                                                                                  .55, .65, .75, .85,
+                                                                                  .95, 1], cmap='Reds')
+                            cs = axi[i].contour(xcvz, ycvz, ratiopipecvz_blurr, [.05, .15, .25, .35, .45,
+                                                                                 .55, .65, .75, .85,
+                                                                                 .95, 1], colors='k', linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('CM Angle (Deg)')
+                            title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title27, fontsize=18)
+
+                        # 4 detector nozzle CM vs z
+                        if plotnum == "4.1.4.9" and i > 0:
+
+                            cf = axi[i].contourf(xcvz, ycvz, rationozzlecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                    .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                    .85, .9, .95, 1], cmap='Blues')
+                            cs = axi[i].contour(xcvz, ycvz, rationozzlecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
+                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
+                                                                                   .85, .9, .95, 1], colors='k',
+                                                linewidths=.2)
+                            cbar = fig.colorbar(cf, ax=axi[i])
+                            axi[i].set_xlabel('z (m)')
+                            axi[i].set_ylabel('CM Angle (Deg)')
+                            title28 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle, B = " + \
+                                      str(df['Magnetic Field'][0]) + " T"
+                            plt.suptitle(title28, fontsize=18)
+
+                        # Phi vs Lab Angle contour
+                        if plotnum == "6.1.9.9" and i == 0:
                             plt.rc('axes', labelsize=16)
                             plt.rc('xtick', labelsize=16)
                             plt.rc('ytick', labelsize=16)
@@ -897,7 +1614,7 @@ def plot(pklin, pkloverlay):
                         # Here we do something a little different, and instead of contour plots we do ratio plots,
                         # still using the bins that were defined above.
 
-                if plotnum > 29 and plotnum < 34:
+                if int(aa) == 7:
                     # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
                     # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
                     # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
@@ -981,28 +1698,28 @@ def plot(pklin, pkloverlay):
                     pbins2 = pbins2[zeromask]
 
                     # The next 3 hists are the ratio plots broken up by detector on the same plot:
-                    if plotnum == 30:
+                    if plotnum == "7.1.9.9":
                         axs.plot(tbins2, divt, marker='o')
                         axs.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower right', fontsize=16)
                         axs.set_xlabel('Lab Angle (Deg)')
                         axs.set_ylabel('Fraction of Particles Detected')
 
-                    if plotnum == 31:
+                    if plotnum == "7.2.9.9":
                         axs.plot(ebins2, dive, marker='o')
                         axs.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower left', fontsize=16)
                         axs.set_xlabel('Energy (MeV)')
                         axs.set_ylabel('Fraction of Particles Detected')
 
-                    if plotnum == 32:
+                    if plotnum == "7.3.9.9":
                         axs.plot(zbins2, divz, marker='o')
                         axs.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower left', fontsize=16)
                         axs.set_xlabel('z (m)')
                         axs.set_ylabel('Fraction of Particles Detected')
 
-                    if plotnum == 33:
+                    if plotnum == "7.4.9.9":
 
                         stdcolors = ['Blue', 'Orange', 'limegreen', 'Red', 'Purple']
                         labels32 = ['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4']
@@ -1037,9 +1754,9 @@ def plot(pklin, pkloverlay):
                         plt.ylabel('Fraction of Particles Detected', rotation=0, size=14, labelpad=-370)
 
                 # This next section is for solid targets only:
-                if plotnum > 33 and plotnum < 40:
+                if sol:
 
-                    if (plotnum == 34 or plotnum == 35) and i > 0:
+                    if (plotnum == "1.1.0.0" or plotnum == "1.1.0.1") and i > 0:
 
                         axi[i].hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
                                     df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
@@ -1047,14 +1764,14 @@ def plot(pklin, pkloverlay):
                         axi[i].set_xlabel('z(m)')
                         axi[i].set_ylabel('Energy (MeV)')
 
-                        if plotnum == 35:
+                        if plotnum == "1.1.0.1":
                             axi[i].hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
                                        df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
                                        range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
                             axi[i].set_xlabel('z(m)')
                             axi[i].set_ylabel('Energy (MeV)')
 
-                    if (plotnum == 36) and i > 0:
+                    if (plotnum == "1.1.0.2") and i > 0:
 
                         axi[i].hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
                                     df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
@@ -1062,13 +1779,13 @@ def plot(pklin, pkloverlay):
                         axi[i].set_xlabel('z(m)')
                         axi[i].set_ylabel('Energy (MeV)')
 
-                    if plotnum == 37 and i == 0:
+                    if plotnum == "5.0.0.0" and i == 0:
                         axs.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750, range=[-0.2, exmax])
                         axs.set_xlabel('Excitation Energy (MeV)')
                         axs.set_ylabel('Counts')
 
                         # 35 is the same as 11 but also showing blocked particles.
-                    if plotnum == 38 and i > 0:
+                    if plotnum == "5.1.0.1" and i > 0:
 
                         axi[i].hist((df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]],
                                   df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]),
@@ -1076,7 +1793,7 @@ def plot(pklin, pkloverlay):
                         axi[i].set_xlabel('Excitation Energy (MeV)')
                         axi[i].set_ylabel('Counts')
 
-                    if plotnum == 39 and i > 0:
+                    if plotnum == "5.1.0.0" and i > 0:
 
                         axi[i].hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
                                  range=[-0.2, exmax])
@@ -1084,17 +1801,64 @@ def plot(pklin, pkloverlay):
                         axi[i].set_ylabel('Counts')
 
                 # Handle the legend here for each plot that needs it.
-                if i == 1 and (plotnum == 2 or plotnum == 3 or plotnum == 5 or
-                               plotnum == 6 or plotnum == 9 or plotnum == 11):
+                if i == 1 and int(dd) == 1:
                     handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
                     labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
-                    if plotnum == 11:
+                    if plotnum == "11":
                         plt.legend(handles, labels, bbox_to_anchor=(1.0, .9), ncol=4)
                     else:
                         plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
 
-        elif plotnum == 0:
+        elif aa == "0":
             switch = 1
+        elif aa == "400":
+            # Here, we'll export the pandas data frame to a text file for use with Tableau or another visualization tool
+            # We need to turn the masks into strings instead.
+            df["Detector Selection"] = ""
+            df["z-axis Detectors"] = ""
+            df["Shadowing"] = ""
+            detznames = ["z1", "z2", "z3", "z4", "z5", "z6"]
+            detnames = ["Detector 2", "Detector 1", "Detector 3", "Detector 4"]
+            detzarr = [df["Detz1"], df["Detz2"], df["Detz3"], df["Detz4"], df["Detz5"], df["Detz6"]]
+            blkmasks = [df["Unblocked"], df["Blocked_Cone"], df["Blocked_Pipe"], df["Blocked_Nozzle"]]
+            unb = ["Unblocked", "Cone", "Pipe", "Nozzle"]
+            for j in range(4):
+                df["Detector Selection"] = np.where(detarr[j+1], detnames[j], df["Detector Selection"])
+                df["Shadowing"] = np.where(blkmasks[j], unb[j], df["Shadowing"])
+            for k in range(6):
+                df["z-axis Detectors"] = np.where(detzarr[k], detznames[k], df["z-axis Detectors"])
+
+            empmask1 = df["z-axis Detectors"] == ""
+            empmask2 = df["Shadowing"] == ""
+            df["z-axis Detectors"] = np.where(empmask1, "Not Detected", df["z-axis Detectors"])
+            df["Shadowing"] = np.where(empmask2, "Magnet Bore", df["Shadowing"])
+
+            csvfile = pklin[:-4] + ".csv"
+
+            print("Saving DataFrame to csv...")
+            df.to_csv(csvfile, index=True, header=True)
+            print("csv file created in ./Output_Files!")
+
+        if aa != '100' and aa != '101':
+            lastentry = plotnum
+
+        if currentry == '300':
+            print("SWITCHBACKDF")
+            overlaybool = False
+            df = df_main
+            if detposbool:
+                detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                                               df['Detz5'] | df['Detz6']),
+                          df["Det2"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                                        df['Detz5'] | df['Detz6']),
+                          df["Det1"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                                        df['Detz5'] | df['Detz6']),
+                          df["Det3"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                                        df['Detz5'] | df['Detz6']),
+                          df["Det4"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
+                                        df['Detz5'] | df['Detz6'])]
+            else:
+                detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
 
     input("\nPress ENTER to end.")
 
