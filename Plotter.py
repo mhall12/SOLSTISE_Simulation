@@ -407,9 +407,6 @@ def plot(pklin, pkloverlay):
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
                 axi = np.array([0, ax1, ax2, ax3, ax4])
 
-            print('AA', aa)
-            print('PLOTNUM', plotnum)
-
             if aa == "100":
                 for j in range(5):
                     detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
@@ -424,7 +421,7 @@ def plot(pklin, pkloverlay):
                               df['Detz5'] | df['Detz6'])]
                 detposonoff = Color.GREEN + "ON" + Color.END
                 detposbool = True
-                print("DETZHAPPENING")
+
             if aa == "101":
                 for j in range(5):
                     detarr = [df["AllPossible"],
@@ -434,244 +431,324 @@ def plot(pklin, pkloverlay):
                               df["Det4"]]
                 detposonoff = Color.RED + "OFF" + Color.END
                 detposbool = False
-                print("DETZHAPPENING2")
 
+            for i in range(5):
 
+                if not sol:
+                    # These set the E vs z histograms
+                    if int(aa) == 1 and int(cc) == 0:
+                        xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, 0, emax, 'z (m)', 'Energy (MeV)'
+                        binsmin, binsmax = 550, 550
+
+                        if 0 <= int(dd) <= 1:
+                            dfx1, dfy1 = df['zpos_final'][detarr[i] & df["Unblocked"]], \
+                                         df['Energy'][detarr[i] & df["Unblocked"]]
+
+                        if 1 <= int(dd) <= 2:
+                            dfx2, dfy2 = df['zpos_final'][detarr[i] & df["Blocked_Cone"]], \
+                                         df['Energy'][detarr[i] & df["Blocked_Cone"]]
+                            dfx3, dfy3 = df['zpos_final'][detarr[i] & df["Blocked_Pipe"]], \
+                                         df['Energy'][detarr[i] & df["Blocked_Pipe"]]
+                            dfx4, dfy4 = df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]], \
+                                         df['Energy'][detarr[i] & df["Blocked_Nozzle"]]
+
+                    # These set the E vs Theta
+                    if int(aa) == 2 and int(cc) == 0:
+                        xmin, xmax, ymin, ymax, xlabel, ylabel = thmin, thmax, 0, emax, 'Theta (Deg)', \
+                                                                 'Energy (MeV)'
+                        binsmin, binsmax = 750, 750
+
+                        if 0 <= int(dd) <= 1:
+                            dfx1, dfy1 = df['Theta_Deg'][df["Unblocked"] & detarr[i]], \
+                                         df['Energy'][detarr[i] & df["Unblocked"]]
+
+                        if 1 <= int(dd) <= 2:
+                            dfx2, dfy2 = df['Theta_Deg'][df["Blocked_Cone"] & detarr[i]], \
+                                         df['Energy'][detarr[i] & df["Blocked_Cone"]]
+                            dfx3, dfy3 = df['Theta_Deg'][df["Blocked_Pipe"] & detarr[i]], \
+                                         df['Energy'][detarr[i] & df["Blocked_Pipe"]]
+                            dfx4, dfy4 = df['Theta_Deg'][df["Blocked_Nozzle"] & detarr[i]], \
+                                         df['Energy'][detarr[i] & df["Blocked_Nozzle"]]
+
+                    # These set the Theta vs z hists
+                    if int(aa) == 3 and int(cc) == 0:
+                        xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, thmin, thmax, 'z (m)', 'Theta (Deg)'
+                        binsmin, binsmax = 550, 550
+
+                        if 0 <= int(dd) <= 1:
+                            dfx1, dfy1 = df['zpos_final'][df["Unblocked"] & detarr[i]], \
+                                         df['Theta_Deg'][df["Unblocked"] & detarr[i]]
+
+                        if 1 <= int(dd) <= 2:
+                            dfx2, dfy2 = df['zpos_final'][df["Blocked_Cone"] & detarr[i]], \
+                                         df['Theta_Deg'][df["Blocked_Cone"] & detarr[i]]
+                            dfx3, dfy3 = df['zpos_final'][df["Blocked_Pipe"] & detarr[i]], \
+                                         df['Theta_Deg'][df["Blocked_Pipe"] & detarr[i]]
+                            dfx4, dfy4 = df['zpos_final'][df["Blocked_Nozzle"] & detarr[i]], \
+                                         df['Theta_Deg'][df["Blocked_Nozzle"] & detarr[i]]
+
+                    # These set the CM angle vs z hists
+                    if int(aa) == 4 and int(cc) == 0:
+                        xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, cmmin, cmmax, 'z (m)', 'CM Angle (Deg)'
+                        binsmin, binsmax = 550, 550
+
+                        if 0 <= int(dd) <= 1:
+                            dfx1, dfy1 = df['zpos_final'][df["Unblocked"] & detarr[i]], \
+                                         df['CM_Deg'][df["Unblocked"] & detarr[i]]
+
+                        if 1 <= int(dd) <= 2:
+                            dfx2, dfy2 = df['zpos_final'][df["Blocked_Cone"] & detarr[i]], \
+                                         df['CM_Deg'][df["Blocked_Cone"] & detarr[i]]
+                            dfx3, dfy3 = df['zpos_final'][df["Blocked_Pipe"] & detarr[i]], \
+                                         df['CM_Deg'][df["Blocked_Pipe"] & detarr[i]]
+                            dfx4, dfy4 = df['zpos_final'][df["Blocked_Nozzle"] & detarr[i]], \
+                                         df['CM_Deg'][df["Blocked_Nozzle"] & detarr[i]]
+
+                if int(bb) == 1:
+                    itest = i > 0
+                    axes = axi[i]
+                if int(bb) == 0:
+                    itest = i == 0
+                    axes = axs
 
             # i > 0 for the 4 detector plots
             # i == 0 for the sum spectra
-            for i in range(5):
-                # The first histograms are Energy vs Z 2D histograms. 1) unblocked particles only, 2) blocked only,
-                # 3) Unblocked and blocked together on the same hist.
-                if (plotnum == "1.1.0.0" or plotnum == "1.1.0.1") and i > 0 and not sol:
 
-                    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
-                               df['Energy'][detarr[i] & df["Unblocked"]], bins=(550, 550),
-                                  range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
-                    axi[i].set_xlabel('z (m)')
-                    axi[i].set_ylabel('Energy (MeV)')
+                if int(aa) < 5 and int(cc) == 0 and 0 <= int(dd) <= 1 and itest:
 
-                if (plotnum == "1.1.0.1" or plotnum == "1.1.0.2") and i > 0 and not sol:
+                    axes.hist2d(dfx1, dfy1, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                  cmap=newcmpBlack, zorder=1)
+                    axes.set_xlabel(xlabel)
+                    axes.set_ylabel(ylabel)
+
+                if int(aa) < 5 and int(cc) == 0 and 1 <= int(dd) <= 2 and itest:
 
                     # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
                     try:
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
-                        axi[i].set_xlabel('z (m)')
-                        axi[i].set_ylabel('Energy (MeV)')
+                        axes.hist2d(dfx2, dfy2, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                    cmap=newcmpGreen)
+                        axes.hist2d(dfx3, dfy3, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                    cmap=newcmpRed)
+                        axes.hist2d(dfx4, dfy4, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                    cmap=newcmpBlue)
+                        axes.set_xlabel(xlabel)
+                        axes.set_ylabel(ylabel)
                     except KeyError:
                         print("ERROR")
 
-                # This hist is just a 1D number of blocked counts vs theta. A better percentage version broken up by
-                # detector is made in hist 28, this was just a first pass.
-                # Now taken out of the code to make 4 an E vs z 2D hist with all detectors
-                #if plotnum == 4 and i == 0:
-                #    axs.hist(df['Theta_Deg'][df['Blocked_Cone'] | df['Blocked_Pipe'] | df['Blocked_Nozzle']])
-                #    axs.xlabel('Lab Angle (deg)')
-                #    axs.ylabel('Counts')
+             #   if int(aa) < 5 and int(bb) == 0 and int(cc) == 0 and 0 <= int(dd) <= 1 and i > 0 and not sol:
+             #       axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+             #                  df['Energy'][df["Unblocked"] & detarr[i]], bins=(550, 550),
+             #                  range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
+             #       axs.set_xlabel('z (m)')
+             #       axs.set_ylabel('Energy (MeV)')
 
-                # 1D Unblocked
-                if (plotnum == "1.0.0.0" or plotnum == "1.0.0.1") and i == 0 and not sol:
-                    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
-                               df['Energy'][df["Unblocked"] & detarr[i]], bins=(550, 550),
-                               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
-                    axs.set_xlabel('z (m)')
-                    axs.set_ylabel('Energy (MeV)')
+             #   if int(aa) < 5 and int(bb) == 0 and int(cc) == 0 and 1 <= int(dd) <= 2 and i > 0 and not sol:
+             #       try:
+             #           axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+             #                      df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+             #                         range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
+             #           axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+             #                      df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+             #                         range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+             #           axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+             #                      df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+             #                         range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
+             #           axs.set_xlabel('z (m)')
+             #           axs.set_ylabel('Energy (MeV)')
+             #       except KeyError:
+             #           print("ERROR")
 
-                if (plotnum == "1.0.0.1" or plotnum == "1.0.0.2") and i == 0 and not sol:
-                    try:
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
-                        axs.set_xlabel('z (m)')
-                        axs.set_ylabel('Energy (MeV)')
-                    except KeyError:
-                        print("ERROR")
+                # The first histograms are Energy vs Z 2D histograms. 1) unblocked particles only, 2) blocked only,
+                # 3) Unblocked and blocked together on the same hist.
 
-                # 5 is raw counts vs Z in all four detectors, where 6 is the same but a stacked hist of blocked
-                # particles, broken up by blocking type and detector. Different version
-                # broken up by detector only in plot 30
-                #if plotnum == 5 and i > 0:
-                #
-                #    axi[i].hist(df['zpos_final'][df['Blocked_Cone'] & detarr[i]], bins=375, range=[-0.5, 0],
-                #             color=grn, alpha=1)
-                #    axi[i].hist(df['zpos_final'][df['Blocked_Pipe'] & detarr[i]], bins=375, range=[-0.5, 0],
-                #             color=red, alpha=0.7)
-                #    axi[i].hist(df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]], bins=375, range=[-0.5, 0],
-                #             color=blu, alpha=0.6)
-                #    axi[i].set_xlabel('z(m)')
-                #    axi[i].set_ylabel('Counts')
+                #if (plotnum == "1.1.0.0" or plotnum == "1.1.0.1") and i > 0 and not sol:
 
-                #if plotnum == 6 and i > 0:
+                #    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
+                #               df['Energy'][detarr[i] & df["Unblocked"]], bins=(550, 550),
+                #                  range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
+                #    axi[i].set_xlabel('z (m)')
+                #    axi[i].set_ylabel('Energy (MeV)')
 
-                 #   axi[i].hist((df['zpos_final'][df['Blocked_Cone'] & detarr[i]],
-                 #               df['zpos_final'][df['Blocked_Pipe'] & detarr[i]],
-                 #               df['zpos_final'][df['Blocked_Nozzle'] & detarr[i]]),
-                 #               bins=375, range=[-0.5, 0], color=(grn, red, blu), stacked=True)
-                 #   axi[i].set_xlabel('z (m)')
-                 #   axi[i].set_ylabel('Counts')
+                #if (plotnum == "1.1.0.1" or plotnum == "1.1.0.2") and i > 0 and not sol:
 
-                # 7 is the same as 6 but for theta instead of z.
-                # 7 is also getting repurposed.
-                #if plotnum == 7 and i > 0:
+                    # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
+                #    try:
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
+                #        axi[i].set_xlabel('z (m)')
+                #        axi[i].set_ylabel('Energy (MeV)')
+                #    except KeyError:
+                #        print("ERROR")
 
-                 #   axi[i].hist((df['Theta_Deg'][df['Blocked_Cone'] & detarr[i]],
-                  #            df['Theta_Deg'][df['Blocked_Pipe'] & detarr[i]],
-                  #            df['Theta_Deg'][df['Blocked_Nozzle'] & detarr[i]]),
-                   #          bins=60, range=[90, 120], color=(grn, red, blu), stacked=True)
-                   # axi[i].set_xlabel('Lab Angle (Deg)')
-                   # axi[i].set_ylabel('Counts')
+                # Summed Unblocked histograms
+                #if (plotnum == "1.0.0.0" or plotnum == "1.0.0.1") and i == 0 and not sol:
+                #    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+                #               df['Energy'][df["Unblocked"] & detarr[i]], bins=(550, 550),
+                #               range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack, zorder=1)
+                #    axs.set_xlabel('z (m)')
+                #    axs.set_ylabel('Energy (MeV)')
+
+                #if (plotnum == "1.0.0.1" or plotnum == "1.0.0.2") and i == 0 and not sol:
+                #    try:
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [0, emax]], cmap=newcmpGreen)
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [0, emax]], cmap=newcmpBlue)
+                #        axs.set_xlabel('z (m)')
+                #        axs.set_ylabel('Energy (MeV)')
+                #    except KeyError:
+                #        print("ERROR")
+
+                # # Lab Angle vs z 2D hists broken down by detector
+                # if (plotnum == "3.1.0.0" or plotnum == "3.1.0.1") and i > 0 and not sol:
+
+                #    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
+                #                  df['Theta_Deg'][detarr[i] & df["Unblocked"]], bins=(550, 550),
+                #                  range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlack, zorder=1)
+                #    axi[i].set_xlabel('z (m)')
+                #    axi[i].set_ylabel('Lab Angle (Deg)')
+
+                #if (plotnum == "3.1.0.1" or plotnum == "3.1.0.2") and i > 0 and not sol:
+                #    try:
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpGreen)
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpRed)
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlue)
+                #        axi[i].set_xlabel('z (m)')
+                #        axi[i].set_ylabel('Lab Angle (Deg)')
+                #    except KeyError:
+                #        print("ERROR")
 
                 # Lab Angle vs z
-                if (plotnum == "3.1.0.0" or plotnum == "3.1.0.1") and i > 0 and not sol:
-
-                    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
-                                  df['Theta_Deg'][detarr[i] & df["Unblocked"]], bins=(550, 550),
-                                  range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlack, zorder=1)
-                    axi[i].set_xlabel('z (m)')
-                    axi[i].set_ylabel('Lab Angle (Deg)')
-
-                if (plotnum == "3.1.0.1" or plotnum == "3.1.0.2") and i > 0 and not sol:
-                    try:
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpGreen)
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpRed)
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlue)
-                        axi[i].set_xlabel('z (m)')
-                        axi[i].set_ylabel('Lab Angle (Deg)')
-                    except KeyError:
-                        print("ERROR")
-
-                # Lab Angle vs z
-                if (plotnum == "3.0.0.0" or plotnum == "3.0.0.1") and i == 0 and not sol:
-                    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
-                               df['Theta_Deg'][df["Unblocked"] & detarr[i]], bins=(550, 550),
-                               range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlack, zorder=1)
-                    axs.set_xlabel('z (m)')
-                    axs.set_ylabel('Lab Angle (Deg)')
-                if (plotnum == "3.0.0.1" or plotnum == "3.0.0.2") and i == 0 and not sol:
-                    try:
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpGreen)
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpRed)
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlue)
-                        axs.set_xlabel('z (m)')
-                        axs.set_ylabel('Lab Angle (Deg)')
-                    except KeyError:
-                        print("ERROR")
+                #if (plotnum == "3.0.0.0" or plotnum == "3.0.0.1") and i == 0 and not sol:
+                #    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+                #               df['Theta_Deg'][df["Unblocked"] & detarr[i]], bins=(550, 550),
+                #               range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlack, zorder=1)
+                #    axs.set_xlabel('z (m)')
+                #    axs.set_ylabel('Lab Angle (Deg)')
+                #if (plotnum == "3.0.0.1" or plotnum == "3.0.0.2") and i == 0 and not sol:
+                #    try:
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpGreen)
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpRed)
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [thmin, thmax]], cmap=newcmpBlue)
+                #        axs.set_xlabel('z (m)')
+                #        axs.set_ylabel('Lab Angle (Deg)')
+                #    except KeyError:
+                #        print("ERROR")
 
                 # CM Angle vs z
-                if (plotnum == "4.1.0.0" or plotnum == "4.1.0.1") and i > 0 and not sol:
-                    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
-                                  df['CM_Deg'][detarr[i] & df["Unblocked"]], bins=(550, 550),
-                                  range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlack, zorder=1)
-                    axi[i].set_xlabel('z (m)')
-                    axi[i].set_ylabel('CM Angle (Deg)')
-                if (plotnum == "4.1.0.2" or plotnum == "4.1.0.1") and i > 0 and not sol:
-                    try:
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['CM_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpGreen)
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['CM_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpRed)
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['CM_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlue)
-                        axi[i].set_xlabel('z (m)')
-                        axi[i].set_ylabel('CM Angle (Deg)')
-                    except KeyError:
-                        print("ERROR")
+                #if (plotnum == "4.1.0.0" or plotnum == "4.1.0.1") and i > 0 and not sol:
+                #    axi[i].hist2d(df['zpos_final'][detarr[i] & df["Unblocked"]],
+                #                  df['CM_Deg'][detarr[i] & df["Unblocked"]], bins=(550, 550),
+                #                  range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlack, zorder=1)
+                #    axi[i].set_xlabel('z (m)')
+                #    axi[i].set_ylabel('CM Angle (Deg)')
+                #if (plotnum == "4.1.0.2" or plotnum == "4.1.0.1") and i > 0 and not sol:
+                #    try:
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['CM_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpGreen)
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['CM_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpRed)
+                #        axi[i].hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['CM_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlue)
+                #        axi[i].set_xlabel('z (m)')
+                #        axi[i].set_ylabel('CM Angle (Deg)')
+                #    except KeyError:
+                #        print("ERROR")
 
-                if (plotnum == "4.0.0.0" or plotnum == "4.0.0.1") and i == 0 and not sol:
-                    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
-                               df['CM_Deg'][df["Unblocked"] & detarr[i]], bins=(550, 550),
-                               range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlack, zorder=1)
-                    axs.set_xlabel('z (m)')
-                    axs.set_ylabel('CM Angle (Deg)')
-                if (plotnum == "4.0.0.2" or plotnum == "4.0.0.1") and i == 0 and not sol:
-                    try:
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
-                                   df['CM_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpGreen)
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['CM_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpRed)
-                        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['CM_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlue)
-                        axs.set_xlabel('z (m)')
-                        axs.set_ylabel('CM Angle (Deg)')
-                    except KeyError:
-                        print("ERROR")
+                #if (plotnum == "4.0.0.0" or plotnum == "4.0.0.1") and i == 0 and not sol:
+                #    axs.hist2d(df['zpos_final'][df["Unblocked"] & detarr[i]],
+                #               df['CM_Deg'][df["Unblocked"] & detarr[i]], bins=(550, 550),
+                #               range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlack, zorder=1)
+                #    axs.set_xlabel('z (m)')
+                #    axs.set_ylabel('CM Angle (Deg)')
+                #if (plotnum == "4.0.0.2" or plotnum == "4.0.0.1") and i == 0 and not sol:
+                #    try:
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['CM_Deg'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpGreen)
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['CM_Deg'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpRed)
+                #        axs.hist2d(df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['CM_Deg'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[zmin, zmax], [cmmin, cmmax]], cmap=newcmpBlue)
+                #        axs.set_xlabel('z (m)')
+                #        axs.set_ylabel('CM Angle (Deg)')
+                #    except KeyError:
+                #        print("ERROR")
 
                 # Energy vs theta lab
-                if (plotnum == "2.0.0.0" or plotnum == "2.0.0.1") and i == 0 and not sol:
-                    axs.hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
-                               df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
-                               range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
-                    axs.set_xlabel('Lab Angle (Deg)')
-                    axs.set_ylabel('Energy (MeV)')
-                if (plotnum == "2.0.0.2" or plotnum == "2.0.0.1") and i == 0 and not sol:
-                    try:
-                        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
-                        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
-                        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
-                        axs.set_xlabel('Lab Angle (Deg)')
-                        axs.set_ylabel('Energy (MeV)')
-                    except KeyError:
-                        print("ERROR")
+                #if (plotnum == "2.0.0.0" or plotnum == "2.0.0.1") and i == 0 and not sol:
+                #    axs.hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
+                #               df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
+                #               range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
+                #    axs.set_xlabel('Lab Angle (Deg)')
+                #    axs.set_ylabel('Energy (MeV)')
+                #if (plotnum == "2.0.0.2" or plotnum == "2.0.0.1") and i == 0 and not sol:
+                #    try:
+                #        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
+                #        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
+                #        axs.hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
+                #        axs.set_xlabel('Lab Angle (Deg)')
+                #        axs.set_ylabel('Energy (MeV)')
+                #    except KeyError:
+                #        print("ERROR")
 
-                if (plotnum == "2.1.0.0" or plotnum == "2.1.0.1") and i > 0 and not sol:
-                    axi[i].hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
-                               df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
-                               range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
-                    axi[i].set_xlabel('Lab Angle (Deg)')
-                    axi[i].set_ylabel('Energy (MeV)')
-                if (plotnum == "2.1.0.2" or plotnum == "2.1.0.1") and i > 0 and not sol:
-                    try:
-                        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
-                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
-                        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
-                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
-                        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]],
-                                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
-                                      range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
-                        axi[i].set_xlabel('Lab Angle (Deg)')
-                        axi[i].set_ylabel('Energy (MeV)')
-                    except KeyError:
-                        print("ERROR")
+                #if (plotnum == "2.1.0.0" or plotnum == "2.1.0.1") and i > 0 and not sol:
+                #    axi[i].hist2d(df['Theta_Deg'][df["Unblocked"] & detarr[i]],
+                #               df['Energy'][df["Unblocked"] & detarr[i]], bins=(750, 750),
+                #               range=[[thmin, thmax], [0, emax]], cmap=newcmpBlack, zorder=1)
+                #    axi[i].set_xlabel('Lab Angle (Deg)')
+                #    axi[i].set_ylabel('Energy (MeV)')
+                #if (plotnum == "2.1.0.2" or plotnum == "2.1.0.1") and i > 0 and not sol:
+                #    try:
+                #        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Cone"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Cone"]], bins=(550, 550),
+                #                      range=[[thmin, thmax], [0, emax]], cmap=newcmpGreen)
+                #        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Pipe"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Pipe"]], bins=(550, 550),
+                #                      range=[[thmin, thmax], [0, emax]], cmap=newcmpRed)
+                #        axi[i].hist2d(df['Theta_Deg'][detarr[i] & df["Blocked_Nozzle"]],
+                #                   df['Energy'][detarr[i] & df["Blocked_Nozzle"]], bins=(550, 550),
+                #                      range=[[thmin, thmax], [0, emax]], cmap=newcmpBlue)
+                #        axi[i].set_xlabel('Lab Angle (Deg)')
+                #        axi[i].set_ylabel('Energy (MeV)')
+                #    except KeyError:
+                #       print("ERROR")
 
                 # 10 is the Excitation Energy reconstructed from the "detected" energy and z position
                 if plotnum == "5.0.0.0" and i == 0 and not sol:
@@ -1780,7 +1857,8 @@ def plot(pklin, pkloverlay):
                         axi[i].set_ylabel('Energy (MeV)')
 
                     if plotnum == "5.0.0.0" and i == 0:
-                        axs.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750, range=[-0.2, exmax])
+                        axs.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
+                                 range=[-0.2, exmax])
                         axs.set_xlabel('Excitation Energy (MeV)')
                         axs.set_ylabel('Counts')
 
