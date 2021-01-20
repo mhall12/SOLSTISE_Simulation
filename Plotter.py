@@ -142,75 +142,6 @@ def plot(pklin, pkloverlay):
     if fnmatch.fnmatch(pkloverlay, "*evts*"):
         df_over['CM_Deg'] = -1 * df_over["Theta_CM"] * 180 / np.pi + 180
 
-
-
-
-
-#    print("\n\nChoose from the list below to plot histograms from the generated data.\n"
-#          "The four histograms represent the four quadrants of a fictional cylindrical detector\n"
-#          "looking down the beam axis.\n")
-#    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
-#        print("\n1) Energy vs z: Unblocked particles in all 4 detectors (2D).\n"
-#              "2) Energy vs z: Blocked particles in all 4 detectors (2D).\n"
-#              "3) Energy vs z: Unblocked and blocked particles in all 4 detectors (2D).\n"
-#              "4) Energy vs z: Unblocked particles (2D).\n"
-#              "5) Counts vs z: Blocked counts vs z in all 4 detectors (1D).\n"
-#              "6) Counts vs z: Blocked counts vs z in all 4 detectors stacked (1D).\n"
-#              "7) Lab Angle vs z: Unblocked particles in all 4 detectors (2D).\n"
-##              "8) Lab Angle vs z: Unblocked particles (2D).\n"
-#              "9) CM Angle vs z: Unblocked particles in all 4 detectors (2D).\n"
-#              "10) CM Angle vs z: Unblocked particles (2D).\n"
-#              "11) Energy vs Lab Angle: Unblocked particles (2D).\n"
-#              "12) Energy vs Lab Angle: Unblocked particles in all 4 detectors (2D).\n"
- #             "13) Energy vs Lab Angle: Unblocked and blocked particles Energy vs ejected lab "
-#              "angle in all 4 detectors (2D).\n"
-#              "14) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D).\n"
-#              "15) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
-#              "detectors (1D).\n"
-#              "16) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D).\n")
-#    if fnmatch.fnmatch(pklin, '*allE*'):
-#        print("17) Energy vs Lab Angle: Contour plot of detected particles. \n"
-#              "18) Energy vs Lab Angle: Contour plot of particles not blocked by the cone. \n"
-#              "19) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe. \n"
-#              "20) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle. \n"
-#              "21) Energy vs Lab Angle: Contour plot of detected particles in all 4 detectors. \n"
-#              "22) Energy vs Lab Angle: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-#              "23) Energy vs Lab Angle: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-#              "24) Energy vs Lab Angle: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-#              "25) Energy vs z: Contour plot of detected particles. \n"
-#              "26) Energy vs z: Contour plot of particles not blocked by the cone. \n"
-#              "27) Energy vs z: Contour plot of particles not blocked by the pipe. \n"
-#              "28) Energy vs z: Contour plot of particles not blocked by the nozzle. \n"
-#              "29) Energy vs z: Contour plot of detected particles in all 4 detectors.. \n"
-#              "30) Energy vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-#              "31) Energy vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-#              "32) Energy vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-#              "33) CM Angle vs z: Contour plot of detected particles. \n"
- #             "34) CM Angle vs z: Contour plot of particles not blocked by the cone. \n"
-#              "35) CM Angle vs z: Contour plot of particles not blocked by the pipe. \n"
-#              "36) CM Angle vs z: Contour plot of particles not blocked by the nozzle. \n"
-#              "37) CM Angle vs z: Contour plot of detected particles in all 4 detectors.. \n"
-#              "38) CM Angle vs z: Contour plot of particles not blocked by the cone in all 4 detectors. \n"
-#              "39) CM Angle vs z: Contour plot of particles not blocked by the pipe in all 4 detectors. \n"
-#              "40) CM Angle vs z: Contour plot of particles not blocked by the nozzle in all 4 detectors. \n"
-#              "41) Lab Angle vs Initial Phi: Polar contour plot of detected particles.\n")
-#    if not fnmatch.fnmatch(pklin, '*eloss_s*'):
-#        print("42) Fraction of particles blocked vs lab angle. \n"
-#              "43) Fraction of particles blocked vs energy. \n"
-#              "44) Fraction of particles blocked vs z position. \n"
-#              "45) Fraction of particles blocked vs initial phi angle (Polar Plot).\n")#
-#
-#    if fnmatch.fnmatch(pklin, '*eloss_s*'):
-#        print("46) Energy vs z: Unblocked particles in all 4 detectors (2D). \n"
-#              "47) Energy vs z: Unblocked and Blocked particles in all 4 detectors (2D). \n"
-#              "48) Energy vs z: Blocked particles in all 4 detectors (2D). \n"
-#              "49) Counts vs Ex: Unblocked particles Ex from detected energy and position (1D). \n"
-#              "50) Counts vs Ex: Unblocked and blocked particles Ex from detected energy and position in all 4 "
-#              "detectors (1D).\n"
-#              "51) Counts vs Ex: Unblocked particles Ex from detected energy and position in all 4 detectors (1D).\n")
-
-
-
     overlaybool = False
     detposbool = False
     overlayonoff = Color.RED + "OFF" + Color.END
@@ -432,6 +363,8 @@ def plot(pklin, pkloverlay):
                 detposonoff = Color.RED + "OFF" + Color.END
                 detposbool = False
 
+            # *****************************************************************************************************
+
             for i in range(5):
 
                 if not sol:
@@ -504,15 +437,13 @@ def plot(pklin, pkloverlay):
                             dfx4, dfy4 = df['zpos_final'][df["Blocked_Nozzle"] & detarr[i]], \
                                          df['CM_Deg'][df["Blocked_Nozzle"] & detarr[i]]
 
+                # Determine here if the axes are single or multiple, and what the bool itest needs to be.
                 if int(bb) == 1:
                     itest = i > 0
                     axes = axi[i]
                 if int(bb) == 0:
                     itest = i == 0
                     axes = axs
-
-            # i > 0 for the 4 detector plots
-            # i == 0 for the sum spectra
 
                 if int(aa) < 5 and int(cc) == 0 and 0 <= int(dd) <= 1 and itest:
 
@@ -536,56 +467,28 @@ def plot(pklin, pkloverlay):
                     except KeyError:
                         print("ERROR")
 
-                # 10 is the Excitation Energy reconstructed from the "detected" energy and z position
-                if plotnum == "5.0.0.0" and i == 0 and not sol:
-                    axs.hist(df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]], bins=750, range=[-.2, exmax])
-                    axs.set_xlabel('Excitation Energy (MeV)')
-                    axs.set_ylabel('Counts')
+                if int(aa) == 5 and int(cc) == 0:
+                    dfx1 = df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]]
+                    dfx2 = df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]]
+                    dfx3 = df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]]
+                    dfx4 = df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]
 
-                if plotnum == "5.0.0.1" and i == 0 and not sol:
-                    axs.hist((df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]],
-                                 df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
-                                 df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
-                                 df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                                 bins=750, range=[-.2, exmax], color=(blk, grn, red, blu), stacked=True)
-                    axs.set_xlabel('Excitation Energy (MeV)')
-                    axs.set_ylabel('Counts')
+                if int(aa) == 5 and itest:
+                    axes.set_xlabel('Excitation Energy (MeV)')
+                    axes.set_ylabel('Counts')
+                    if int(dd) == 0:
+                        axes.hist(dfx1, bins=750, range=[-.2, exmax])
+                    if int(dd) == 1:
+                        axes.hist((dfx1, dfx2, dfx3, dfx4), bins=750, range=[-.2, exmax],  color=(blk, grn, red, blu),
+                                  stacked=True)
+                    if int(dd) == 2:
+                        axes.hist((dfx2, dfx3, dfx4), bins=750, range=[-.2, exmax],  color=(grn, red, blu),
+                                  stacked=True)
 
-                if plotnum == "5.0.0.2" and i == 0 and not sol:
-                    axs.hist((df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
-                                 df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
-                                 df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                                 bins=750, range=[-.2, exmax], color=(grn, red, blu), stacked=True)
-                    axs.set_xlabel('Excitation Energy (MeV)')
-                    axs.set_ylabel('Counts')
+            # *****************************************************************************************************
 
-                if plotnum == "5.1.0.0" and i > 0 and not sol:
-
-                    axi[i].hist(df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]], bins=750, range=[-.2, exmax])
-                    axi[i].set_xlabel('Excitation Energy (MeV)')
-                    axi[i].set_ylabel('Counts')
-
-                if plotnum == "5.1.0.1" and i > 0 and not sol:
-
-                    axi[i].hist((df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                             bins=750, range=[-.2, exmax], color=(blk, grn, red, blu), stacked=True)
-                    axi[i].set_xlabel('Excitation Energy (MeV)')
-                    axi[i].set_ylabel('Counts')
-
-                if plotnum == "5.1.0.2" and i > 0 and not sol:
-
-                    axi[i].hist((df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]],
-                              df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]),
-                             bins=750, range=[-.2, exmax], color=(grn, red, blu), stacked=True)
-                    axi[i].set_xlabel('Excitation Energy (MeV)')
-                    axi[i].set_ylabel('Counts')
-
-                # 14-29 are contour plots of blocked particles. These should only be used with "allE" simulated files
-                # because they don't really make sense with specific excited states populated.
+                # The next section are contour plots of blocked particles. These should only be used with "allE"
+                # simulated files because they don't really make sense with specific excited states populated.
                 if int(cc) > 0 and int(aa) < 7:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
@@ -903,561 +806,156 @@ def plot(pklin, pkloverlay):
                         rationozzletvz_blurr = ndimage.gaussian_filter(rationozzletvz, sigma=1.5, order=0)
 
                         # 13 is the contour plot of percentage of detected particles.
-                        if plotnum == "2.0.1.9" and i == 0:
-
-                            cf = axs.contourf(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                           .8, .85, .9, .95, 1], cmap='YlGnBu')
-                            cs = axs.contour(xevt, yevt, ratioevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                          .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-                            # cs = plt.contour(xevt, yevt, ratioevt_blurr, [.5, .6, .7, .8, .9], colors='k',
-                            # linewidths=1.2)
-                            # manual_locations = [(92, 5), (94, 5), (97, 5), (104, 5), (110, 5)]
-                            # labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
-                            # for l in labels:
-                            #    l.set_rotation(-90)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('Lab Angle (Deg)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title13 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title13, fontsize=18)
-
-                        # 14 is a contour plot of percetage of particles not blocked by the cone.
-                        if plotnum == "2.0.2.9" and i == 0:
-
-                            cf = axs.contourf(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
-                            cs = axs.contour(xevt, yevt, ratioconeevt_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                              .75, .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-                            #cs = plt.contour(xevt, yevt, ratioconeevt_blurr, [.5, .6, .7, .8, .9],
-                            #                 colors='k', linewidths=1.2)
-                            #manual_locations = [(94, 5), (96, 5), (100, 5), (106, 5)]
-                            #labels = plt.clabel(cs, inline=1, fontsize=14, manual=manual_locations)
-                            #for l in labels:
-                            #    l.set_rotation(-90)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('Lab Angle (Deg)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title14 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title14, fontsize=18)
-
-                        # 15 is the percentage of particles not blocked by the pipe
-                        if plotnum == "2.0.3.9" and i == 0:
-
-                            cf = axs.contourf(xevt, yevt, ratiopipeevt_blurr,
-                                              [.65, .7, .75, .8, .85, .9, .95, 1], cmap='Reds')
-                            cs = axs.contour(xevt, yevt, ratiopipeevt_blurr, [.65, .7, .75, .8, .85, .9, .95, 1],
-                                             colors='k', linewidths=.2)
-                            #cs = plt.contour(xevt, yevt, ratiopipeevt_blurr, [.7, .8, .9], colors='k', linewidths=1.2)
-                            #manual_locations = [(112, 5), (109, 6.2), (92, 9)]
-                            #labels = plt.clabel(cs, inline=1, inline_spacing=-20, fontsize=14, manual=manual_locations)
-                            #for l in labels:
-                            #    l.set_rotation(-90)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('Lab Angle (Deg)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title15 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title15, fontsize=18)
-
-                        # 16 is the percentage of particles not blocked by the nozzle
-                        if plotnum == "2.0.4.9" and i == 0:
-
-                            cf = axs.contourf(xevt, yevt, rationozzleevt_blurr, [.65, .7, .75, .8, .85, .9, .95, 1],
-                                              cmap='Blues')
-                            cs = axs.contour(xevt, yevt, rationozzleevt_blurr, [.65, .7, .75, .8, .85, .9, .95, 1],
-                                             colors='k', linewidths=.2)
-                            # cs = plt.contour(xevt, yevt, rationozzleevt_blurr, [.88, .92, .96], colors='k',
-                            # linewidths=1.2)
-                            # manual_locations = [(100, 7.5), (110, 6), (115, 4)]
-                            # labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14, manual=manual_locations)
-                            # for l in labels:
-                            #    l.set_rotation(-90)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('Lab Angle (Deg)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title16 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title16, fontsize=18)
-
-                        # 17 is the Energy vs angle split into the four detector quadrants, same as 12
-                        if plotnum == "2.1.1.9" and i > 0:
-
-                            cf = axi[i].contourf(xevt, yevt, ratioevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                               .85, .9, .95, 1], cmap='YlGnBu')
-                            cs = axi[i].contour(xevt, yevt, ratioevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                             .5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                             .95, 1],
-                                                colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('Lab Angle (Deg)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            plt.suptitle(df['Reaction'][0] + " Fraction of Particles Detected, B = " +
-                                         str(df['Magnetic Field'][0]) + " T", fontsize=18)
-
-                        # 18 is the Energy vs angle not blocked by the cone split into the four detector quadrants,
-                        # same as 13
-                        if plotnum == "2.1.2.9" and i > 0:
-
-                            cf = axi[i].contourf(xevt, yevt, ratioconeevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                               .85, .9, .95, 1], cmap='Greens')
-                            cs = axi[i].contour(xevt, yevt, ratioconeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                 .85, .9, .95, 1], colors='k',
-                                                linewidths=.3)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('Lab Angle (Deg)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            plt.suptitle(df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " +
-                                         str(df['Magnetic Field'][0]) + " T", fontsize=18)
-
-                        # 19 is the Energy vs angle not blocked by the pipe split into the four detector quadrants,
-                        # same as 14
-                        if plotnum == "2.1.3.9" and i > 0:
-
-                            cf = axi[i].contourf(xevt, yevt, ratiopipeevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                               .85, .9, .95, 1], cmap='Reds')
-                            cs = axi[i].contour(xevt, yevt, ratiopipeevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                 .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('Lab Angle (Deg)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            title19 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title19, fontsize=18)
-
-                        # 20 is the Energy vs angle not blocked by the nozzle split into the four detector quadrants,
-                        # same as 16
-                        if plotnum == "2.1.4.9" and i > 0:
-
-                            cf = axi[i].contourf(xevt, yevt, rationozzleevt_blurr,
-                                              [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
-                                               .85, .9, .95, 1], cmap='Blues')
-                            cs = axi[i].contour(xevt, yevt, rationozzleevt_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                   .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('Lab Angle (Deg)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            plt.suptitle(df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " +
-                                         str(df['Magnetic Field'][0]) + " T",
-                                         fontsize=18)
-
-                        # The contour plot cycle repeats here but is instead made with Energy vs z position.
-
-                        if plotnum == "1.0.1.9" and i == 0:
-
-                            cf = axs.contourf(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                           .8, .85, .9, .95, 1], cmap='GnBu')
-                            cs = axs.contour(xevz, yevz, ratioevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                          .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-                            # cs = plt.contour(xevz, yevz, ratioevz_blurr, [.5, .6, .7, .8, .9], colors='k',
-                            # linewidths=1.2)
-                            # manual_locations = [(-.35, 5), (-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                            # labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14,
-                            # manual=manual_locations)
-                            # for l in labels:
-                            #    l.set_rotation(-70)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Energy (MeV)')
-
-                            title21 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title21, fontsize=18)
-
-                        if plotnum == "1.0.2.9" and i == 0:
-
-                            cf = axs.contourf(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
-                            cs = axs.contour(xevz, yevz, ratioconeevz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                              .75, .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-                            # cs = plt.contour(xevz, yevz, ratioconeevz_blurr, [.5, .6, .7, .8, .9], colors='k',
-                            #                 linewidths=1.2)
-                            # manual_locations = [(-.28, 5), (-.15, 5), (-.11, 5.5), (-.09, 5.5)]
-                            # labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=16,
-                            # manual=manual_locations)
-                            # for l in labels:
-                            #    l.set_rotation(-70)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title22 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title22, fontsize=18)
-
-                        if plotnum == "1.0.3.9" and i == 0:
-
-                            cf = axs.contourf(xevz, yevz, ratiopipeevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                               .95, 1], cmap='Reds')
-                            cs = axs.contour(xevz, yevz, ratiopipeevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                              .95, 1], colors='k', linewidths=.2)
-                            # cs = plt.contour(xevz, yevz, ratiopipeevz_blurr, [.78, .86, .94], colors='k',
-                            #                 linewidths=1.2)
-                            # manual_locations = [(-.35, 6.2), (-.22, 7.3), (-.1, 8.3)]
-                            # labels = plt.clabel(cs, inline=1, inline_spacing=-10, fontsize=14,
-                            # manual=manual_locations)
-                            # for l in labels:
-                            #    l.set_rotation(0)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title23 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title23, fontsize=18)
-
-                        if plotnum == "1.0.4.9" and i == 0:
-
-                            cf = axs.contourf(xevz, yevz, rationozzleevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                                 .95, 1], cmap='Blues')
-                            cs = axs.contour(xevz, yevz, rationozzleevz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                                .95, 1], colors='k', linewidths=.2)
-                            # cs = plt.contour(xevz, yevz, rationozzleevz_blurr, [.88, .92, .96],
-                            #                 colors='k', linewidths=1.2)
-                            # manual_locations = [(-.4, 4.5), (-.35, 5), (-.2, 5)]
-                            # labels = plt.clabel(cs, inline=1, inline_spacing=-15, fontsize=14,
-                            # manual=manual_locations)
-                            # for l in labels:
-                            #    l.set_rotation(-65)
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Energy (MeV)')
-                            title24 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title24, fontsize=18)
-
-                        if plotnum == "1.1.1.9" and i > 0:
-
-                            cf = axi[i].contourf(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                           .9, .95, 1], cmap='GnBu')
-                            cs = axi[i].contour(xevz, yevz, ratioevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                          .9, .95, 1], colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            title25 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title25, fontsize=18)
-
-                        if plotnum == "1.1.2.9" and i > 0:
-
-                            cf = axi[i].contourf(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                  .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                  .85, .9, .95, 1], cmap='Greens')
-                            cs = axi[i].contour(xevz, yevz, ratioconeevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                 .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title26, fontsize=18)
-
-                        if plotnum == "1.1.3.9" and i > 0:
-
-                            cf = axi[i].contourf(xevz, yevz, ratiopipeevz_blurr, [.05, .15, .25, .35, .45,
-                                                                                  .55, .65, .75, .85,
-                                                                                  .95, 1], cmap='Reds')
-                            cs = axi[i].contour(xevz, yevz, ratiopipeevz_blurr, [.05, .15, .25, .35, .45,
-                                                                                 .55, .65, .75, .85,
-                                                                                 .95, 1], colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title27, fontsize=18)
-
-                        if plotnum == "1.1.4.9" and i > 0:
-
-                            cf = axi[i].contourf(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                    .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                    .85, .9, .95, 1], cmap='Blues')
-                            cs = axi[i].contour(xevz, yevz, rationozzleevz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                   .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Energy (MeV)')
-                            title28 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title28, fontsize=18)
-
-                        # The contour plot cycle repeats here but is instead made with Lab Angle vs z position.
-                        # All Theta vs z contour
-                        if plotnum == "3.0.1.9" and i == 0:
-
-                            cf = axs.contourf(xtvz, ytvz, ratiotvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                           .8, .85, .9, .95, 1], cmap='GnBu')
-                            cs = axs.contour(xtvz, ytvz, ratiotvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                          .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Lab Angle (Deg)')
-
-                            title21 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title21, fontsize=18)
-
-                        # Cone Lab Angle vs z
-                        if plotnum == "3.0.2.9" and i == 0:
-
-                            cf = axs.contourf(xtvz, ytvz, ratioconetvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
-                            cs = axs.contour(xtvz, ytvz, ratioconetvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                              .75, .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Lab Angle (Deg)')
-                            title22 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title22, fontsize=18)
-
-                        # Pipe Lab Angle vs z
-                        if plotnum == "3.0.3.9" and i == 0:
-
-                            cf = axs.contourf(xtvz, ytvz, ratiopipetvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                               .95, 1], cmap='Reds')
-                            cs = axs.contour(xtvz, ytvz, ratiopipetvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                              .95, 1], colors='k', linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Lab Angle (Deg)')
-                            title23 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title23, fontsize=18)
-
-                        # Nozzle Lab Angle vs z
-                        if plotnum == "3.0.4.9" and i == 0:
-
-                            cf = axs.contourf(xtvz, ytvz, rationozzletvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                                 .95, 1], cmap='Blues')
-                            cs = axs.contour(xtvz, ytvz, rationozzletvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                                .95, 1], colors='k', linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('Lab Angle (Deg)')
-                            title24 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title24, fontsize=18)
-
-                        # 4 detector Lab Angle vs z
-                        if plotnum == "3.1.1.9" and i > 0:
-
-                            cf = axi[i].contourf(xtvz, ytvz, ratiotvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                           .9, .95, 1], cmap='GnBu')
-                            cs = axi[i].contour(xtvz, ytvz, ratiotvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                          .9, .95, 1], colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Lab Angle (Deg)')
-                            title25 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title25, fontsize=18)
-
-                        # 4 detector cone Lab Angle vs z
-                        if plotnum == "3.1.2.9" and i > 0:
-
-                            cf = axi[i].contourf(xtvz, ytvz, ratioconetvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                  .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                  .85, .9, .95, 1], cmap='Greens')
-                            cs = axi[i].contour(xtvz, ytvz, ratioconetvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                 .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Lab Angle (Deg)')
-                            title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title26, fontsize=18)
-
-                        # 4 detector pipe Lab Angle vs z
-                        if plotnum == "3.1.3.9" and i > 0:
-
-                            cf = axi[i].contourf(xtvz, ytvz, ratiopipetvz_blurr, [.05, .15, .25, .35, .45,
-                                                                                  .55, .65, .75, .85,
-                                                                                  .95, 1], cmap='Reds')
-                            cs = axi[i].contour(xtvz, ytvz, ratiopipetvz_blurr, [.05, .15, .25, .35, .45,
-                                                                                 .55, .65, .75, .85,
-                                                                                 .95, 1], colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Lab Angle (Deg)')
-                            title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title27, fontsize=18)
-
-                        # 4 detector nozzle Lab Angle vs z
-                        if plotnum == "3.1.4.9" and i > 0:
-
-                            cf = axi[i].contourf(xtvz, ytvz, rationozzletvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                    .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                    .85, .9, .95, 1], cmap='Blues')
-                            cs = axi[i].contour(xtvz, ytvz, rationozzletvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                   .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('Lab Angle (Deg)')
-                            title28 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title28, fontsize=18)
-
-                        # The contour plot cycle repeats here but is instead made with CM Angle vs z position.
-                        # All CM vs z contour
-                        if plotnum == "4.0.1.9" and i == 0:
-
-                            cf = axs.contourf(xcvz, ycvz, ratiocvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                           .8, .85, .9, .95, 1], cmap='GnBu')
-                            cs = axs.contour(xcvz, ycvz, ratiocvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75,
-                                                                          .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('CM Angle (Deg)')
-
-                            title21 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title21, fontsize=18)
-
-                        # Cone CM vs z
-                        if plotnum == "4.0.2.9" and i == 0:
-
-                            cf = axs.contourf(xcvz, ycvz, ratioconecvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                               .75, .8, .85, .9, .95, 1], cmap='Greens')
-                            cs = axs.contour(xcvz, ycvz, ratioconecvz_blurr, [.25, .3, .4, .45, .5, .55, .6, .65, .7,
-                                                                              .75, .8, .85, .9, .95, 1], colors='k',
-                                             linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('CM Angle (Deg)')
-                            title22 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title22, fontsize=18)
-
-                        # Pipe CM vs z
-                        if plotnum == "4.0.3.9" and i == 0:
-
-                            cf = axs.contourf(xcvz, ycvz, ratiopipecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                               .95, 1], cmap='Reds')
-                            cs = axs.contour(xcvz, ycvz, ratiopipecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                              .95, 1], colors='k', linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('CM Angle (Deg)')
-                            title23 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title23, fontsize=18)
-
-                        # Nozzle CM vs z
-                        if plotnum == "4.0.4.9" and i == 0:
-
-                            cf = axs.contourf(xcvz, ycvz, rationozzlecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                                 .95, 1], cmap='Blues')
-                            cs = axs.contour(xcvz, ycvz, rationozzlecvz_blurr, [.5, .55, .6, .65, .7, .75, .8, .85, .9,
-                                                                                .95, 1], colors='k', linewidths=.2)
-
-                            cbar = fig.colorbar(cf, ax=axs)
-                            axs.set_xlabel('z (m)')
-                            axs.set_ylabel('CM Angle (Deg)')
-                            title24 = df['Reaction'][0] + " Fraction of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title24, fontsize=18)
-
-                        # 4 detector CM vs z
-                        if plotnum == "4.1.1.9" and i > 0:
-
-                            cf = axi[i].contourf(xcvz, ycvz, ratiocvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                           .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                           .9, .95, 1], cmap='GnBu')
-                            cs = axi[i].contour(xcvz, ycvz, ratiocvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4, .45,
-                                                                          .5, .55, .6, .65, .7, .75, .8, .85,
-                                                                          .9, .95, 1], colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('CM Angle (Deg)')
-                            title25 = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title25, fontsize=18)
-
-                        # 4 detector cone CM vs z
-                        if plotnum == "4.1.2.9" and i > 0:
-
-                            cf = axi[i].contourf(xcvz, ycvz, ratioconecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                  .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                  .85, .9, .95, 1], cmap='Greens')
-                            cs = axi[i].contour(xcvz, ycvz, ratioconecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                 .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                 .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('CM Angle (Deg)')
-                            title26 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Cone, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title26, fontsize=18)
-
-                        # 4 detector pipe CM vs z
-                        if plotnum == "4.1.3.9" and i > 0:
-
-                            cf = axi[i].contourf(xcvz, ycvz, ratiopipecvz_blurr, [.05, .15, .25, .35, .45,
-                                                                                  .55, .65, .75, .85,
-                                                                                  .95, 1], cmap='Reds')
-                            cs = axi[i].contour(xcvz, ycvz, ratiopipecvz_blurr, [.05, .15, .25, .35, .45,
-                                                                                 .55, .65, .75, .85,
-                                                                                 .95, 1], colors='k', linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('CM Angle (Deg)')
-                            title27 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Pipe, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title27, fontsize=18)
-
-                        # 4 detector nozzle CM vs z
-                        if plotnum == "4.1.4.9" and i > 0:
-
-                            cf = axi[i].contourf(xcvz, ycvz, rationozzlecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                    .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                    .85, .9, .95, 1], cmap='Blues')
-                            cs = axi[i].contour(xcvz, ycvz, rationozzlecvz_blurr, [.05, .1, .15, .2, .25, .3, .35, .4,
-                                                                                   .45, .5, .55, .6, .65, .7, .75, .8,
-                                                                                   .85, .9, .95, 1], colors='k',
-                                                linewidths=.2)
-                            cbar = fig.colorbar(cf, ax=axi[i])
-                            axi[i].set_xlabel('z (m)')
-                            axi[i].set_ylabel('CM Angle (Deg)')
-                            title28 = df['Reaction'][0] + " Percentage of Particles Not Blocked by the Nozzle, B = " + \
-                                      str(df['Magnetic Field'][0]) + " T"
-                            plt.suptitle(title28, fontsize=18)
+                        if int(aa) < 5 and int(dd) == 9:
+                            # Energy vs z contour plot parameters:
+                            if int(aa) == 1:
+                                xdata, ydata = xevz, yevz
+                                if int(cc) == 1:
+                                    ratiodata = ratioevz_blurr
+                                    cmp = 'GnBu'
+                                    title = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                            str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 2:
+                                    ratiodata = ratioconeevz_blurr
+                                    cmp = 'Greens'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by " \
+                                                                "the Cone, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 3:
+                                    ratiodata = ratiopipeevz_blurr
+                                    cmp = 'Reds'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Pipe, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 4:
+                                    ratiodata = rationozzleevz_blurr
+                                    cmp = 'Blues'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                if int(bb) == 0:
+                                    if 1 <= int(cc) <= 2:
+                                        conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
+                                    if 3 <= int(cc) <= 4:
+                                        conts = [.5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
+                                else:
+                                    conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                             .85, .9, .95, 1]
+
+                                color = 'k'
+                                lnwdth = 0.2
+                                xlabel, ylabel = 'z (m)', 'Energy (MeV)'
+
+                            # Energy vs theta lab contour plot parameters:
+                            if int(aa) == 2:
+                                xdata, ydata = xevt, yevt
+                                if int(cc) == 1:
+                                    ratiodata = ratioevt_blurr
+                                    cmp = 'YlGnBu'
+                                    title = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                            str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 2:
+                                    ratiodata = ratioconeevt_blurr
+                                    cmp = 'Greens'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by " \
+                                                                "the Cone, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 3:
+                                    ratiodata = ratiopipeevt_blurr
+                                    cmp = 'Reds'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Pipe, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 4:
+                                    ratiodata = rationozzleevt_blurr
+                                    cmp = 'Blues'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                if int(bb) == 0:
+                                    if 1 <= int(cc) <= 2:
+                                        conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
+                                    if 3 <= int(cc) <= 4:
+                                        conts = [.65, .7, .75, .8, .85, .9, .95, 1]
+                                else:
+                                    conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                             .85, .9, .95, 1]
+                                color = 'k'
+                                lnwdth = 0.2
+                                xlabel, ylabel = 'Lab Angle (Deg)', 'Energy (MeV)'
+
+                            # Lab angle vs z contour plot parameters:
+                            if int(aa) == 3:
+                                xdata, ydata = xtvz, ytvz
+                                if int(cc) == 1:
+                                    ratiodata = ratiotvz_blurr
+                                    cmp = 'YlGnBu'
+                                    title = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                            str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 2:
+                                    ratiodata = ratioconetvz_blurr
+                                    cmp = 'Greens'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by " \
+                                                                "the Cone, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 3:
+                                    ratiodata = ratiopipetvz_blurr
+                                    cmp = 'Reds'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Pipe, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 4:
+                                    ratiodata = rationozzletvz_blurr
+                                    cmp = 'Blues'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                if int(bb) == 0:
+                                    if 1 <= int(cc) <= 2:
+                                        conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
+                                    if 3 <= int(cc) <= 4:
+                                        conts = [.65, .7, .75, .8, .85, .9, .95, 1]
+                                else:
+                                    conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                             .85, .9, .95, 1]
+                                color = 'k'
+                                lnwdth = 0.2
+                                xlabel, ylabel = 'z (m)', 'Lab Angle (Deg)'
+
+                            # CM Angle vs z
+                            if int(aa) == 4:
+                                xdata, ydata = xcvz, ycvz
+                                if int(cc) == 1:
+                                    ratiodata = ratiocvz_blurr
+                                    cmp = 'YlGnBu'
+                                    title = df['Reaction'][0] + " Fraction of Particles Detected, B = " + \
+                                            str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 2:
+                                    ratiodata = ratioconecvz_blurr
+                                    cmp = 'Greens'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by " \
+                                                                "the Cone, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 3:
+                                    ratiodata = ratiopipecvz_blurr
+                                    cmp = 'Reds'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Pipe, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 4:
+                                    ratiodata = rationozzlecvz_blurr
+                                    cmp = 'Blues'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                if int(bb) == 0:
+                                    if 1 <= int(cc) <= 2:
+                                        conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
+                                    if 3 <= int(cc) <= 4:
+                                        conts = [.65, .7, .75, .8, .85, .9, .95, 1]
+                                else:
+                                    conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
+                                             .85, .9, .95, 1]
+                                color = 'k'
+                                lnwdth = 0.2
+                                xlabel, ylabel = 'z (m)', 'CM Angle (Deg)'
+
+                        if int(aa) < 5 and int(dd) == 9 and itest:
+                            cf = axes.contourf(xdata, ydata, ratiodata, conts, cmap=cmp)
+                            cs = axes.contour(xdata, ydata, ratiodata, conts, colors=color, linewidths=lnwdth)
+
+                            cbar = fig.colorbar(cf, ax=axes)
+                            axes.set_xlabel(xlabel)
+                            axes.set_ylabel(ylabel)
+                            plt.suptitle(title, fontsize=18)
 
                         # Phi vs Lab Angle contour
                         if plotnum == "6.1.9.9" and i == 0:
