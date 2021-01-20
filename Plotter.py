@@ -139,6 +139,11 @@ def plot(pklin, pkloverlay):
     cmmin = df['CM_Deg'].min()
     cmmax = df['CM_Deg'].max()
 
+    if df['CM_Deg'].mean() < 90:
+        cmflag = True
+    else:
+        cmflag = False
+
     if fnmatch.fnmatch(pkloverlay, "*evts*"):
         df_over['CM_Deg'] = -1 * df_over["Theta_CM"] * 180 / np.pi + 180
 
@@ -499,10 +504,14 @@ def plot(pklin, pkloverlay):
                             binstheta[j] = j * 1 + 90
                         else:
                             binstheta[j] = j * 1
-                    binscm = np.zeros(181)
-                    for j in range(181):
 
-                        binscm[j] = j * 1
+                    binscm = np.zeros(91)
+                    for j in range(91):
+                        if cmflag:
+                            binscm[j] = j * 1
+                        else:
+                            binscm[j] = j * 1 + 90
+
                     # We'll also make the energy bins as well:
                     numebins = 150
                     binse = np.zeros(numebins + 1)
@@ -753,7 +762,7 @@ def plot(pklin, pkloverlay):
                         # As mentioned, tbins, ebins, and zbins are the bin edges. Here initialize a new array:
 
                         tbins2 = np.zeros(90)
-                        cbins2 = np.zeros(180)
+                        cbins2 = np.zeros(90)
                         ebins2 = np.zeros(150)
                         zbins2 = np.zeros(100)
                         pbins2 = np.zeros(numphibins)
@@ -763,13 +772,13 @@ def plot(pklin, pkloverlay):
                         for k in range(180):
                             if k < 90:
                                 tbins2[k] = (tbins[k] + tbins[k + 1]) / 2
+                                cbins2[k] = (cbins[k] + cbins[k + 1]) / 2
                             if k < numphibins:
                                 pbins2[k] = (pbins[k] + pbins[k + 1]) / 2
                             if k < 100:
                                 zbins2[k] = (zbins[k] + zbins[k + 1]) / 2
                             if k < 150:
                                 ebins2[k] = (ebins[k] + ebins[k + 1]) / 2
-                            cbins2[k] = (cbins[k] + cbins[k + 1]) / 2
 
                         # To plot them we need to make a mesh grid of the bins:
 
