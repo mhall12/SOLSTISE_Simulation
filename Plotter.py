@@ -330,16 +330,13 @@ def plot(pklin, pkloverlay):
                     detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
                 overlayonoff = Color.RED + "OFF" + Color.END
 
-            # initialize the figure here, it might not be necessary.
-            # All of these are 1D histograms or single 2D histograms
-            #if (plotnum == 4 or plotnum == 8 or 10 <= plotnum <= 11 or plotnum == 14 or 17 <= plotnum <= 20 or
-            #    25 <= plotnum <= 29 or 33 <= plotnum <= 36 or
-            #    42 <= plotnum <= 44 or plotnum == 41) and not overlaybool:
+            # initialize the figure here
 
-            if ((int(aa) < 6 and bb == "0") or 100 > int(aa) > 5) and not overlaybool:
+            if ((int(aa) < 6 and bb == "0") and not overlaybool) or \
+                    ((int(cc) == 9 and (int(aa) == 6 or int(aa) == 7)) and plotnum != '6.1.9.9'):
                 fig, axs = plt.subplots()
             # All these are 1D or 2D histograms broken down by detector
-            if (int(aa) < 6 and bb == "1") and not overlaybool:
+            if (int(aa) < 6 and bb == "1") and not overlaybool and int(cc) != 9:
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
                 axi = np.array([0, ax1, ax2, ax3, ax4])
 
@@ -372,81 +369,112 @@ def plot(pklin, pkloverlay):
 
             for i in range(5):
 
-                if not sol:
-                    # These set the E vs z histograms
-                    if int(aa) == 1 and int(cc) == 0:
-                        xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, 0, emax, 'z (m)', 'Energy (MeV)'
-                        binsmin, binsmax = 550, 550
+                # These set the E vs z histograms
+                if int(aa) == 1 and int(cc) == 0:
+                    xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, 0, emax, 'z (m)', 'Energy (MeV)'
+                    binsmin, binsmax = 550, 550
 
-                        if 0 <= int(dd) <= 1:
+                    if 0 <= int(dd) <= 1:
+                        if not sol:
                             dfx1, dfy1 = df['zpos_final'][detarr[i] & df["Unblocked"]], \
                                          df['Energy'][detarr[i] & df["Unblocked"]]
+                        if sol:
+                            dfx1, dfy1 = df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]], \
+                                         df['Energy'][detarr[i] & df["UnblockedSolidTarg"]]
 
-                        if 1 <= int(dd) <= 2:
+                    if 1 <= int(dd) <= 2:
+                        if not sol:
                             dfx2, dfy2 = df['zpos_final'][detarr[i] & df["Blocked_Cone"]], \
                                          df['Energy'][detarr[i] & df["Blocked_Cone"]]
                             dfx3, dfy3 = df['zpos_final'][detarr[i] & df["Blocked_Pipe"]], \
                                          df['Energy'][detarr[i] & df["Blocked_Pipe"]]
                             dfx4, dfy4 = df['zpos_final'][detarr[i] & df["Blocked_Nozzle"]], \
                                          df['Energy'][detarr[i] & df["Blocked_Nozzle"]]
+                        if sol:
+                            dfx2, dfy2 = df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]], \
+                                         df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]]
 
-                    # These set the E vs Theta
-                    if int(aa) == 2 and int(cc) == 0:
-                        xmin, xmax, ymin, ymax, xlabel, ylabel = thmin, thmax, 0, emax, 'Theta (Deg)', \
-                                                                 'Energy (MeV)'
-                        binsmin, binsmax = 750, 750
+                # These set the E vs Theta
+                if int(aa) == 2 and int(cc) == 0:
+                    xmin, xmax, ymin, ymax, xlabel, ylabel = thmin, thmax, 0, emax, 'Theta (Deg)', \
+                                                             'Energy (MeV)'
+                    binsmin, binsmax = 750, 750
 
-                        if 0 <= int(dd) <= 1:
+                    if 0 <= int(dd) <= 1:
+                        if not sol:
                             dfx1, dfy1 = df['Theta_Deg'][df["Unblocked"] & detarr[i]], \
                                          df['Energy'][detarr[i] & df["Unblocked"]]
+                        if sol:
+                            dfx1, dfy1 = df['Theta_Deg'][detarr[i] & df["UnblockedSolidTarg"]], \
+                                         df['Energy'][detarr[i] & df["UnblockedSolidTarg"]]
 
-                        if 1 <= int(dd) <= 2:
+                    if 1 <= int(dd) <= 2:
+                        if not sol:
                             dfx2, dfy2 = df['Theta_Deg'][df["Blocked_Cone"] & detarr[i]], \
                                          df['Energy'][detarr[i] & df["Blocked_Cone"]]
                             dfx3, dfy3 = df['Theta_Deg'][df["Blocked_Pipe"] & detarr[i]], \
                                          df['Energy'][detarr[i] & df["Blocked_Pipe"]]
                             dfx4, dfy4 = df['Theta_Deg'][df["Blocked_Nozzle"] & detarr[i]], \
                                          df['Energy'][detarr[i] & df["Blocked_Nozzle"]]
+                        if sol:
+                            dfx2, dfy2 = df['Theta_Deg'][~df["UnblockedSolidTarg"] & detarr[i]], \
+                                         df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]]
 
-                    # These set the Theta vs z hists
-                    if int(aa) == 3 and int(cc) == 0:
-                        xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, thmin, thmax, 'z (m)', 'Theta (Deg)'
-                        binsmin, binsmax = 550, 550
+                # These set the Theta vs z hists
+                if int(aa) == 3 and int(cc) == 0:
+                    xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, thmin, thmax, 'z (m)', 'Theta (Deg)'
+                    binsmin, binsmax = 550, 550
 
-                        if 0 <= int(dd) <= 1:
+                    if 0 <= int(dd) <= 1:
+                        if not sol:
                             dfx1, dfy1 = df['zpos_final'][df["Unblocked"] & detarr[i]], \
                                          df['Theta_Deg'][df["Unblocked"] & detarr[i]]
+                        if sol:
+                            dfx1, dfy1 = df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]], \
+                                         df['Theta_Deg'][detarr[i] & df["UnblockedSolidTarg"]]
 
-                        if 1 <= int(dd) <= 2:
+                    if 1 <= int(dd) <= 2:
+                        if not sol:
                             dfx2, dfy2 = df['zpos_final'][df["Blocked_Cone"] & detarr[i]], \
                                          df['Theta_Deg'][df["Blocked_Cone"] & detarr[i]]
                             dfx3, dfy3 = df['zpos_final'][df["Blocked_Pipe"] & detarr[i]], \
                                          df['Theta_Deg'][df["Blocked_Pipe"] & detarr[i]]
                             dfx4, dfy4 = df['zpos_final'][df["Blocked_Nozzle"] & detarr[i]], \
                                          df['Theta_Deg'][df["Blocked_Nozzle"] & detarr[i]]
+                        if sol:
+                            dfx2, dfy2 = df['zpos_final'][~df["UnblockedSolidTarg"] & detarr[i]], \
+                                         df['Theta_Deg'][detarr[i] & ~df["UnblockedSolidTarg"]]
 
-                    # These set the CM angle vs z hists
-                    if int(aa) == 4 and int(cc) == 0:
-                        xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, cmmin, cmmax, 'z (m)', 'CM Angle (Deg)'
-                        binsmin, binsmax = 550, 550
+                # These set the CM angle vs z hists
+                if int(aa) == 4 and int(cc) == 0:
+                    xmin, xmax, ymin, ymax, xlabel, ylabel = zmin, zmax, cmmin, cmmax, 'z (m)', 'CM Angle (Deg)'
+                    binsmin, binsmax = 550, 550
 
-                        if 0 <= int(dd) <= 1:
+                    if 0 <= int(dd) <= 1:
+                        if not sol:
                             dfx1, dfy1 = df['zpos_final'][df["Unblocked"] & detarr[i]], \
                                          df['CM_Deg'][df["Unblocked"] & detarr[i]]
+                        if sol:
+                            dfx1, dfy1 = df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]], \
+                                         df['CM_Deg'][detarr[i] & df["UnblockedSolidTarg"]]
 
-                        if 1 <= int(dd) <= 2:
+                    if 1 <= int(dd) <= 2:
+                        if not sol:
                             dfx2, dfy2 = df['zpos_final'][df["Blocked_Cone"] & detarr[i]], \
                                          df['CM_Deg'][df["Blocked_Cone"] & detarr[i]]
                             dfx3, dfy3 = df['zpos_final'][df["Blocked_Pipe"] & detarr[i]], \
                                          df['CM_Deg'][df["Blocked_Pipe"] & detarr[i]]
                             dfx4, dfy4 = df['zpos_final'][df["Blocked_Nozzle"] & detarr[i]], \
                                          df['CM_Deg'][df["Blocked_Nozzle"] & detarr[i]]
+                        if sol:
+                            dfx2, dfy2 = df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]], \
+                                         df['CM_Deg'][detarr[i] & ~df["UnblockedSolidTarg"]]
 
                 # Determine here if the axes are single or multiple, and what the bool itest needs to be.
-                if int(bb) == 1:
+                if int(bb) == 1 and int(cc) != 9:
                     itest = i > 0
                     axes = axi[i]
-                if int(bb) == 0:
+                if int(bb) == 0 and int(cc) != 9:
                     itest = i == 0
                     axes = axs
 
@@ -458,25 +486,35 @@ def plot(pklin, pkloverlay):
                     axes.set_ylabel(ylabel)
 
                 if int(aa) < 5 and int(cc) == 0 and 1 <= int(dd) <= 2 and itest:
-
-                    # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
-                    try:
-                        axes.hist2d(dfx2, dfy2, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
-                                    cmap=newcmpGreen)
-                        axes.hist2d(dfx3, dfy3, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
-                                    cmap=newcmpRed)
-                        axes.hist2d(dfx4, dfy4, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
-                                    cmap=newcmpBlue)
-                        axes.set_xlabel(xlabel)
-                        axes.set_ylabel(ylabel)
-                    except KeyError:
-                        print("ERROR")
+                    if not sol:
+                        # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
+                        try:
+                            axes.hist2d(dfx2, dfy2, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                        cmap=newcmpGreen)
+                            axes.hist2d(dfx3, dfy3, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                        cmap=newcmpRed)
+                            axes.hist2d(dfx4, dfy4, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                        cmap=newcmpBlue)
+                            axes.set_xlabel(xlabel)
+                            axes.set_ylabel(ylabel)
+                        except KeyError:
+                            print("ERROR")
+                    if sol:
+                        try:
+                            axes.hist2d(dfx2, dfy2, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
+                                        cmap=newcmpRed)
+                        except KeyError:
+                            print("ERROR")
 
                 if int(aa) == 5 and int(cc) == 0:
-                    dfx1 = df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]]
-                    dfx2 = df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]]
-                    dfx3 = df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]]
-                    dfx4 = df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]
+                    if not sol:
+                        dfx1 = df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]]
+                        dfx2 = df['Ex_Reconstructed'][df["Blocked_Cone"] & detarr[i]]
+                        dfx3 = df['Ex_Reconstructed'][df["Blocked_Pipe"] & detarr[i]]
+                        dfx4 = df['Ex_Reconstructed'][df["Blocked_Nozzle"] & detarr[i]]
+                    if sol:
+                        dfx1 = df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]]
+                        dfx2 = df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]
 
                 if int(aa) == 5 and itest:
                     axes.set_xlabel('Excitation Energy (MeV)')
@@ -484,17 +522,26 @@ def plot(pklin, pkloverlay):
                     if int(dd) == 0:
                         axes.hist(dfx1, bins=750, range=[-.2, exmax])
                     if int(dd) == 1:
-                        axes.hist((dfx1, dfx2, dfx3, dfx4), bins=750, range=[-.2, exmax],  color=(blk, grn, red, blu),
-                                  stacked=True)
+                        if not sol:
+                            axes.hist((dfx1, dfx2, dfx3, dfx4), bins=750, range=[-.2, exmax],  color=(blk, grn, red,
+                                                                                                      blu),
+                                      stacked=True)
+                        if sol:
+                            axes.hist((dfx1, dfx2), bins=750, range=[-.2, exmax],  color=(blk, red), stacked=True)
                     if int(dd) == 2:
-                        axes.hist((dfx2, dfx3, dfx4), bins=750, range=[-.2, exmax],  color=(grn, red, blu),
-                                  stacked=True)
+                        if not sol:
+                            axes.hist((dfx2, dfx3, dfx4), bins=750, range=[-.2, exmax],  color=(grn, red, blu),
+                                      stacked=True)
+                        if sol:
+                            axes.hist(dfx2, bins=750, range=[-.2, exmax],  color=red, stacked=True)
 
             # *****************************************************************************************************
 
+                df['Phi_Deg'] = df['Phi'] * 180 / np.pi
+
                 # The next section are contour plots of blocked particles. These should only be used with "allE"
                 # simulated files because they don't really make sense with specific excited states populated.
-                if int(cc) > 0 and int(aa) < 7:
+                if int(cc) > 0 and int(aa) < 8:
 
                     # Make Energy vs Theta contour plot here. Theta goes from 90 to 180 and we'll use bins every 1
                     # degree.
@@ -548,7 +595,6 @@ def plot(pklin, pkloverlay):
                     unblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][detarr[i] & df["AllPossible"]],
                                                                 df['Theta_Deg'][detarr[i] & df["AllPossible"]],
                                                                 bins=(binsz, binstheta))
-                    df['Phi_Deg'] = df['Phi'] * 180 / np.pi
 
                     unblockedevphi, pbins, ebins = np.histogram2d(df['Phi_Deg'][detarr[i] & df["AllPossible"]],
                                                                   df['Energy'][detarr[i] & df["AllPossible"]],
@@ -971,12 +1017,12 @@ def plot(pklin, pkloverlay):
                             plt.rc('axes', labelsize=16)
                             plt.rc('xtick', labelsize=16)
                             plt.rc('ytick', labelsize=16)
-                            fig2, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-                            cf = ax.contourf(ytvp, xtvp, ratiotvp_blurr, cmap='hot')
-                            ax.contour(ytvp, xtvp, ratiotvp_blurr, colors='k', linewidths=.2)
+                            fig, axs = plt.subplots(subplot_kw=dict(projection='polar'))
+                            cf = axs.contourf(ytvp, xtvp, ratiotvp_blurr, cmap='hot')
+                            axs.contour(ytvp, xtvp, ratiotvp_blurr, colors='k', linewidths=.2)
                             plt.xlabel('Initial Phi Angle (Deg)')
                             plt.ylabel('Lab Angle (Deg)', rotation=0, size=14, labelpad=-370)
-                            cbar = fig2.colorbar(cf)
+                            cbar = fig.colorbar(cf)
                             title29 = df['Reaction'][0] + " Percentage of Particles Detected, B = " + \
                                       str(df['Magnetic Field'][0]) + " T"
                             plt.suptitle(title29, fontsize=18)
@@ -984,7 +1030,7 @@ def plot(pklin, pkloverlay):
                         # Here we do something a little different, and instead of contour plots we do ratio plots,
                         # still using the bins that were defined above.
 
-                if int(aa) == 7:
+                if int(aa) == 7 or plotnum == '6.0.9.9':
                     # Unfortunately I couldn't get the cuts to work by putting in the masks, so we have to create
                     # some dummy dataframes to contain them so we can cut them later. As mentioned before, here
                     # I actually use Unblocked and AllPossible since I'm not trying to break them up by cone, nozzle
@@ -1068,28 +1114,28 @@ def plot(pklin, pkloverlay):
                     pbins2 = pbins2[zeromask]
 
                     # The next 3 hists are the ratio plots broken up by detector on the same plot:
-                    if plotnum == "7.1.9.9":
+                    if plotnum == "7.0.9.9":
                         axs.plot(tbins2, divt, marker='o')
                         axs.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower right', fontsize=16)
                         axs.set_xlabel('Lab Angle (Deg)')
                         axs.set_ylabel('Fraction of Particles Detected')
 
-                    if plotnum == "7.2.9.9":
+                    if plotnum == "7.1.9.9":
                         axs.plot(ebins2, dive, marker='o')
                         axs.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower left', fontsize=16)
                         axs.set_xlabel('Energy (MeV)')
                         axs.set_ylabel('Fraction of Particles Detected')
 
-                    if plotnum == "7.3.9.9":
+                    if plotnum == "7.2.9.9":
                         axs.plot(zbins2, divz, marker='o')
                         axs.legend(['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4'],
                                    loc='lower left', fontsize=16)
                         axs.set_xlabel('z (m)')
                         axs.set_ylabel('Fraction of Particles Detected')
 
-                    if plotnum == "7.4.9.9":
+                    if plotnum == "6.0.9.9":
 
                         stdcolors = ['Blue', 'Orange', 'limegreen', 'Red', 'Purple']
                         labels32 = ['Total', 'Detector 1', 'Detector 2', 'Detector 3', 'Detector 4']
@@ -1097,14 +1143,14 @@ def plot(pklin, pkloverlay):
                             plt.rc('axes', labelsize=16)
                             plt.rc('xtick', labelsize=16)
                             plt.rc('ytick', labelsize=16)
-                            ax32 = plt.subplot(111, projection='polar')
+                            axs = plt.subplot(111, projection='polar')
                         pbins2 = pbins2 * np.pi / 180
                         if i !=2 and i != 3:
                             if i > 0:
-                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i],
+                                axs.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i],
                                           markersize=8, MarkerEdgeColor='Black', alpha=0.7)
                             if i == 0:
-                                ax32.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i],
+                                axs.plot(pbins2, divp, marker='o', color=stdcolors[i], label=labels32[i],
                                           markersize=14, MarkerEdgeColor='Black', alpha=0.7)
                         if i == 2 or i == 3:
                             pbins2gt0 = pbins2[pbins2 < np.pi]
@@ -1113,73 +1159,25 @@ def plot(pklin, pkloverlay):
                             pbins2lt0 = pbins2[pbins2 > np.pi]
                             divplt0 = divp[pbins2 > np.pi]
 
-                            ax32.plot(pbins2gt0, divpgt0, marker='o', color=stdcolors[i], label=labels32[i],
+                            axs.plot(pbins2gt0, divpgt0, marker='o', color=stdcolors[i], label=labels32[i],
                                       markersize=8, MarkerEdgeColor='Black', alpha=0.7)
-                            ax32.plot(pbins2lt0, divplt0, marker='o', color=stdcolors[i], markersize=8,
+                            axs.plot(pbins2lt0, divplt0, marker='o', color=stdcolors[i], markersize=8,
                                       MarkerEdgeColor='Black', alpha=0.7)
 
-                        ax32.grid(True)
+                        axs.grid(True)
                         plt.legend(fontsize=16, bbox_to_anchor=(1.0, .9))
                         plt.xlabel('Initial Phi Angle (Deg)')
                         plt.ylabel('Fraction of Particles Detected', rotation=0, size=14, labelpad=-370)
 
-                # This next section is for solid targets only:
-                if sol:
-
-                    if (plotnum == "1.1.0.0" or plotnum == "1.1.0.1") and i > 0:
-
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]],
-                                    df['Energy'][detarr[i] & df["UnblockedSolidTarg"]], bins=(750, 750),
-                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
-                        axi[i].set_xlabel('z(m)')
-                        axi[i].set_ylabel('Energy (MeV)')
-
-                        if plotnum == "1.1.0.1":
-                            axi[i].hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
-                                       df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
-                                       range=[[zmin, zmax], [0, emax]], cmap=newcmpRed)
-                            axi[i].set_xlabel('z(m)')
-                            axi[i].set_ylabel('Energy (MeV)')
-
-                    if (plotnum == "1.1.0.2") and i > 0:
-
-                        axi[i].hist2d(df['zpos_final'][detarr[i] & ~df["UnblockedSolidTarg"]],
-                                    df['Energy'][detarr[i] & ~df["UnblockedSolidTarg"]], bins=(750, 750),
-                                    range=[[zmin, zmax], [0, emax]], cmap=newcmpBlack)
-                        axi[i].set_xlabel('z(m)')
-                        axi[i].set_ylabel('Energy (MeV)')
-
-                    if plotnum == "5.0.0.0" and i == 0:
-                        axs.hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
-                                 range=[-0.2, exmax])
-                        axs.set_xlabel('Excitation Energy (MeV)')
-                        axs.set_ylabel('Counts')
-
-                        # 35 is the same as 11 but also showing blocked particles.
-                    if plotnum == "5.1.0.1" and i > 0:
-
-                        axi[i].hist((df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]],
-                                  df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]),
-                                 bins=1000, range=[-0.2, exmax], color=(blk, red), stacked=True)
-                        axi[i].set_xlabel('Excitation Energy (MeV)')
-                        axi[i].set_ylabel('Counts')
-
-                    if plotnum == "5.1.0.0" and i > 0:
-
-                        axi[i].hist(df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]], bins=750,
-                                 range=[-0.2, exmax])
-                        axi[i].set_xlabel('Excitation Energy (MeV)')
-                        axi[i].set_ylabel('Counts')
-
                 # Handle the legend here for each plot that needs it.
-                if i == 1 and int(dd) == 1:
-                    handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
-                    labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
-                    if plotnum == "11":
-                        plt.legend(handles, labels, bbox_to_anchor=(1.0, .9), ncol=4)
-                    else:
-                        plt.legend(handles, labels, bbox_to_anchor=(1.4, 1.1), ncol=4)
-
+                if i == 1 and (int(dd) == 1 or int(dd) == 2):
+                    if not sol:
+                        handles = [Rectangle((0, 0), 1, 1, color=c, ec="k") for c in [blk, grn, red, blu]]
+                        labels = ["Unblocked", "Cone", "Pipe", "Nozzle"]
+                        if int(bb) == 1:
+                            plt.legend(handles, labels, bbox_to_anchor=(.2, 2.3), ncol=4)
+                        if int(bb) == 0:
+                            plt.legend(handles, labels, bbox_to_anchor=(.6, 1), ncol=4)
         elif aa == "0":
             switch = 1
         elif aa == "400":
@@ -1214,7 +1212,6 @@ def plot(pklin, pkloverlay):
             lastentry = plotnum
 
         if currentry == '300':
-            print("SWITCHBACKDF")
             overlaybool = False
             df = df_main
             if detposbool:
