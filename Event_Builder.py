@@ -17,13 +17,13 @@ def BuildEvts():
     evtdir = "Event_Files"
 
     # Have the user enter a reaction of the form Target(Beam, Ejectile). The recoil is calculated.
-    reac = input("Enter a reaction of the form d(17F,p): ")
+    reac = input("Enter a reaction. Ex) d(28Si,p): ")
 
     # Let the user say whether or not the reaction is to be measured in inverse of normal kin.
     kinemat = 3
     while kinemat > 2 or kinemat == 0:
         try:
-            kinemat = int(input("Will the reaction be measured upstream (1) or downstream (2) of the target? "))
+            kinemat = int(input("Will the reaction be measured upstream (1) or downstream (2) of the target? Ex) 1: "))
         except ValueError:
             kinemat = 1
         if kinemat > 2 or kinemat == 0:
@@ -42,35 +42,35 @@ def BuildEvts():
     for i in range(4):
         masses[i] = masses[i] * utoMeV
 
-    beamenergy = float(input("Enter a beam energy in MeV (or enter 0 for MeV/u): "))
+    beamenergy = float(input("Enter a beam energy in MeV (or enter 0 for MeV/u) Ex) 168: "))
     if beamenergy == 0:
-        beamenergyu = float(input("Enter a beam energy in MeV/u: "))
+        beamenergyu = float(input("Enter a beam energy in MeV/u Ex) 6: "))
         beamenergy = beamenergyu * abeam
 
     # Entering 0 makes the program randomly generate excitation energies within the specified range.
     levnum = int(input("Enter the number of energy levels to be populated in the recoil (or 0 for "
-                       "all energies): "))
+                       "all energies) Ex: 3: "))
 
     energyend = 0
 
     # Let the user specify the max excitation energy.
     if levnum == 0:
         print("All energies will be simulated.")
-        energyend = int(input("Enter the highest excitation energy (integer MeV) you would like to simulate: "))
+        energyend = int(input("Enter the highest excitation energy (integer MeV) you would like to simulate. Ex) 10: "))
 
     # Or, have the user specify the number of levels they want simulated:
     while levnum < 0:
         print("ERROR: The number of levels cannot be less than 0.")
-        levnum = int(input("Enter the number of energy levels to be populated in the recoil: "))
+        levnum = int(input("Enter the number of energy levels to be populated in the recoil Ex) 3: "))
 
     levels = []
 
     # and their energies:
     if levnum > 0:
         for i in range(levnum):
-            levels.append(float(input("Enter the energy of a level in MeV: ")))
+            levels.append(float(input("Enter the energy of a level in MeV. Ex) " + str(i) + ": ")))
 
-    numevents = int(input("\nInput the number of events you would like to generate: "))
+    numevents = int(input("\nInput the number of events you would like to generate. Ex) 100000: "))
 
     beamenp = np.zeros(numevents) + beamenergy
     angstrag = np.array([0])
@@ -82,7 +82,7 @@ def BuildEvts():
     if levnum > 0:
         try:
             elossopt = int(input("If you want to calculate energy loss in the code, "
-                                 "enter (1), otherwise enter (0): "))
+                                 "enter (1), otherwise enter (0). Ex) 1: "))
         except ValueError:
             elossopt = 1
 
@@ -94,7 +94,7 @@ def BuildEvts():
         # need to set up the absorber data here, which should be easy because we know the target:
 
         if ztarget == 1:
-            gs = int(input("\nIs the target a gas (1) or solid (2)?: "))
+            gs = int(input("\nIs the target a gas (1) or solid (2)? Ex) 1: "))
             if gs == 2:
                 # depth is a random number between 0 and 1, which when multiplied by the thickness of the absorber
                 # gives the position in the target that the reaction occurs.
@@ -130,16 +130,16 @@ def BuildEvts():
             if ztarget == 1:
                 num = [2]
             else:
-                num = [int(input("Enter the number of atoms in the molecule: "))]
+                num = [int(input("Enter the number of atoms in the molecule. Ex) 2: "))]
 
             # Density and thickness are 0 for gasses.
             density = [0]
             thickness = [0]
             thkin = [0]
-            jetpress = [float(input("Enter the pressure in the jet in Torr (typically ~400 Torr): "))]
+            jetpress = [float(input("Enter the pressure in the jet in Torr. Ex) 400: "))]
             jetrad = [float(input("Enter the radius of the jet in mm (typically 1.0 to 1.75 mm): "))]
-            champress = [float(input("Enter the ambient pressure in the magnet in Torr (typically less than 1.0 Torr)"
-                                     ": "))]
+            champress = [float(input("Enter the ambient pressure in the magnet in Torr (typically less than 1.0 Torr)."
+                                     " Ex) 0.7: "))]
             chamdist = [float(input("Enter the distance from the end of the magnet to the jet in cm \n"
                                     "(distance to the center of HELIOS (SOLARIS) is ~117 cm (~136 cm)): "))]
             # Convert jetrad into cm

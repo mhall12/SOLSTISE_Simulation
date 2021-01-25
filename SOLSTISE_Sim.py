@@ -109,12 +109,12 @@ ebeam = int(filein[(uslocs[2]+1):uslocs[3]])
 print("The beam energy is: " + str(ebeam) + " MeV")
 
 try:
-    bfield = float(input("\nEnter the magnetic field strength in Tesla: "))
+    bfield = float(input("\nEnter the magnetic field strength in Tesla. Ex) 2.0: "))
 except ValueError:
     bfield = 2.0
 
 try:
-    beamdia = float(input("\nEnter the beam diameter (FWHM) to be used in the simulation in mm: "))
+    beamdia = float(input("\nEnter the beam diameter (FWHM) to be used in the simulation in mm. Ex) 2.0: "))
 except ValueError:
     beamdia = 1
 
@@ -127,7 +127,7 @@ else:
     jetrad = 0
 
 try:
-    detzi = float(input("\nEnter the distance from the target that the detector array should start in m: "))
+    detzi = float(input("\nEnter the distance from the target that the detector array should start in m. Ex) 0.2 "))
 except ValueError:
     detzi = 0.2
 
@@ -144,7 +144,7 @@ else:
 
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
     try:
-        coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)?: "))
+        coneopt = int(input("\nWould you like to use the default SOLSTISE cone (0) or a custom cone (1)? Ex) 0: "))
     except ValueError:
         coneopt = 0
 else:
@@ -190,7 +190,8 @@ else:
 
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
     try:
-        nozzopt = int(input("\nWould you like to use the default SOLSTISE nozzle (0) or a custom-shaped nozzle (1)?: "))
+        nozzopt = int(input("\nWould you like to use the default SOLSTISE nozzle (0) or a custom-shaped nozzle (1)? "
+                            "Ex) 0: "))
     except ValueError:
         nozzopt = 0
 else:
@@ -238,7 +239,7 @@ else:
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
     try:
         pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the "
-                           "magnet?: "))
+                           "magnet? Ex) 0: "))
     except ValueError:
         pipefb = 0
 else:

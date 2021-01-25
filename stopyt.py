@@ -74,7 +74,7 @@ def desorb(z_projectile, a_projectile, energy, z_absorber, a_absorber, numa_abso
     if isgas:
         # we have to do something different if it's a gas, though it's similar.
         for j in range(len(z_absorber)):
-            print(a_tot, a_absorber[j], numa_absorber[j])
+            # print(a_tot, a_absorber[j], numa_absorber[j])
             a_tot = a_tot + a_absorber[j] * numa_absorber[j]
             # the fractional thickness for the gas layer is calculated here. The pressure is in torr, so the 760
             # converts that to atms, and the 22.4 is the molar gas volume at STP in L.
