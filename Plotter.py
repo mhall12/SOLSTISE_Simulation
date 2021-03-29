@@ -178,7 +178,8 @@ def plot(pklin, pkloverlay):
             print(Color.GREEN + "\t\t   1) Shadowing Contour Plots (no D needed)\n"
                                 "\t\t   2) Cone Shadowing Contour Plots (no D needed)\n"
                                 "\t\t   3) Pipe Shadowing Contour Plots (no D needed)\n"
-                                "\t\t   4) Nozzle Shadowing Contour Plots (no D needed)" + Color.END)
+                                "\t\t   4) Nozzle Shadowing Contour Plots (no D needed)\n"
+                                "\t\t   5) Rail Shadowing Contour Plots (no D needed)" + Color.END)
         print(Color.BOLD + "\nSpecial Plots:\n" + Color.END + Color.CYAN + Color.UNDERLINE +
               "A:" + Color.END + Color.CYAN + " 6) Phi vs Lab Angle Polar Plots (no C/D needed)" + Color.END)
         print(Color.RED + Color.UNDERLINE + "\tB:" + Color.END + Color.RED + " 0) Ratio Plot")
@@ -675,6 +676,11 @@ def plot(pklin, pkloverlay):
                                                                             df['Energy'][df['Blocked_Nozzle'] &
                                                                                          detarr[i]],
                                                                             bins=(binstheta, binse))
+                            railsblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Rails'] &
+                                                                                            detarr[i]],
+                                                                            df['Energy'][df['Blocked_Rails'] &
+                                                                                         detarr[i]],
+                                                                            bins=(binstheta, binse))
 
                             coneblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] &
                                                                                            detarr[i]],
@@ -687,6 +693,11 @@ def plot(pklin, pkloverlay):
                             nozzleblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Nozzle'] &
                                                                                              detarr[i]],
                                                                             df['Energy'][df['Blocked_Nozzle'] &
+                                                                                         detarr[i]],
+                                                                            bins=(binsz, binse))
+                            railsblockedevz, zbins, ebins = np.histogram2d(df['zpos_final'][df['Blocked_Rails'] &
+                                                                                             detarr[i]],
+                                                                            df['Energy'][df['Blocked_Rails'] &
                                                                                          detarr[i]],
                                                                             bins=(binsz, binse))
 
@@ -754,6 +765,9 @@ def plot(pklin, pkloverlay):
                         rationozzleevt = np.divide((unblockedevt - nozzleblockedevt), unblockedevt,
                                                    out=np.zeros_like(nozzleblockedevt), where=unblockedevt != 0)
 
+                        ratiorailsevt = np.divide((unblockedevt - railsblockedevt), unblockedevt,
+                                                   out=np.zeros_like(railsblockedevt), where=unblockedevt != 0)
+
                         ratioconeevz = np.divide((unblockedevz - coneblockedevz), unblockedevz,
                                                  out=np.zeros_like(coneblockedevz), where=unblockedevz != 0)
 
@@ -762,6 +776,9 @@ def plot(pklin, pkloverlay):
 
                         rationozzleevz = np.divide((unblockedevz - nozzleblockedevz), unblockedevz,
                                                    out=np.zeros_like(nozzleblockedevz), where=unblockedevz != 0)
+
+                        ratiorailsevz = np.divide((unblockedevz - railsblockedevz), unblockedevz,
+                                                   out=np.zeros_like(railsblockedevz), where=unblockedevz != 0)
 
                         ratioconecvz = np.divide((unblockedcvz - coneblockedcvz), unblockedcvz,
                                                  out=np.zeros_like(coneblockedcvz), where=unblockedcvz != 0)
@@ -792,10 +809,12 @@ def plot(pklin, pkloverlay):
                         ratioconeevt = ratioconeevt.T
                         ratiopipeevt = ratiopipeevt.T
                         rationozzleevt = rationozzleevt.T
+                        ratiorailsevt = ratiorailsevt.T
 
                         ratioconeevz = ratioconeevz.T
                         ratiopipeevz = ratiopipeevz.T
                         rationozzleevz = rationozzleevz.T
+                        ratiorailsevz = ratiorailsevz.T
 
                         ratioconecvz = ratioconecvz.T
                         ratiopipecvz = ratiopipecvz.T
@@ -847,10 +866,12 @@ def plot(pklin, pkloverlay):
                         ratioconeevt_blurr = ndimage.gaussian_filter(ratioconeevt, sigma=1.5, order=0)
                         ratiopipeevt_blurr = ndimage.gaussian_filter(ratiopipeevt, sigma=1.5, order=0)
                         rationozzleevt_blurr = ndimage.gaussian_filter(rationozzleevt, sigma=1.5, order=0)
+                        ratiorailsevt_blurr = ndimage.gaussian_filter(ratiorailsevt, sigma=1.5, order=0)
 
                         ratioconeevz_blurr = ndimage.gaussian_filter(ratioconeevz, sigma=1.6, order=0)
                         ratiopipeevz_blurr = ndimage.gaussian_filter(ratiopipeevz, sigma=1.6, order=0)
                         rationozzleevz_blurr = ndimage.gaussian_filter(rationozzleevz, sigma=1.6, order=0)
+                        ratiorailsevz_blurr = ndimage.gaussian_filter(ratiorailsevz, sigma=1.6, order=0)
 
                         ratioconecvz_blurr = ndimage.gaussian_filter(ratioconecvz, sigma=1.5, order=0)
                         ratiopipecvz_blurr = ndimage.gaussian_filter(ratiopipecvz, sigma=1.5, order=0)
@@ -885,10 +906,16 @@ def plot(pklin, pkloverlay):
                                     cmp = 'Blues'
                                     title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
                                                                 "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 5:
+                                    ratiodata = ratiorailsevz_blurr
+                                    cmp = 'Oranges'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Rails, B = " + str(df['Magnetic Field'][0]) + " T"
+
                                 if int(bb) == 0:
                                     if 1 <= int(cc) <= 2:
                                         conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
-                                    if 3 <= int(cc) <= 4:
+                                    if 3 <= int(cc) <= 5:
                                         conts = [.5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
                                 else:
                                     conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -921,6 +948,12 @@ def plot(pklin, pkloverlay):
                                     cmp = 'Blues'
                                     title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
                                                                 "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 5:
+                                    ratiodata = ratiorailsevt_blurr
+                                    cmp = 'Oranges'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Rails, B = " + str(df['Magnetic Field'][0]) + " T"
+
                                 if int(bb) == 0:
                                     if 1 <= int(cc) <= 2:
                                         conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]

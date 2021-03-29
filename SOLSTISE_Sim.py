@@ -235,7 +235,17 @@ else:
     else:
         nozztxt = latest_nozz
 
+try:
+    railsopt = int(input("\nWould you like to include shadowing by the AT-TPC 80/20 rails? [Y/N] "))
+except ValueError:
+    railsopt = "Y"
+if railsopt == "Y" or railsopt == "y":
+    rails = True
+else:
+    rails = False
+
 # Remove this question if the user is using a solid target:
+
 if not fnmatch.fnmatch(filein, '*eloss_s*'):
     try:
         pipefb = int(input("\nIs the pipe for the gas return in the downstream (0) or upstream (1) half of the "
@@ -280,7 +290,7 @@ if pipeyn == "N" or pipeyn == "n":
         phi2 = 2*math.pi - (phi1 - math.pi)
 
     sim_pd(r1, piper, pipecenter, math.pi, 2*math.pi, ebeam, filein, reac, conetxt, nozztxt, bfield, beamdia,
-           jetrad, detzi)
+           jetrad, detzi, rails)
 
 else:
     list_pipe_files = glob.glob(geodir + 'PipeOut*.txt')
@@ -326,4 +336,4 @@ else:
     lines = file.readlines()
 
     sim_pd(float(lines[0]), float(lines[1]), float(lines[2]), float(lines[3]), float(lines[4]),
-           ebeam, filein, reac, conetxt, nozztxt, bfield, beamdia, jetrad, detzi)
+           ebeam, filein, reac, conetxt, nozztxt, bfield, beamdia, jetrad, detzi, rails)

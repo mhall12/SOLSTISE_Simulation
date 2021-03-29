@@ -19,7 +19,7 @@ from random import randrange
 
 
 def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, conetxt, nozztxt,
-           bfield, beamdiamm, jetrin, detzi):
+           bfield, beamdiamm, jetrin, detzi, rails):
     # suppress warnings that occur in the code calculations:
     warnings.filterwarnings("ignore")
 
@@ -271,6 +271,9 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     maskrbore = df['Energy'] > 0
     # maskcone initialized like maskrbore
     masknozzle = df['Energy'] > 0
+    if rails:
+        maskrails = df['Energy'] > 0
+        maskmaster_rails = df['Energy'] > 0
 
     # ***************************************************************************************
     # ***************************************************************************************
@@ -374,6 +377,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     xoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), beamspotdia / 2.355)
     yoff = np.random.normal(np.zeros_like(df['Energy'].to_numpy()), beamspotdia / 2.355)
 
+    siderailx1, siderailx2, sideraily1, sideraily2 = 0.3825875, 0.4206875, -0.0635, -0.1778
+    bottomrailr, bottomrailblphi1, bottomrailblphi2, bottomrailbrphi1, bottomrailbrphi2 = 0.403, 240.5 * np.pi / 180, \
+                                                                                          244.1 * np.pi / 180, \
+                                                                                          295.9 * np.pi / 180, \
+                                                                                          299.5 * np.pi / 180,
+
     # For the ejectile energy loss, the energy loss will be split into two layers (if gas target).
     # The first layer will be the jetlength, defined below which is the approximate straight-line distance the
     # ejectile will traverse the jet, and the total distance (disttravl) that the particle will traverse in its orbit.
@@ -461,6 +470,16 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
 
         maskpipe = (maskrpipe & maskphipipe) | masktoppipe
 
+        # 15.0625 to 16.5625 in x, -2.5 to -7 in y (inches) for side rail.
+        # in meters: 0.3825875 to 0.4206875 in x, -0.0635 to -0.1778 in y (meters)
+        if rails:
+            masksiderails = (np.abs(xpos) > siderailx1) & (np.abs(xpos) < siderailx2) & (ypos < sideraily1) & \
+                            (ypos > sideraily2)
+            maskbottomrails = (r > bottomrailr) & (((phic > bottomrailblphi1) & (phic < bottomrailblphi2)) |
+                                                   ((phic > bottomrailbrphi1) & (phic < bottomrailbrphi2)))
+
+            maskrails = masksiderails | maskbottomrails
+
         # maskcone determines if the particle is within the opening of the cone
         # Since if statements on the arrays are so slow, we'll break up the cone mask into three: tube (top), sides,
         # and ISO base. In the future, the base could be gotten rid of depending on final geometry.
@@ -501,6 +520,8 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
         maskmaster_cone = maskmaster_cone & np.invert(maskcone)
         maskmaster_pipe = maskmaster_pipe & np.invert(maskpipe)
         maskmaster_nozzle = maskmaster_nozzle & np.invert(masknozzle)
+        if rails:
+            maskmaster_rails = maskmaster_rails & np.invert(maskrails)
 
         # Here, I'll attempt to remove similar events from the masks (i.e. ones that would hit the cone and pipe, etc)
         # Basically, if it already hit one of the other two blocking elements, we want to update the maskmaster to
@@ -620,6 +641,12 @@ def sim_pd(rbore, rblock, cheight, phi1block, phi2block, ebeam, filein, reac, co
     df["Blocked_Nozzle"] = np.invert(maskmaster_nozzle) & maskz & maskrbore
     # All particles blocked by the pipe
     df["Blocked_Pipe"] = np.invert(maskmaster_pipe) & maskz & maskrbore
+
+    if rails:
+        df["Blocked_Rails"] = np.invert(maskmaster_rails) & maskz & maskrbore
+        # print(df["Energy"][df["Blocked_Rails"]])
+    else:
+        df["Blocked_Rails"] = maskz
 
     df["UnblockedSolidTarg"] = maskz & maskrbore & masktheta
 
