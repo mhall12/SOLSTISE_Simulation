@@ -714,6 +714,11 @@ def plot(pklin, pkloverlay):
                                                                             df['CM_Deg'][df['Blocked_Nozzle'] &
                                                                                          detarr[i]],
                                                                             bins=(binsz, binscm))
+                            railsblockedcvz, zbins, cbins = np.histogram2d(df['zpos_final'][df['Blocked_Rails'] &
+                                                                                             detarr[i]],
+                                                                            df['CM_Deg'][df['Blocked_Rails'] &
+                                                                                         detarr[i]],
+                                                                            bins=(binsz, binscm))
 
                             coneblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][df['Blocked_Cone'] &
                                                                                            detarr[i]],
@@ -728,6 +733,12 @@ def plot(pklin, pkloverlay):
                                                                             df['Theta_Deg'][df['Blocked_Nozzle'] &
                                                                                          detarr[i]],
                                                                             bins=(binsz, binstheta))
+                            railsblockedtvz, zbins, tbins = np.histogram2d(df['zpos_final'][df['Blocked_Rails'] &
+                                                                                             detarr[i]],
+                                                                            df['Theta_Deg'][df['Blocked_Rails'] &
+                                                                                         detarr[i]],
+                                                                            bins=(binsz, binstheta))
+
                         except KeyError:
                             print("KeyError suppressed.")
 
@@ -789,6 +800,9 @@ def plot(pklin, pkloverlay):
                         rationozzlecvz = np.divide((unblockedcvz - nozzleblockedcvz), unblockedcvz,
                                                    out=np.zeros_like(nozzleblockedcvz), where=unblockedcvz != 0)
 
+                        ratiorailscvz = np.divide((unblockedcvz - railsblockedcvz), unblockedcvz,
+                                                   out=np.zeros_like(railsblockedcvz), where=unblockedcvz != 0)
+
                         ratioconetvz = np.divide((unblockedtvz - coneblockedtvz), unblockedtvz,
                                                  out=np.zeros_like(coneblockedtvz), where=unblockedtvz != 0)
 
@@ -797,6 +811,9 @@ def plot(pklin, pkloverlay):
 
                         rationozzletvz = np.divide((unblockedtvz - nozzleblockedtvz), unblockedtvz,
                                                    out=np.zeros_like(nozzleblockedtvz), where=unblockedtvz != 0)
+
+                        ratiorailstvz = np.divide((unblockedtvz - railsblockedtvz), unblockedtvz,
+                                                   out=np.zeros_like(railsblockedtvz), where=unblockedtvz != 0)
 
                         # To actually plot the ratios into histograms we have to transpose the binned arrays:
 
@@ -819,10 +836,12 @@ def plot(pklin, pkloverlay):
                         ratioconecvz = ratioconecvz.T
                         ratiopipecvz = ratiopipecvz.T
                         rationozzlecvz = rationozzlecvz.T
+                        ratiorailscvz = ratiorailscvz.T
 
                         ratioconetvz = ratioconetvz.T
                         ratiopipetvz = ratiopipetvz.T
                         rationozzletvz = rationozzletvz.T
+                        ratiorailstvz = ratiorailstvz.T
 
                         # As mentioned, tbins, ebins, and zbins are the bin edges. Here initialize a new array:
 
@@ -876,12 +895,13 @@ def plot(pklin, pkloverlay):
                         ratioconecvz_blurr = ndimage.gaussian_filter(ratioconecvz, sigma=1.5, order=0)
                         ratiopipecvz_blurr = ndimage.gaussian_filter(ratiopipecvz, sigma=1.5, order=0)
                         rationozzlecvz_blurr = ndimage.gaussian_filter(rationozzlecvz, sigma=1.5, order=0)
+                        ratiorailscvz_blurr = ndimage.gaussian_filter(ratiorailscvz, sigma=1.5, order=0)
 
                         ratioconetvz_blurr = ndimage.gaussian_filter(ratioconetvz, sigma=1.5, order=0)
                         ratiopipetvz_blurr = ndimage.gaussian_filter(ratiopipetvz, sigma=1.5, order=0)
                         rationozzletvz_blurr = ndimage.gaussian_filter(rationozzletvz, sigma=1.5, order=0)
+                        ratiorailstvz_blurr = ndimage.gaussian_filter(ratiorailstvz, sigma=1.5, order=0)
 
-                        # 13 is the contour plot of percentage of detected particles.
                         if int(aa) < 5 and int(dd) == 9:
                             # Energy vs z contour plot parameters:
                             if int(aa) == 1:
@@ -957,7 +977,7 @@ def plot(pklin, pkloverlay):
                                 if int(bb) == 0:
                                     if 1 <= int(cc) <= 2:
                                         conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
-                                    if 3 <= int(cc) <= 4:
+                                    if 3 <= int(cc) <= 5:
                                         conts = [.65, .7, .75, .8, .85, .9, .95, 1]
                                 else:
                                     conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -989,10 +1009,15 @@ def plot(pklin, pkloverlay):
                                     cmp = 'Blues'
                                     title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
                                                                 "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 5:
+                                    ratiodata = ratiorailstvz_blurr
+                                    cmp = 'Oranges'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Rails, B = " + str(df['Magnetic Field'][0]) + " T"
                                 if int(bb) == 0:
                                     if 1 <= int(cc) <= 2:
                                         conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
-                                    if 3 <= int(cc) <= 4:
+                                    if 3 <= int(cc) <= 5:
                                         conts = [.65, .7, .75, .8, .85, .9, .95, 1]
                                 else:
                                     conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
@@ -1024,10 +1049,15 @@ def plot(pklin, pkloverlay):
                                     cmp = 'Blues'
                                     title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
                                                                 "Nozzle, B = " + str(df['Magnetic Field'][0]) + " T"
+                                elif int(cc) == 5:
+                                    ratiodata = ratiorailscvz_blurr
+                                    cmp = 'Oranges'
+                                    title = df['Reaction'][0] + " Fraction of Particles Not Blocked by the " \
+                                                                "Rails, B = " + str(df['Magnetic Field'][0]) + " T"
                                 if int(bb) == 0:
                                     if 1 <= int(cc) <= 2:
                                         conts = [.25, .3, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, 1]
-                                    if 3 <= int(cc) <= 4:
+                                    if 3 <= int(cc) <= 5:
                                         conts = [.65, .7, .75, .8, .85, .9, .95, 1]
                                 else:
                                     conts = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8,
