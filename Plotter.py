@@ -13,6 +13,7 @@ import fnmatch
 import sys
 
 
+# Colors and font options for the terminal
 class Color:
    PURPLE = '\033[95m'
    CYAN = '\033[96m'
@@ -31,10 +32,15 @@ def plot(pklin, pkloverlay):
     # Read the pickled DataFrame File here.
     df = pd.read_pickle(pklin)
 
+    # Assign the data frame from the pickle file to df_main, the main data frame that Plotter is using
+    # the distinction is necessary because a pickle file may be opened for the overlays (df_over)
     df_main = df
 
+    # Detector only currently broken up into 4 quadrants. Can be expanded in the future.
     detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
 
+    # If pkloverlay is an event file, we can open up the dataframe into df_over here. This does nothing if there's
+    # no overlay file
     if fnmatch.fnmatch(pkloverlay, "*evts*"):
         df_over = pd.read_pickle(pkloverlay)
 
@@ -68,6 +74,7 @@ def plot(pklin, pkloverlay):
         invkin = False
 
     # Make the color maps for the histograms here. Matplotlib does not have a standard Red/White etc color map.
+    # These color maps make 0 white, and anything else >0 a solid color
     Reds = cm.get_cmap('Reds', 256)
     newcolors = Reds(np.linspace(0, 1, 256))
     white = np.array([1, 1, 1, 0])
@@ -109,10 +116,11 @@ def plot(pklin, pkloverlay):
     # Switch is used in a while loop to see if we should continue running the program. once it is !=0 the program closes
     switch = 0
 
-    # Histogram order to get the quadrants right.
+    # Histogram order to get the quadrants right (counter clockwise starting from the top right)
     ho = [0, 2, 1, 3, 4]
 
-    # Set the max and min values for the various histogram axis parameters
+    # Set the max and min values for the various histogram axis parameters, depending on which half of the magnet
+    # the reaction products are measured. thmin/thmax are set later on, but this is how they were implemented originally
     if invkin:
         zmax = 0
         zmin = df['zpos_final'].min()
@@ -124,36 +132,43 @@ def plot(pklin, pkloverlay):
         thmax = 90
         thmin = 0
 
-    # Get the ax energy from the data frame. This assumes no shadowing, so we can also see where the bore shadows.
+    # Get the max energy from the data frame. This assumes no shadowing, so we can also see where the bore shadows.
     emax = df['Max Energy'][0]
 
+    # Calculate the Excitation Energy maximum. I was having a problem with exmax, but calculating it this way works.
     exmax = 2 * df['Ex_Reconstructed'].mean() + 0.5
 
     # emin should always just be 0
 
+    # Get the lab angle min and max.
     thmax = df['Theta_Deg'].max()
     thmin = df['Theta_Deg'].min()
 
-    # Change quadrant of CM angle to be in line with HELIOS spreadsheet
+    # Change quadrant of CM angle to be in line with HELIOS spreadsheet, because mine was different
     df['CM_Deg'] = -1 * df["Theta_CM"] * 180 / np.pi + 180
     cmmin = df['CM_Deg'].min()
     cmmax = df['CM_Deg'].max()
 
+    # cmflag indicates later on if the bins for CM should start at 0 or 90
     if df['CM_Deg'].mean() < 90:
         cmflag = True
     else:
         cmflag = False
 
+    # Also change the quadrant of the CM angle in the overlay file to match the main file
     if fnmatch.fnmatch(pkloverlay, "*evts*"):
         df_over['CM_Deg'] = -1 * df_over["Theta_CM"] * 180 / np.pi + 180
 
+    # Set initial values here for the overlay and detector message in the terminal. Red if off, Green if on
     overlaybool = False
     detposbool = False
     overlayonoff = Color.RED + "OFF" + Color.END
     detposonoff = Color.RED + "OFF" + Color.END
 
+    # lastentry saves the previous input so we can do the auto overlay later on. Set to an empty string initially
     lastentry = ''
 
+    # Print the menu into the terminal here. Different options get printed depending on the type of file that's opened
     while switch == 0:
 
         print('\n' + Color.BOLD + "Standard Plots:\n" + Color.END + Color.CYAN + Color.UNDERLINE +
@@ -205,6 +220,9 @@ def plot(pklin, pkloverlay):
 
         plt.ion()
 
+        # Change the terminal indicator if overlay is on
+        # 1) On when aa=200 or the current entry is 300
+        # 2) Off when aa=201 or the current entry isn't 30
         if overlaybool:
             overlayonoff = Color.GREEN + "ON" + Color.END
         else:
@@ -264,8 +282,10 @@ def plot(pklin, pkloverlay):
             cc = "9"
             dd = "9"
 
+        # rebuild plotnum here with trailing 9's for c/d if needed
         plotnum = aa + '.' + bb + '.' + cc + '.' + dd
 
+        # sol is a boolean that determines whether or not the file was made with a solid target. Important for plotting
         sol = fnmatch.fnmatch(pklin, '*_s*')
 
         if aa != "0" and int(aa) < 400:
@@ -275,9 +295,7 @@ def plot(pklin, pkloverlay):
             plt.rc('ytick', labelsize=18)
             plt.rcParams["font.family"] = "STIXGeneral"
 
-            # 1) On when aa=200 or the current entry is 300
-            # 2) Off when aa=201 or the current entry isn't 30
-
+            # Auto overlay: switch the df here
             if currentry == '300':
                 overlaybool = True
                 df = df_over
@@ -295,6 +313,7 @@ def plot(pklin, pkloverlay):
                 else:
                     detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
 
+            # Similar to above, switch the df here for manual overlay
             if aa == "200" and fnmatch.fnmatch(pkloverlay, "*evts*"):
                 overlaybool = True
                 df = df_over
@@ -311,6 +330,7 @@ def plot(pklin, pkloverlay):
                               df['Detz5'] | df['Detz6'])]
                 else:
                     detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
+                # Not a necessary line because the indicator gets determined at the top of the while loop
                 overlayonoff = Color.GREEN + "ON" + Color.END
 
             if aa == "201" and fnmatch.fnmatch(pkloverlay, "*evts*"):
@@ -329,10 +349,11 @@ def plot(pklin, pkloverlay):
                               df['Detz5'] | df['Detz6'])]
                 else:
                     detarr = [df["AllPossible"], df["Det2"], df["Det1"], df["Det3"], df["Det4"]]
+                # Not a necessary line because the indicator gets determined at the top of the while loop
                 overlayonoff = Color.RED + "OFF" + Color.END
 
             # initialize the figure here
-
+            # 6.1.9.9 is the polar plots
             if ((int(aa) < 6 and bb == "0") and not overlaybool) or \
                     ((int(cc) == 9 and (int(aa) == 6 or int(aa) == 7)) and plotnum != '6.1.9.9'):
                 fig, axs = plt.subplots()
@@ -341,6 +362,7 @@ def plot(pklin, pkloverlay):
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
                 axi = np.array([0, ax1, ax2, ax3, ax4])
 
+            # If detector positions are turned on with option 100, change the detarr accordingly,
             if aa == "100":
                 for j in range(5):
                     detarr = [df["AllPossible"] & (df['Detz1'] | df['Detz2'] | df['Detz3'] | df['Detz4'] |
@@ -356,6 +378,7 @@ def plot(pklin, pkloverlay):
                 detposonoff = Color.GREEN + "ON" + Color.END
                 detposbool = True
 
+            # Similarly, change detarr back if detector positions are turned off
             if aa == "101":
                 for j in range(5):
                     detarr = [df["AllPossible"],
@@ -368,6 +391,8 @@ def plot(pklin, pkloverlay):
 
             # *****************************************************************************************************
 
+            # Histograms are made below. Loop runs 0-4 to account for the 4 quadrants. In the future, this will need to
+            # be changed to accommodate more detector sides
             for i in range(5):
 
                 # These set the E vs z histograms
@@ -376,6 +401,7 @@ def plot(pklin, pkloverlay):
                     binsmin, binsmax = 550, 550
 
                     if 0 <= int(dd) <= 1:
+                        # Depends on if the target is a solid or not
                         if not sol:
                             dfx1, dfy1 = df['zpos_final'][detarr[i] & df["Unblocked"]], \
                                          df['Energy'][detarr[i] & df["Unblocked"]]
@@ -383,6 +409,8 @@ def plot(pklin, pkloverlay):
                             dfx1, dfy1 = df['zpos_final'][detarr[i] & df["UnblockedSolidTarg"]], \
                                          df['Energy'][detarr[i] & df["UnblockedSolidTarg"]]
 
+                    # Get all the blocked particles here. This is different for a solid target, so there we just
+                    # invert the UnblockedSolidTarg
                     if 1 <= int(dd) <= 2:
                         if not sol:
                             dfx2, dfy2 = df['zpos_final'][detarr[i] & df["Blocked_Cone"]], \
@@ -401,6 +429,7 @@ def plot(pklin, pkloverlay):
                                                              'Energy (MeV)'
                     binsmin, binsmax = 750, 750
 
+                    # Similar to above, but this time for Theta_Deg
                     if 0 <= int(dd) <= 1:
                         if not sol:
                             dfx1, dfy1 = df['Theta_Deg'][df["Unblocked"] & detarr[i]], \
@@ -472,6 +501,7 @@ def plot(pklin, pkloverlay):
                                          df['CM_Deg'][detarr[i] & ~df["UnblockedSolidTarg"]]
 
                 # Determine here if the axes are single or multiple, and what the bool itest needs to be.
+                # itest just says whether or not i is 0 or non-zero
                 if int(bb) == 1 and int(cc) != 9:
                     itest = i > 0
                     axes = axi[i]
@@ -479,6 +509,7 @@ def plot(pklin, pkloverlay):
                     itest = i == 0
                     axes = axs
 
+                # Draw the histogram here. All of the parameters are set above.
                 if int(aa) < 5 and int(cc) == 0 and 0 <= int(dd) <= 1 and itest:
 
                     axes.hist2d(dfx1, dfy1, bins=(binsmin, binsmax), range=[[xmin, xmax], [ymin, ymax]],
@@ -486,6 +517,7 @@ def plot(pklin, pkloverlay):
                     axes.set_xlabel(xlabel)
                     axes.set_ylabel(ylabel)
 
+                # Blocked particles histograms:
                 if int(aa) < 5 and int(cc) == 0 and 1 <= int(dd) <= 2 and itest:
                     if not sol:
                         # This section giving a KeyError when the DataFrame size is 1, so I'll try except it.
@@ -507,6 +539,7 @@ def plot(pklin, pkloverlay):
                         except KeyError:
                             print("ERROR")
 
+                # Excitation Energy Histograms
                 if int(aa) == 5 and int(cc) == 0:
                     if not sol:
                         dfx1 = df['Ex_Reconstructed'][df["Unblocked"] & detarr[i]]
@@ -517,6 +550,7 @@ def plot(pklin, pkloverlay):
                         dfx1 = df['Ex_Reconstructed'][df["UnblockedSolidTarg"] & detarr[i]]
                         dfx2 = df['Ex_Reconstructed'][~df["UnblockedSolidTarg"] & detarr[i]]
 
+                # Stacked Ex histograms showing blocked particles
                 if int(aa) == 5 and itest:
                     axes.set_xlabel('Excitation Energy (MeV)')
                     axes.set_ylabel('Counts')
@@ -607,7 +641,7 @@ def plot(pklin, pkloverlay):
 
                     if int(dd) > 1:
                         # The following lines bin the particles into either energy vs theta or energy vs z 2d histograms
-                        # Ex: unbloxkedevt is an array that has given each particle a theta and E bin, and tbins and
+                        # Ex: unblockedevt is an array that has given each particle a theta and E bin, and tbins and
                         # ebins are the corresponding bin edges.
 
                         # a note, unblocked is actually "AllPossible" NOT "Unblocked" like the mask...
@@ -1345,6 +1379,7 @@ if __name__ == "__main__":
         else:
             filein = latest_file
 
+        # Open the overlay file here if indicated by the user.
         if fnmatch.fnmatch(filein, "*allE*"):
             yn2 = input("\nWould you like to load a file to overlay on top of the contour histograms? [Y/N]: ")
 

@@ -902,7 +902,7 @@ if __name__ == "__main__":
 
         if option == 4:
             # Option 4 finds the thickness/length/pressure needed in a specific layer to get some final energy for
-            # a stopping particle.
+            # a stopping particle. It currently is not perfect and fails sometimes.
             proj_ei4 = []
             proj_z4 = []
             proj_a4 = []

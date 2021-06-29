@@ -26,6 +26,8 @@ print("")
 print("                     Particle Shadowing Simulation Code")
 input("\n\n\nTo continue, press ENTER")
 
+
+# Create the correct folders for the user if they don't exist. Really only used when a user first downloads the program
 if not os.path.exists("Event_Files"):
     print("An Event_Files directory was not found, so one was created for you!\n")
     os.mkdir("Event_Files")
@@ -41,9 +43,11 @@ if not os.path.exists("Geometry_Files"):
 evtdir = "./Event_Files/"
 geodir = "./Geometry_Files/"
 
+# Can set new defaults for the nozzle and cone here
 defnozz = ".SOLSTISE_nozz_default.txt"
 defcone = ".SOLSTISE_cone_3_2-6in.txt"
 
+# For new users, the default cone files are copied into the folders (They're downloaded from Github as hidden files)
 if not os.path.exists(geodir + defnozz[1:]):
     copyfile(defnozz, geodir + defnozz[1:])
     print("The default nozzle file was copied to the Geometry_Files directory!")
@@ -51,6 +55,7 @@ if not os.path.exists(geodir + defcone[1:]):
     copyfile(defcone, geodir + defcone[1:])
     print("The default receiver cone file was copied to the Geometry_Files directory!")
 
+# Get all of the event files from the event folder and put it in a list
 list_files = glob.glob(evtdir + '*evts*.txt')
 
 if len(list_files) == 0:
@@ -132,9 +137,9 @@ except ValueError:
     detzi = 0.2
 
 # need to load the file into a numpy array to do genfromtxt to determine whether or not the reaction is going to be
-# measured in normal or inverse kinematics, then ask which way the return pipe is facing. If the pipe is facing the
-# opposite direction, we'll just skip over the pipe definition and make the radius of the pipe tiny so it doesn't
-# interfere with the reaction products...
+# measured in normal or inverse kinematics (upstream or downstream in the magnet), then ask which way the return pipe
+# is facing. If the pipe is facing the opposite direction, we'll just skip over the pipe definition and make the
+# radius of the pipe tiny so it doesn't interfere with the reaction products...
 
 datas = np.genfromtxt(evtdir + filein)
 if datas[:, 0].mean() > 90:
@@ -235,8 +240,9 @@ else:
     else:
         nozztxt = latest_nozz
 
+# In the current design, the AT-TPC rails aren't used. They also don't shadow much anyway.
 try:
-    railsopt = int(input("\nWould you like to include shadowing by the AT-TPC 80/20 rails? [Y/N] "))
+    railsopt = int(input("\nWould you like to include shadowing by the AT-TPC 80/20 rails? [Y/N] Ex) N: "))
 except ValueError:
     railsopt = "Y"
 if railsopt == "Y" or railsopt == "y":
