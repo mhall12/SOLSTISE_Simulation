@@ -73,6 +73,10 @@ def plot(pklin, pkloverlay):
     else:
         invkin = False
 
+    if not 'Blocked_Rails' in df:
+        print("No Rails!!!!")
+        df['Blocked_Rails'] = df['Energy'] > 0
+
     # Make the color maps for the histograms here. Matplotlib does not have a standard Red/White etc color map.
     # These color maps make 0 white, and anything else >0 a solid color
     Reds = cm.get_cmap('Reds', 256)
@@ -710,6 +714,7 @@ def plot(pklin, pkloverlay):
                                                                             df['Energy'][df['Blocked_Nozzle'] &
                                                                                          detarr[i]],
                                                                             bins=(binstheta, binse))
+
                             railsblockedevt, tbins, ebins = np.histogram2d(df['Theta_Deg'][df['Blocked_Rails'] &
                                                                                             detarr[i]],
                                                                             df['Energy'][df['Blocked_Rails'] &

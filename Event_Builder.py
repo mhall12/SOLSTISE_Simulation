@@ -49,7 +49,7 @@ def BuildEvts():
 
     # Entering 0 makes the program randomly generate excitation energies within the specified range.
     levnum = int(input("Enter the number of energy levels to be populated in the recoil (or 0 for "
-                       "all energies) Ex: 3: "))
+                       "all energies) Ex) 3: "))
 
     energyend = 0
 
